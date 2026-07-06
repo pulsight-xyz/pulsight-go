@@ -1,0 +1,3 @@
+# oapi-codegen writes pulsight.gen.go here on `make sdk-go`. Generated code
+# is never hand-edited and never committed pre-generation (this .gitkeep
+# only preserves the directory).

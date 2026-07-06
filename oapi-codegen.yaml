@@ -1,0 +1,13 @@
+# oapi-codegen config — generates the Pulsight Go client core into
+# generated/pulsight.gen.go (types + net/http client). Never hand-edited.
+#
+# Run via `make sdk-go` from the repo root, or directly:
+#   go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
+#   oapi-codegen -config sdks/go/oapi-codegen.yaml sdks/openapi/public.json
+package: generated
+output: generated/pulsight.gen.go
+generate:
+  models: true
+  client: true
+output-options:
+  skip-prune: true
