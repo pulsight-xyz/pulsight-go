@@ -2,6 +2,8 @@
 
 Official Go client for the [Pulsight](https://pulsight.xyz) public API.
 
+📦 **[pkg.go.dev/github.com/pulsight-xyz/pulsight-go](https://pkg.go.dev/github.com/pulsight-xyz/pulsight-go)** — `go get github.com/pulsight-xyz/pulsight-go@latest`
+
 > Module path: `github.com/pulsight-xyz/pulsight-go`. This directory is the
 > source of truth; CI mirrors it to `github.com/pulsight-xyz/pulsight-go` and
 > tags releases there (see the `sdk-*` jobs in `.gitlab-ci.yml`). Install with
@@ -37,19 +39,21 @@ import (
 )
 
 c := pulsight.New("pk_live_…")               // api token from the settings UI
-api, err := generated.NewClientWithResponses(
+api, err := generated.NewClient(
     c.BaseURL(), generated.WithHTTPClient(c.HTTPClient()))
 if err != nil { /* … */ }
 
-resp, err := api.ListTraders(ctx, &generated.ListTradersParams{})
+// Generated operations follow the operation ids (GET /api/traders -> GetTraders)
+// and return the raw *http.Response (the config generates the basic client).
+resp, err := api.GetTraders(ctx, &generated.GetTradersParams{})
 if err != nil { /* transport error */ }
-if err := pulsight.ErrorFromResponse(resp.HTTPResponse); err != nil {
+if err := pulsight.ErrorFromResponse(resp); err != nil {
     var exhausted *pulsight.CreditExhaustedError
     if errors.As(err, &exhausted) {
         // out of api credits for this cycle
     }
 }
-fmt.Println("credits left:", pulsight.CreditsFromHeader(resp.HTTPResponse.Header).Remaining)
+fmt.Println("credits left:", pulsight.CreditsFromHeader(resp.Header).Remaining)
 ```
 
 ## Error mapping
@@ -70,7 +74,7 @@ helper polls to a terminal state. Wire it after generation against the real
 generated operation names, e.g.:
 
 ```go
-// rec, _ := api.SubmitBacktestWithResponse(ctx, body)
-// poll api.GetBacktestWithResponse(ctx, rec.JSON200.Id) with backoff until
-// status is done/failed/cancelled, surfacing a progress callback.
+// resp, _ := api.PostBacktests(ctx, body)         // POST /api/backtests -> the new id
+// poll api.GetBacktestsById(ctx, id) with backoff until status is
+// done/failed/cancelled, surfacing a progress callback.
 ```

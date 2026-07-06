@@ -10,8 +10,9 @@
 // the authenticated transport to the generated constructor:
 //
 //	c := pulsight.New("pk_live_…")
-//	api, _ := generated.NewClientWithResponses(c.BaseURL(),
+//	api, _ := generated.NewClient(c.BaseURL(),
 //		generated.WithHTTPClient(c.HTTPClient()))
+//	resp, _ := api.GetTraders(ctx, &generated.GetTradersParams{})
 //	// map non-2xx with pulsight.ErrorFromResponse(resp).
 //
 // See README.md for the full generated-client wiring and submit_and_wait.
