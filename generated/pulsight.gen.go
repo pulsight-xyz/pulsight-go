@@ -223,7 +223,6 @@ func (e PulsightInternalCoreDomainStrategyEventKind) Valid() bool {
 
 // Defines values for PulsightInternalCoreDomainStrategyVenueID.
 const (
-	DefaultVenue     PulsightInternalCoreDomainStrategyVenueID = "solana"
 	VenueHyperliquid PulsightInternalCoreDomainStrategyVenueID = "hyperliquid"
 	VenuePolymarket  PulsightInternalCoreDomainStrategyVenueID = "polymarket"
 	VenueSolana      PulsightInternalCoreDomainStrategyVenueID = "solana"
@@ -232,8 +231,6 @@ const (
 // Valid indicates whether the value is a known member of the PulsightInternalCoreDomainStrategyVenueID enum.
 func (e PulsightInternalCoreDomainStrategyVenueID) Valid() bool {
 	switch e {
-	case DefaultVenue:
-		return true
 	case VenueHyperliquid:
 		return true
 	case VenuePolymarket:
@@ -440,16 +437,16 @@ func (e PulsightInternalCoreUsecasesBacktestTradeSource) Valid() bool {
 	}
 }
 
-// Defines values for GetApiTradersWalletAddressPnlSeriesParamsWindow.
+// Defines values for GetTradersByWalletAddressPnlSeriesParamsWindow.
 const (
-	All  GetApiTradersWalletAddressPnlSeriesParamsWindow = "all"
-	N1d  GetApiTradersWalletAddressPnlSeriesParamsWindow = "1d"
-	N30d GetApiTradersWalletAddressPnlSeriesParamsWindow = "30d"
-	N7d  GetApiTradersWalletAddressPnlSeriesParamsWindow = "7d"
+	All  GetTradersByWalletAddressPnlSeriesParamsWindow = "all"
+	N1d  GetTradersByWalletAddressPnlSeriesParamsWindow = "1d"
+	N30d GetTradersByWalletAddressPnlSeriesParamsWindow = "30d"
+	N7d  GetTradersByWalletAddressPnlSeriesParamsWindow = "7d"
 )
 
-// Valid indicates whether the value is a known member of the GetApiTradersWalletAddressPnlSeriesParamsWindow enum.
-func (e GetApiTradersWalletAddressPnlSeriesParamsWindow) Valid() bool {
+// Valid indicates whether the value is a known member of the GetTradersByWalletAddressPnlSeriesParamsWindow enum.
+func (e GetTradersByWalletAddressPnlSeriesParamsWindow) Valid() bool {
 	switch e {
 	case All:
 		return true
@@ -1891,14 +1888,14 @@ type PulsightInternalCoreUsecasesTraderTraderListResult struct {
 // apiTokenContextKey is the context key for api-token security scheme
 type apiTokenContextKey string
 
-// GetApiBacktestsParams defines parameters for GetApiBacktests.
-type GetApiBacktestsParams struct {
+// GetBacktestsParams defines parameters for GetBacktests.
+type GetBacktestsParams struct {
 	// StrategyId Strategy ID (when called via /api/backtests)
 	StrategyId *string `form:"strategy_id,omitempty" json:"strategy_id,omitempty"`
 }
 
-// GetApiBacktestsIdTradesParams defines parameters for GetApiBacktestsIdTrades.
-type GetApiBacktestsIdTradesParams struct {
+// GetBacktestsByIdTradesParams defines parameters for GetBacktestsByIdTrades.
+type GetBacktestsByIdTradesParams struct {
 	// Limit Page size (default 200, max 2000)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -1906,14 +1903,14 @@ type GetApiBacktestsIdTradesParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// GetApiMeCreditsLedgerParams defines parameters for GetApiMeCreditsLedger.
-type GetApiMeCreditsLedgerParams struct {
+// GetMeCreditsLedgerParams defines parameters for GetMeCreditsLedger.
+type GetMeCreditsLedgerParams struct {
 	// Limit Max entries to return (default 50, max 200)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
-// GetApiMintsParams defines parameters for GetApiMints.
-type GetApiMintsParams struct {
+// GetMintsParams defines parameters for GetMints.
+type GetMintsParams struct {
 	// Window Window (1m|5m|1h|24h)
 	Window string `form:"window" json:"window"`
 
@@ -1939,8 +1936,8 @@ type GetApiMintsParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// GetApiMintsPubkeyLpEventsParams defines parameters for GetApiMintsPubkeyLpEvents.
-type GetApiMintsPubkeyLpEventsParams struct {
+// GetMintsByPubkeyLpEventsParams defines parameters for GetMintsByPubkeyLpEvents.
+type GetMintsByPubkeyLpEventsParams struct {
 	// Op Filter by op (add|remove|burn)
 	Op *string `form:"op,omitempty" json:"op,omitempty"`
 
@@ -1948,14 +1945,14 @@ type GetApiMintsPubkeyLpEventsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
-// GetApiMintsPubkeyMarketsParams defines parameters for GetApiMintsPubkeyMarkets.
-type GetApiMintsPubkeyMarketsParams struct {
+// GetMintsByPubkeyMarketsParams defines parameters for GetMintsByPubkeyMarkets.
+type GetMintsByPubkeyMarketsParams struct {
 	// Window Window (1m|5m|1h|24h|all, default 24h)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiMintsPubkeySafetyEventsParams defines parameters for GetApiMintsPubkeySafetyEvents.
-type GetApiMintsPubkeySafetyEventsParams struct {
+// GetMintsByPubkeySafetyEventsParams defines parameters for GetMintsByPubkeySafetyEvents.
+type GetMintsByPubkeySafetyEventsParams struct {
 	// Kind Filter by kind (burn|mint_to|freeze|thaw|authority_change)
 	Kind *string `form:"kind,omitempty" json:"kind,omitempty"`
 
@@ -1963,8 +1960,8 @@ type GetApiMintsPubkeySafetyEventsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
-// GetApiMintsPubkeyTopHoldersParams defines parameters for GetApiMintsPubkeyTopHolders.
-type GetApiMintsPubkeyTopHoldersParams struct {
+// GetMintsByPubkeyTopHoldersParams defines parameters for GetMintsByPubkeyTopHolders.
+type GetMintsByPubkeyTopHoldersParams struct {
 	// Sort Sort key (balance|holding_pnl|recent, default balance)
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
@@ -1975,8 +1972,8 @@ type GetApiMintsPubkeyTopHoldersParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// GetApiMintsPubkeyTopTradersParams defines parameters for GetApiMintsPubkeyTopTraders.
-type GetApiMintsPubkeyTopTradersParams struct {
+// GetMintsByPubkeyTopTradersParams defines parameters for GetMintsByPubkeyTopTraders.
+type GetMintsByPubkeyTopTradersParams struct {
 	// Sort Sort key (pnl|volume|swaps|recent, default pnl)
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
@@ -1987,8 +1984,8 @@ type GetApiMintsPubkeyTopTradersParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// GetApiOhlcvParams defines parameters for GetApiOhlcv.
-type GetApiOhlcvParams struct {
+// GetOhlcvParams defines parameters for GetOhlcv.
+type GetOhlcvParams struct {
 	// Mint Mint pubkey
 	Mint string `form:"mint" json:"mint"`
 
@@ -2008,8 +2005,8 @@ type GetApiOhlcvParams struct {
 	To *string `form:"to,omitempty" json:"to,omitempty"`
 }
 
-// GetApiStrategiesParams defines parameters for GetApiStrategies.
-type GetApiStrategiesParams struct {
+// GetStrategiesParams defines parameters for GetStrategies.
+type GetStrategiesParams struct {
 	// Limit Max rows (default 200, max 1000)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -2017,8 +2014,8 @@ type GetApiStrategiesParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// GetApiStrategiesWithStatsParams defines parameters for GetApiStrategiesWithStats.
-type GetApiStrategiesWithStatsParams struct {
+// GetStrategiesWithStatsParams defines parameters for GetStrategiesWithStats.
+type GetStrategiesWithStatsParams struct {
 	// Limit Max rows
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -2026,8 +2023,8 @@ type GetApiStrategiesWithStatsParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// GetApiSwapsParams defines parameters for GetApiSwaps.
-type GetApiSwapsParams struct {
+// GetSwapsParams defines parameters for GetSwaps.
+type GetSwapsParams struct {
 	// Mint Mint pubkey (optional; combinable with trader)
 	Mint *string `form:"mint,omitempty" json:"mint,omitempty"`
 
@@ -2056,14 +2053,14 @@ type GetApiSwapsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
-// GetApiTipsGlobalParams defines parameters for GetApiTipsGlobal.
-type GetApiTipsGlobalParams struct {
+// GetTipsGlobalParams defines parameters for GetTipsGlobal.
+type GetTipsGlobalParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTipsHeatmapParams defines parameters for GetApiTipsHeatmap.
-type GetApiTipsHeatmapParams struct {
+// GetTipsHeatmapParams defines parameters for GetTipsHeatmap.
+type GetTipsHeatmapParams struct {
 	// Bucket Bucket (1m|5m|10m)
 	Bucket *string `form:"bucket,omitempty" json:"bucket,omitempty"`
 
@@ -2071,8 +2068,8 @@ type GetApiTipsHeatmapParams struct {
 	HorizonHours *int `form:"horizon_hours,omitempty" json:"horizon_hours,omitempty"`
 }
 
-// GetApiTipsLeaderboardJitoEfficiencyParams defines parameters for GetApiTipsLeaderboardJitoEfficiency.
-type GetApiTipsLeaderboardJitoEfficiencyParams struct {
+// GetTipsLeaderboardJitoEfficiencyParams defines parameters for GetTipsLeaderboardJitoEfficiency.
+type GetTipsLeaderboardJitoEfficiencyParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 
@@ -2080,32 +2077,32 @@ type GetApiTipsLeaderboardJitoEfficiencyParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
-// GetApiTipsMatParams defines parameters for GetApiTipsMat.
-type GetApiTipsMatParams struct {
+// GetTipsMatParams defines parameters for GetTipsMat.
+type GetTipsMatParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTipsMevShareParams defines parameters for GetApiTipsMevShare.
-type GetApiTipsMevShareParams struct {
+// GetTipsMevShareParams defines parameters for GetTipsMevShare.
+type GetTipsMevShareParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTipsPriorityRatioParams defines parameters for GetApiTipsPriorityRatio.
-type GetApiTipsPriorityRatioParams struct {
+// GetTipsPriorityRatioParams defines parameters for GetTipsPriorityRatio.
+type GetTipsPriorityRatioParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTipsServicesParams defines parameters for GetApiTipsServices.
-type GetApiTipsServicesParams struct {
+// GetTipsServicesParams defines parameters for GetTipsServices.
+type GetTipsServicesParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTradersParams defines parameters for GetApiTraders.
-type GetApiTradersParams struct {
+// GetTradersParams defines parameters for GetTraders.
+type GetTradersParams struct {
 	// Limit Limit
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -2122,8 +2119,8 @@ type GetApiTradersParams struct {
 	FavoritesOnly *bool `form:"favorites_only,omitempty" json:"favorites_only,omitempty"`
 }
 
-// GetApiTradersSearchParams defines parameters for GetApiTradersSearch.
-type GetApiTradersSearchParams struct {
+// GetTradersSearchParams defines parameters for GetTradersSearch.
+type GetTradersSearchParams struct {
 	// Q Search query
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 
@@ -2134,8 +2131,8 @@ type GetApiTradersSearchParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
-// GetApiTradersSnapshotParams defines parameters for GetApiTradersSnapshot.
-type GetApiTradersSnapshotParams struct {
+// GetTradersSnapshotParams defines parameters for GetTradersSnapshot.
+type GetTradersSnapshotParams struct {
 	// Traders Comma-separated wallet addresses
 	Traders string `form:"traders" json:"traders"`
 
@@ -2143,8 +2140,8 @@ type GetApiTradersSnapshotParams struct {
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTradersTraderIDDailyProfitsParams defines parameters for GetApiTradersTraderIDDailyProfits.
-type GetApiTradersTraderIDDailyProfitsParams struct {
+// GetTradersByTraderIDDailyProfitsParams defines parameters for GetTradersByTraderIDDailyProfits.
+type GetTradersByTraderIDDailyProfitsParams struct {
 	// Limit Limit (1..200)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -2164,8 +2161,8 @@ type GetApiTradersTraderIDDailyProfitsParams struct {
 	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
 }
 
-// GetApiTradersTraderIDPnlsParams defines parameters for GetApiTradersTraderIDPnls.
-type GetApiTradersTraderIDPnlsParams struct {
+// GetTradersByTraderIDPnlsParams defines parameters for GetTradersByTraderIDPnls.
+type GetTradersByTraderIDPnlsParams struct {
 	// TokenSearch Search by token address or symbol
 	TokenSearch *string `form:"token_search,omitempty" json:"token_search,omitempty"`
 
@@ -2182,8 +2179,8 @@ type GetApiTradersTraderIDPnlsParams struct {
 	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
 }
 
-// GetApiTradersWalletAddressCreatedTokensParams defines parameters for GetApiTradersWalletAddressCreatedTokens.
-type GetApiTradersWalletAddressCreatedTokensParams struct {
+// GetTradersByWalletAddressCreatedTokensParams defines parameters for GetTradersByWalletAddressCreatedTokens.
+type GetTradersByWalletAddressCreatedTokensParams struct {
 	// Limit Max rows (default 100, max 500)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -2191,29 +2188,29 @@ type GetApiTradersWalletAddressCreatedTokensParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// GetApiTradersWalletAddressPnlSeriesParams defines parameters for GetApiTradersWalletAddressPnlSeries.
-type GetApiTradersWalletAddressPnlSeriesParams struct {
+// GetTradersByWalletAddressPnlSeriesParams defines parameters for GetTradersByWalletAddressPnlSeries.
+type GetTradersByWalletAddressPnlSeriesParams struct {
 	// Window Time window
-	Window *GetApiTradersWalletAddressPnlSeriesParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+	Window *GetTradersByWalletAddressPnlSeriesParamsWindow `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTradersWalletAddressPnlSeriesParamsWindow defines parameters for GetApiTradersWalletAddressPnlSeries.
-type GetApiTradersWalletAddressPnlSeriesParamsWindow string
+// GetTradersByWalletAddressPnlSeriesParamsWindow defines parameters for GetTradersByWalletAddressPnlSeries.
+type GetTradersByWalletAddressPnlSeriesParamsWindow string
 
-// GetApiTradersWalletAddressTipsParams defines parameters for GetApiTradersWalletAddressTips.
-type GetApiTradersWalletAddressTipsParams struct {
+// GetTradersByWalletAddressTipsParams defines parameters for GetTradersByWalletAddressTips.
+type GetTradersByWalletAddressTipsParams struct {
 	// Window Window (1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTradersWalletAddressTipsServicesParams defines parameters for GetApiTradersWalletAddressTipsServices.
-type GetApiTradersWalletAddressTipsServicesParams struct {
+// GetTradersByWalletAddressTipsServicesParams defines parameters for GetTradersByWalletAddressTipsServices.
+type GetTradersByWalletAddressTipsServicesParams struct {
 	// Window Window (1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetApiTradersWalletAddressTokensParams defines parameters for GetApiTradersWalletAddressTokens.
-type GetApiTradersWalletAddressTokensParams struct {
+// GetTradersByWalletAddressTokensParams defines parameters for GetTradersByWalletAddressTokens.
+type GetTradersByWalletAddressTokensParams struct {
 	// Sort Sort key (profit|invested|balance|recent)
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
@@ -2224,32 +2221,32 @@ type GetApiTradersWalletAddressTokensParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
-// PostApiBacktestsJSONRequestBody defines body for PostApiBacktests for application/json ContentType.
-type PostApiBacktestsJSONRequestBody = PulsightInternalCoreUsecasesBacktestBacktestRequest
+// PostBacktestsJSONRequestBody defines body for PostBacktests for application/json ContentType.
+type PostBacktestsJSONRequestBody = PulsightInternalCoreUsecasesBacktestBacktestRequest
 
-// PostApiMeApiKeysJSONRequestBody defines body for PostApiMeApiKeys for application/json ContentType.
-type PostApiMeApiKeysJSONRequestBody = PulsightInternalCorePortsInputAPIKeyCreateRequest
+// PostMeApiKeysJSONRequestBody defines body for PostMeApiKeys for application/json ContentType.
+type PostMeApiKeysJSONRequestBody = PulsightInternalCorePortsInputAPIKeyCreateRequest
 
-// PatchApiMeApiKeysIdJSONRequestBody defines body for PatchApiMeApiKeysId for application/json ContentType.
-type PatchApiMeApiKeysIdJSONRequestBody = InternalAdaptersPrimaryHttpHandlerApiKeyRenameRequest
+// PatchMeApiKeysByIdJSONRequestBody defines body for PatchMeApiKeysById for application/json ContentType.
+type PatchMeApiKeysByIdJSONRequestBody = InternalAdaptersPrimaryHttpHandlerApiKeyRenameRequest
 
-// PostApiStrategiesJSONRequestBody defines body for PostApiStrategies for application/json ContentType.
-type PostApiStrategiesJSONRequestBody = InternalAdaptersPrimaryHttpHandlerStrategyCreateRequest
+// PostStrategiesJSONRequestBody defines body for PostStrategies for application/json ContentType.
+type PostStrategiesJSONRequestBody = InternalAdaptersPrimaryHttpHandlerStrategyCreateRequest
 
-// PostApiStrategiesPreviewJSONRequestBody defines body for PostApiStrategiesPreview for application/json ContentType.
-type PostApiStrategiesPreviewJSONRequestBody = PulsightInternalCoreUsecasesBacktestPreviewRequest
+// PostStrategiesPreviewJSONRequestBody defines body for PostStrategiesPreview for application/json ContentType.
+type PostStrategiesPreviewJSONRequestBody = PulsightInternalCoreUsecasesBacktestPreviewRequest
 
-// PutApiStrategiesIdJSONRequestBody defines body for PutApiStrategiesId for application/json ContentType.
-type PutApiStrategiesIdJSONRequestBody = InternalAdaptersPrimaryHttpHandlerStrategyUpdateRequest
+// PutStrategiesByIdJSONRequestBody defines body for PutStrategiesById for application/json ContentType.
+type PutStrategiesByIdJSONRequestBody = InternalAdaptersPrimaryHttpHandlerStrategyUpdateRequest
 
-// PostApiTraderFiltersJSONRequestBody defines body for PostApiTraderFilters for application/json ContentType.
-type PostApiTraderFiltersJSONRequestBody = PulsightInternalCorePortsInputFilterCreateRequest
+// PostTraderFiltersJSONRequestBody defines body for PostTraderFilters for application/json ContentType.
+type PostTraderFiltersJSONRequestBody = PulsightInternalCorePortsInputFilterCreateRequest
 
-// PutApiTraderFiltersIdJSONRequestBody defines body for PutApiTraderFiltersId for application/json ContentType.
-type PutApiTraderFiltersIdJSONRequestBody = PulsightInternalCorePortsInputFilterUpdateRequest
+// PutTraderFiltersByIdJSONRequestBody defines body for PutTraderFiltersById for application/json ContentType.
+type PutTraderFiltersByIdJSONRequestBody = PulsightInternalCorePortsInputFilterUpdateRequest
 
-// PostApiTradersExportJSONRequestBody defines body for PostApiTradersExport for application/json ContentType.
-type PostApiTradersExportJSONRequestBody = InternalAdaptersPrimaryHttpHandlerTraderExportRequest
+// PostTradersExportJSONRequestBody defines body for PostTradersExport for application/json ContentType.
+type PostTradersExportJSONRequestBody = InternalAdaptersPrimaryHttpHandlerTraderExportRequest
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -2324,204 +2321,204 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetApiBacktests request
-	GetApiBacktests(ctx context.Context, params *GetApiBacktestsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetBacktests request
+	GetBacktests(ctx context.Context, params *GetBacktestsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiBacktestsWithBody request with any body
-	PostApiBacktestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostBacktestsWithBody request with any body
+	PostBacktestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiBacktests(ctx context.Context, body PostApiBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostBacktests(ctx context.Context, body PostBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiBacktestsLimits request
-	GetApiBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetBacktestsLimits request
+	GetBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteApiBacktestsId request
-	DeleteApiBacktestsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteBacktestsById request
+	DeleteBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiBacktestsId request
-	GetApiBacktestsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetBacktestsById request
+	GetBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiBacktestsIdTrades request
-	GetApiBacktestsIdTrades(ctx context.Context, id string, params *GetApiBacktestsIdTradesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetBacktestsByIdTrades request
+	GetBacktestsByIdTrades(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiHealth request
-	GetApiHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetHealth request
+	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMeApiKeys request
-	GetApiMeApiKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMeApiKeys request
+	GetMeApiKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiMeApiKeysWithBody request with any body
-	PostApiMeApiKeysWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostMeApiKeysWithBody request with any body
+	PostMeApiKeysWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiMeApiKeys(ctx context.Context, body PostApiMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostMeApiKeys(ctx context.Context, body PostMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteApiMeApiKeysId request
-	DeleteApiMeApiKeysId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteMeApiKeysById request
+	DeleteMeApiKeysById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PatchApiMeApiKeysIdWithBody request with any body
-	PatchApiMeApiKeysIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PatchMeApiKeysByIdWithBody request with any body
+	PatchMeApiKeysByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PatchApiMeApiKeysId(ctx context.Context, id string, body PatchApiMeApiKeysIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PatchMeApiKeysById(ctx context.Context, id string, body PatchMeApiKeysByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMeCredits request
-	GetApiMeCredits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMeCredits request
+	GetMeCredits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMeCreditsLedger request
-	GetApiMeCreditsLedger(ctx context.Context, params *GetApiMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMeCreditsLedger request
+	GetMeCreditsLedger(ctx context.Context, params *GetMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMints request
-	GetApiMints(ctx context.Context, params *GetApiMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMints request
+	GetMints(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkey request
-	GetApiMintsPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkey request
+	GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeyLpEvents request
-	GetApiMintsPubkeyLpEvents(ctx context.Context, pubkey string, params *GetApiMintsPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeyLpEvents request
+	GetMintsByPubkeyLpEvents(ctx context.Context, pubkey string, params *GetMintsByPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeyMarkets request
-	GetApiMintsPubkeyMarkets(ctx context.Context, pubkey string, params *GetApiMintsPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeyMarkets request
+	GetMintsByPubkeyMarkets(ctx context.Context, pubkey string, params *GetMintsByPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeyMigrations request
-	GetApiMintsPubkeyMigrations(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeyMigrations request
+	GetMintsByPubkeyMigrations(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeySafetyEvents request
-	GetApiMintsPubkeySafetyEvents(ctx context.Context, pubkey string, params *GetApiMintsPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeySafetyEvents request
+	GetMintsByPubkeySafetyEvents(ctx context.Context, pubkey string, params *GetMintsByPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeyStats request
-	GetApiMintsPubkeyStats(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeyStats request
+	GetMintsByPubkeyStats(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeyTopHolders request
-	GetApiMintsPubkeyTopHolders(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeyTopHolders request
+	GetMintsByPubkeyTopHolders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeyTopTraders request
-	GetApiMintsPubkeyTopTraders(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeyTopTraders request
+	GetMintsByPubkeyTopTraders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiMintsPubkeyTradersTrader request
-	GetApiMintsPubkeyTradersTrader(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetMintsByPubkeyTradersByTrader request
+	GetMintsByPubkeyTradersByTrader(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiOhlcv request
-	GetApiOhlcv(ctx context.Context, params *GetApiOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetOhlcv request
+	GetOhlcv(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiStrategies request
-	GetApiStrategies(ctx context.Context, params *GetApiStrategiesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetStrategies request
+	GetStrategies(ctx context.Context, params *GetStrategiesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiStrategiesWithBody request with any body
-	PostApiStrategiesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostStrategiesWithBody request with any body
+	PostStrategiesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiStrategies(ctx context.Context, body PostApiStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostStrategies(ctx context.Context, body PostStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiStrategiesDashboard request
-	GetApiStrategiesDashboard(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetStrategiesDashboard request
+	GetStrategiesDashboard(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiStrategiesPreviewWithBody request with any body
-	PostApiStrategiesPreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostStrategiesPreviewWithBody request with any body
+	PostStrategiesPreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiStrategiesPreview(ctx context.Context, body PostApiStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostStrategiesPreview(ctx context.Context, body PostStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiStrategiesWithStats request
-	GetApiStrategiesWithStats(ctx context.Context, params *GetApiStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetStrategiesWithStats request
+	GetStrategiesWithStats(ctx context.Context, params *GetStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteApiStrategiesId request
-	DeleteApiStrategiesId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteStrategiesById request
+	DeleteStrategiesById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiStrategiesId request
-	GetApiStrategiesId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetStrategiesById request
+	GetStrategiesById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutApiStrategiesIdWithBody request with any body
-	PutApiStrategiesIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutStrategiesByIdWithBody request with any body
+	PutStrategiesByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutApiStrategiesId(ctx context.Context, id string, body PutApiStrategiesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutStrategiesById(ctx context.Context, id string, body PutStrategiesByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiSubscriptionsMe request
-	GetApiSubscriptionsMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetSubscriptionsMe request
+	GetSubscriptionsMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiSwaps request
-	GetApiSwaps(ctx context.Context, params *GetApiSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetSwaps request
+	GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTipsGlobal request
-	GetApiTipsGlobal(ctx context.Context, params *GetApiTipsGlobalParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTipsGlobal request
+	GetTipsGlobal(ctx context.Context, params *GetTipsGlobalParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTipsHeatmap request
-	GetApiTipsHeatmap(ctx context.Context, params *GetApiTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTipsHeatmap request
+	GetTipsHeatmap(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTipsLeaderboardJitoEfficiency request
-	GetApiTipsLeaderboardJitoEfficiency(ctx context.Context, params *GetApiTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTipsLeaderboardJitoEfficiency request
+	GetTipsLeaderboardJitoEfficiency(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTipsMat request
-	GetApiTipsMat(ctx context.Context, params *GetApiTipsMatParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTipsMat request
+	GetTipsMat(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTipsMevShare request
-	GetApiTipsMevShare(ctx context.Context, params *GetApiTipsMevShareParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTipsMevShare request
+	GetTipsMevShare(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTipsPriorityRatio request
-	GetApiTipsPriorityRatio(ctx context.Context, params *GetApiTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTipsPriorityRatio request
+	GetTipsPriorityRatio(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTipsServices request
-	GetApiTipsServices(ctx context.Context, params *GetApiTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTipsServices request
+	GetTipsServices(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTraderFilters request
-	GetApiTraderFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTraderFilters request
+	GetTraderFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiTraderFiltersWithBody request with any body
-	PostApiTraderFiltersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostTraderFiltersWithBody request with any body
+	PostTraderFiltersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiTraderFilters(ctx context.Context, body PostApiTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostTraderFilters(ctx context.Context, body PostTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// DeleteApiTraderFiltersId request
-	DeleteApiTraderFiltersId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// DeleteTraderFiltersById request
+	DeleteTraderFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTraderFiltersId request
-	GetApiTraderFiltersId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTraderFiltersById request
+	GetTraderFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PutApiTraderFiltersIdWithBody request with any body
-	PutApiTraderFiltersIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PutTraderFiltersByIdWithBody request with any body
+	PutTraderFiltersByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PutApiTraderFiltersId(ctx context.Context, id string, body PutApiTraderFiltersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PutTraderFiltersById(ctx context.Context, id string, body PutTraderFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTraders request
-	GetApiTraders(ctx context.Context, params *GetApiTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTraders request
+	GetTraders(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersByIdTraderID request
-	GetApiTradersByIdTraderID(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByIdByTraderID request
+	GetTradersByIdByTraderID(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersByWalletWalletAddress request
-	GetApiTradersByWalletWalletAddress(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByWalletByWalletAddress request
+	GetTradersByWalletByWalletAddress(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiTradersExportWithBody request with any body
-	PostApiTradersExportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostTradersExportWithBody request with any body
+	PostTradersExportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiTradersExport(ctx context.Context, body PostApiTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostTradersExport(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersSearch request
-	GetApiTradersSearch(ctx context.Context, params *GetApiTradersSearchParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersSearch request
+	GetTradersSearch(ctx context.Context, params *GetTradersSearchParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersSnapshot request
-	GetApiTradersSnapshot(ctx context.Context, params *GetApiTradersSnapshotParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersSnapshot request
+	GetTradersSnapshot(ctx context.Context, params *GetTradersSnapshotParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersTraderIDDailyProfits request
-	GetApiTradersTraderIDDailyProfits(ctx context.Context, traderID string, params *GetApiTradersTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByTraderIDDailyProfits request
+	GetTradersByTraderIDDailyProfits(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersTraderIDPnls request
-	GetApiTradersTraderIDPnls(ctx context.Context, traderID string, params *GetApiTradersTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByTraderIDPnls request
+	GetTradersByTraderIDPnls(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersWalletAddressCreatedTokens request
-	GetApiTradersWalletAddressCreatedTokens(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByWalletAddressCreatedTokens request
+	GetTradersByWalletAddressCreatedTokens(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersWalletAddressPnlSeries request
-	GetApiTradersWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByWalletAddressPnlSeries request
+	GetTradersByWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersWalletAddressTips request
-	GetApiTradersWalletAddressTips(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByWalletAddressTips request
+	GetTradersByWalletAddressTips(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersWalletAddressTipsServices request
-	GetApiTradersWalletAddressTipsServices(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByWalletAddressTipsServices request
+	GetTradersByWalletAddressTipsServices(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiTradersWalletAddressTokens request
-	GetApiTradersWalletAddressTokens(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetTradersByWalletAddressTokens request
+	GetTradersByWalletAddressTokens(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetApiBacktests(ctx context.Context, params *GetApiBacktestsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiBacktestsRequest(c.Server, params)
+func (c *Client) GetBacktests(ctx context.Context, params *GetBacktestsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBacktestsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2532,8 +2529,8 @@ func (c *Client) GetApiBacktests(ctx context.Context, params *GetApiBacktestsPar
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiBacktestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiBacktestsRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostBacktestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostBacktestsRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2544,8 +2541,8 @@ func (c *Client) PostApiBacktestsWithBody(ctx context.Context, contentType strin
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiBacktests(ctx context.Context, body PostApiBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiBacktestsRequest(c.Server, body)
+func (c *Client) PostBacktests(ctx context.Context, body PostBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostBacktestsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2556,8 +2553,8 @@ func (c *Client) PostApiBacktests(ctx context.Context, body PostApiBacktestsJSON
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiBacktestsLimitsRequest(c.Server)
+func (c *Client) GetBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBacktestsLimitsRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2568,8 +2565,8 @@ func (c *Client) GetApiBacktestsLimits(ctx context.Context, reqEditors ...Reques
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiBacktestsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiBacktestsIdRequest(c.Server, id)
+func (c *Client) DeleteBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteBacktestsByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2580,8 +2577,8 @@ func (c *Client) DeleteApiBacktestsId(ctx context.Context, id string, reqEditors
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiBacktestsId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiBacktestsIdRequest(c.Server, id)
+func (c *Client) GetBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBacktestsByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2592,8 +2589,8 @@ func (c *Client) GetApiBacktestsId(ctx context.Context, id string, reqEditors ..
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiBacktestsIdTrades(ctx context.Context, id string, params *GetApiBacktestsIdTradesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiBacktestsIdTradesRequest(c.Server, id, params)
+func (c *Client) GetBacktestsByIdTrades(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBacktestsByIdTradesRequest(c.Server, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2604,8 +2601,8 @@ func (c *Client) GetApiBacktestsIdTrades(ctx context.Context, id string, params 
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiHealthRequest(c.Server)
+func (c *Client) GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHealthRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2616,8 +2613,8 @@ func (c *Client) GetApiHealth(ctx context.Context, reqEditors ...RequestEditorFn
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMeApiKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMeApiKeysRequest(c.Server)
+func (c *Client) GetMeApiKeys(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMeApiKeysRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2628,8 +2625,8 @@ func (c *Client) GetApiMeApiKeys(ctx context.Context, reqEditors ...RequestEdito
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiMeApiKeysWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiMeApiKeysRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostMeApiKeysWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostMeApiKeysRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2640,8 +2637,8 @@ func (c *Client) PostApiMeApiKeysWithBody(ctx context.Context, contentType strin
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiMeApiKeys(ctx context.Context, body PostApiMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiMeApiKeysRequest(c.Server, body)
+func (c *Client) PostMeApiKeys(ctx context.Context, body PostMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostMeApiKeysRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2652,8 +2649,8 @@ func (c *Client) PostApiMeApiKeys(ctx context.Context, body PostApiMeApiKeysJSON
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiMeApiKeysId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiMeApiKeysIdRequest(c.Server, id)
+func (c *Client) DeleteMeApiKeysById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteMeApiKeysByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2664,8 +2661,8 @@ func (c *Client) DeleteApiMeApiKeysId(ctx context.Context, id string, reqEditors
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiMeApiKeysIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiMeApiKeysIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PatchMeApiKeysByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchMeApiKeysByIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2676,8 +2673,8 @@ func (c *Client) PatchApiMeApiKeysIdWithBody(ctx context.Context, id string, con
 	return c.Client.Do(req)
 }
 
-func (c *Client) PatchApiMeApiKeysId(ctx context.Context, id string, body PatchApiMeApiKeysIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPatchApiMeApiKeysIdRequest(c.Server, id, body)
+func (c *Client) PatchMeApiKeysById(ctx context.Context, id string, body PatchMeApiKeysByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPatchMeApiKeysByIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2688,8 +2685,8 @@ func (c *Client) PatchApiMeApiKeysId(ctx context.Context, id string, body PatchA
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMeCredits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMeCreditsRequest(c.Server)
+func (c *Client) GetMeCredits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMeCreditsRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2700,8 +2697,8 @@ func (c *Client) GetApiMeCredits(ctx context.Context, reqEditors ...RequestEdito
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMeCreditsLedger(ctx context.Context, params *GetApiMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMeCreditsLedgerRequest(c.Server, params)
+func (c *Client) GetMeCreditsLedger(ctx context.Context, params *GetMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMeCreditsLedgerRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2712,8 +2709,8 @@ func (c *Client) GetApiMeCreditsLedger(ctx context.Context, params *GetApiMeCred
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMints(ctx context.Context, params *GetApiMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsRequest(c.Server, params)
+func (c *Client) GetMints(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2724,8 +2721,8 @@ func (c *Client) GetApiMints(ctx context.Context, params *GetApiMintsParams, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyRequest(c.Server, pubkey)
+func (c *Client) GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyRequest(c.Server, pubkey)
 	if err != nil {
 		return nil, err
 	}
@@ -2736,8 +2733,8 @@ func (c *Client) GetApiMintsPubkey(ctx context.Context, pubkey string, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeyLpEvents(ctx context.Context, pubkey string, params *GetApiMintsPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyLpEventsRequest(c.Server, pubkey, params)
+func (c *Client) GetMintsByPubkeyLpEvents(ctx context.Context, pubkey string, params *GetMintsByPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyLpEventsRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2748,8 +2745,8 @@ func (c *Client) GetApiMintsPubkeyLpEvents(ctx context.Context, pubkey string, p
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeyMarkets(ctx context.Context, pubkey string, params *GetApiMintsPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyMarketsRequest(c.Server, pubkey, params)
+func (c *Client) GetMintsByPubkeyMarkets(ctx context.Context, pubkey string, params *GetMintsByPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyMarketsRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2760,8 +2757,8 @@ func (c *Client) GetApiMintsPubkeyMarkets(ctx context.Context, pubkey string, pa
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeyMigrations(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyMigrationsRequest(c.Server, pubkey)
+func (c *Client) GetMintsByPubkeyMigrations(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyMigrationsRequest(c.Server, pubkey)
 	if err != nil {
 		return nil, err
 	}
@@ -2772,8 +2769,8 @@ func (c *Client) GetApiMintsPubkeyMigrations(ctx context.Context, pubkey string,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeySafetyEvents(ctx context.Context, pubkey string, params *GetApiMintsPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeySafetyEventsRequest(c.Server, pubkey, params)
+func (c *Client) GetMintsByPubkeySafetyEvents(ctx context.Context, pubkey string, params *GetMintsByPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeySafetyEventsRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2784,8 +2781,8 @@ func (c *Client) GetApiMintsPubkeySafetyEvents(ctx context.Context, pubkey strin
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeyStats(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyStatsRequest(c.Server, pubkey)
+func (c *Client) GetMintsByPubkeyStats(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyStatsRequest(c.Server, pubkey)
 	if err != nil {
 		return nil, err
 	}
@@ -2796,8 +2793,8 @@ func (c *Client) GetApiMintsPubkeyStats(ctx context.Context, pubkey string, reqE
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeyTopHolders(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyTopHoldersRequest(c.Server, pubkey, params)
+func (c *Client) GetMintsByPubkeyTopHolders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyTopHoldersRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2808,8 +2805,8 @@ func (c *Client) GetApiMintsPubkeyTopHolders(ctx context.Context, pubkey string,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeyTopTraders(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyTopTradersRequest(c.Server, pubkey, params)
+func (c *Client) GetMintsByPubkeyTopTraders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyTopTradersRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2820,8 +2817,8 @@ func (c *Client) GetApiMintsPubkeyTopTraders(ctx context.Context, pubkey string,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiMintsPubkeyTradersTrader(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiMintsPubkeyTradersTraderRequest(c.Server, pubkey, trader)
+func (c *Client) GetMintsByPubkeyTradersByTrader(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyTradersByTraderRequest(c.Server, pubkey, trader)
 	if err != nil {
 		return nil, err
 	}
@@ -2832,8 +2829,8 @@ func (c *Client) GetApiMintsPubkeyTradersTrader(ctx context.Context, pubkey stri
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiOhlcv(ctx context.Context, params *GetApiOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiOhlcvRequest(c.Server, params)
+func (c *Client) GetOhlcv(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetOhlcvRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2844,8 +2841,8 @@ func (c *Client) GetApiOhlcv(ctx context.Context, params *GetApiOhlcvParams, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiStrategies(ctx context.Context, params *GetApiStrategiesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiStrategiesRequest(c.Server, params)
+func (c *Client) GetStrategies(ctx context.Context, params *GetStrategiesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetStrategiesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2856,8 +2853,8 @@ func (c *Client) GetApiStrategies(ctx context.Context, params *GetApiStrategiesP
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiStrategiesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiStrategiesRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostStrategiesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStrategiesRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2868,8 +2865,8 @@ func (c *Client) PostApiStrategiesWithBody(ctx context.Context, contentType stri
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiStrategies(ctx context.Context, body PostApiStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiStrategiesRequest(c.Server, body)
+func (c *Client) PostStrategies(ctx context.Context, body PostStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStrategiesRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2880,8 +2877,8 @@ func (c *Client) PostApiStrategies(ctx context.Context, body PostApiStrategiesJS
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiStrategiesDashboard(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiStrategiesDashboardRequest(c.Server)
+func (c *Client) GetStrategiesDashboard(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetStrategiesDashboardRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2892,8 +2889,8 @@ func (c *Client) GetApiStrategiesDashboard(ctx context.Context, reqEditors ...Re
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiStrategiesPreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiStrategiesPreviewRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostStrategiesPreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStrategiesPreviewRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2904,8 +2901,8 @@ func (c *Client) PostApiStrategiesPreviewWithBody(ctx context.Context, contentTy
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiStrategiesPreview(ctx context.Context, body PostApiStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiStrategiesPreviewRequest(c.Server, body)
+func (c *Client) PostStrategiesPreview(ctx context.Context, body PostStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStrategiesPreviewRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2916,8 +2913,8 @@ func (c *Client) PostApiStrategiesPreview(ctx context.Context, body PostApiStrat
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiStrategiesWithStats(ctx context.Context, params *GetApiStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiStrategiesWithStatsRequest(c.Server, params)
+func (c *Client) GetStrategiesWithStats(ctx context.Context, params *GetStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetStrategiesWithStatsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -2928,8 +2925,8 @@ func (c *Client) GetApiStrategiesWithStats(ctx context.Context, params *GetApiSt
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiStrategiesId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiStrategiesIdRequest(c.Server, id)
+func (c *Client) DeleteStrategiesById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteStrategiesByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2940,8 +2937,8 @@ func (c *Client) DeleteApiStrategiesId(ctx context.Context, id string, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiStrategiesId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiStrategiesIdRequest(c.Server, id)
+func (c *Client) GetStrategiesById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetStrategiesByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2952,8 +2949,8 @@ func (c *Client) GetApiStrategiesId(ctx context.Context, id string, reqEditors .
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiStrategiesIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiStrategiesIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PutStrategiesByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutStrategiesByIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2964,8 +2961,8 @@ func (c *Client) PutApiStrategiesIdWithBody(ctx context.Context, id string, cont
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiStrategiesId(ctx context.Context, id string, body PutApiStrategiesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiStrategiesIdRequest(c.Server, id, body)
+func (c *Client) PutStrategiesById(ctx context.Context, id string, body PutStrategiesByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutStrategiesByIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2976,8 +2973,8 @@ func (c *Client) PutApiStrategiesId(ctx context.Context, id string, body PutApiS
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiSubscriptionsMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiSubscriptionsMeRequest(c.Server)
+func (c *Client) GetSubscriptionsMe(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSubscriptionsMeRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -2988,8 +2985,8 @@ func (c *Client) GetApiSubscriptionsMe(ctx context.Context, reqEditors ...Reques
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiSwaps(ctx context.Context, params *GetApiSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiSwapsRequest(c.Server, params)
+func (c *Client) GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSwapsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3000,8 +2997,8 @@ func (c *Client) GetApiSwaps(ctx context.Context, params *GetApiSwapsParams, req
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTipsGlobal(ctx context.Context, params *GetApiTipsGlobalParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTipsGlobalRequest(c.Server, params)
+func (c *Client) GetTipsGlobal(ctx context.Context, params *GetTipsGlobalParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsGlobalRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3012,8 +3009,8 @@ func (c *Client) GetApiTipsGlobal(ctx context.Context, params *GetApiTipsGlobalP
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTipsHeatmap(ctx context.Context, params *GetApiTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTipsHeatmapRequest(c.Server, params)
+func (c *Client) GetTipsHeatmap(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsHeatmapRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3024,8 +3021,8 @@ func (c *Client) GetApiTipsHeatmap(ctx context.Context, params *GetApiTipsHeatma
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTipsLeaderboardJitoEfficiency(ctx context.Context, params *GetApiTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTipsLeaderboardJitoEfficiencyRequest(c.Server, params)
+func (c *Client) GetTipsLeaderboardJitoEfficiency(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsLeaderboardJitoEfficiencyRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3036,8 +3033,8 @@ func (c *Client) GetApiTipsLeaderboardJitoEfficiency(ctx context.Context, params
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTipsMat(ctx context.Context, params *GetApiTipsMatParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTipsMatRequest(c.Server, params)
+func (c *Client) GetTipsMat(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsMatRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3048,8 +3045,8 @@ func (c *Client) GetApiTipsMat(ctx context.Context, params *GetApiTipsMatParams,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTipsMevShare(ctx context.Context, params *GetApiTipsMevShareParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTipsMevShareRequest(c.Server, params)
+func (c *Client) GetTipsMevShare(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsMevShareRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3060,8 +3057,8 @@ func (c *Client) GetApiTipsMevShare(ctx context.Context, params *GetApiTipsMevSh
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTipsPriorityRatio(ctx context.Context, params *GetApiTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTipsPriorityRatioRequest(c.Server, params)
+func (c *Client) GetTipsPriorityRatio(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsPriorityRatioRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3072,8 +3069,8 @@ func (c *Client) GetApiTipsPriorityRatio(ctx context.Context, params *GetApiTips
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTipsServices(ctx context.Context, params *GetApiTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTipsServicesRequest(c.Server, params)
+func (c *Client) GetTipsServices(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsServicesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3084,8 +3081,8 @@ func (c *Client) GetApiTipsServices(ctx context.Context, params *GetApiTipsServi
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTraderFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTraderFiltersRequest(c.Server)
+func (c *Client) GetTraderFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTraderFiltersRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -3096,8 +3093,8 @@ func (c *Client) GetApiTraderFilters(ctx context.Context, reqEditors ...RequestE
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiTraderFiltersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiTraderFiltersRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostTraderFiltersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTraderFiltersRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3108,8 +3105,8 @@ func (c *Client) PostApiTraderFiltersWithBody(ctx context.Context, contentType s
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiTraderFilters(ctx context.Context, body PostApiTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiTraderFiltersRequest(c.Server, body)
+func (c *Client) PostTraderFilters(ctx context.Context, body PostTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTraderFiltersRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3120,8 +3117,8 @@ func (c *Client) PostApiTraderFilters(ctx context.Context, body PostApiTraderFil
 	return c.Client.Do(req)
 }
 
-func (c *Client) DeleteApiTraderFiltersId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewDeleteApiTraderFiltersIdRequest(c.Server, id)
+func (c *Client) DeleteTraderFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteTraderFiltersByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -3132,8 +3129,8 @@ func (c *Client) DeleteApiTraderFiltersId(ctx context.Context, id string, reqEdi
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTraderFiltersId(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTraderFiltersIdRequest(c.Server, id)
+func (c *Client) GetTraderFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTraderFiltersByIdRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -3144,8 +3141,8 @@ func (c *Client) GetApiTraderFiltersId(ctx context.Context, id string, reqEditor
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiTraderFiltersIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiTraderFiltersIdRequestWithBody(c.Server, id, contentType, body)
+func (c *Client) PutTraderFiltersByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTraderFiltersByIdRequestWithBody(c.Server, id, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3156,8 +3153,8 @@ func (c *Client) PutApiTraderFiltersIdWithBody(ctx context.Context, id string, c
 	return c.Client.Do(req)
 }
 
-func (c *Client) PutApiTraderFiltersId(ctx context.Context, id string, body PutApiTraderFiltersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPutApiTraderFiltersIdRequest(c.Server, id, body)
+func (c *Client) PutTraderFiltersById(ctx context.Context, id string, body PutTraderFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTraderFiltersByIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3168,8 +3165,8 @@ func (c *Client) PutApiTraderFiltersId(ctx context.Context, id string, body PutA
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTraders(ctx context.Context, params *GetApiTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersRequest(c.Server, params)
+func (c *Client) GetTraders(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3180,8 +3177,8 @@ func (c *Client) GetApiTraders(ctx context.Context, params *GetApiTradersParams,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersByIdTraderID(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersByIdTraderIDRequest(c.Server, traderID)
+func (c *Client) GetTradersByIdByTraderID(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByIdByTraderIDRequest(c.Server, traderID)
 	if err != nil {
 		return nil, err
 	}
@@ -3192,8 +3189,8 @@ func (c *Client) GetApiTradersByIdTraderID(ctx context.Context, traderID string,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersByWalletWalletAddress(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersByWalletWalletAddressRequest(c.Server, walletAddress)
+func (c *Client) GetTradersByWalletByWalletAddress(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletByWalletAddressRequest(c.Server, walletAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -3204,8 +3201,8 @@ func (c *Client) GetApiTradersByWalletWalletAddress(ctx context.Context, walletA
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiTradersExportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiTradersExportRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostTradersExportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTradersExportRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3216,8 +3213,8 @@ func (c *Client) PostApiTradersExportWithBody(ctx context.Context, contentType s
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiTradersExport(ctx context.Context, body PostApiTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiTradersExportRequest(c.Server, body)
+func (c *Client) PostTradersExport(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTradersExportRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3228,8 +3225,8 @@ func (c *Client) PostApiTradersExport(ctx context.Context, body PostApiTradersEx
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersSearch(ctx context.Context, params *GetApiTradersSearchParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersSearchRequest(c.Server, params)
+func (c *Client) GetTradersSearch(ctx context.Context, params *GetTradersSearchParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersSearchRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3240,8 +3237,8 @@ func (c *Client) GetApiTradersSearch(ctx context.Context, params *GetApiTradersS
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersSnapshot(ctx context.Context, params *GetApiTradersSnapshotParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersSnapshotRequest(c.Server, params)
+func (c *Client) GetTradersSnapshot(ctx context.Context, params *GetTradersSnapshotParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersSnapshotRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3252,8 +3249,8 @@ func (c *Client) GetApiTradersSnapshot(ctx context.Context, params *GetApiTrader
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersTraderIDDailyProfits(ctx context.Context, traderID string, params *GetApiTradersTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersTraderIDDailyProfitsRequest(c.Server, traderID, params)
+func (c *Client) GetTradersByTraderIDDailyProfits(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByTraderIDDailyProfitsRequest(c.Server, traderID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3264,8 +3261,8 @@ func (c *Client) GetApiTradersTraderIDDailyProfits(ctx context.Context, traderID
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersTraderIDPnls(ctx context.Context, traderID string, params *GetApiTradersTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersTraderIDPnlsRequest(c.Server, traderID, params)
+func (c *Client) GetTradersByTraderIDPnls(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByTraderIDPnlsRequest(c.Server, traderID, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3276,8 +3273,8 @@ func (c *Client) GetApiTradersTraderIDPnls(ctx context.Context, traderID string,
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersWalletAddressCreatedTokens(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersWalletAddressCreatedTokensRequest(c.Server, walletAddress, params)
+func (c *Client) GetTradersByWalletAddressCreatedTokens(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressCreatedTokensRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3288,8 +3285,8 @@ func (c *Client) GetApiTradersWalletAddressCreatedTokens(ctx context.Context, wa
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersWalletAddressPnlSeriesRequest(c.Server, walletAddress, params)
+func (c *Client) GetTradersByWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressPnlSeriesRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3300,8 +3297,8 @@ func (c *Client) GetApiTradersWalletAddressPnlSeries(ctx context.Context, wallet
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersWalletAddressTips(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersWalletAddressTipsRequest(c.Server, walletAddress, params)
+func (c *Client) GetTradersByWalletAddressTips(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressTipsRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3312,8 +3309,8 @@ func (c *Client) GetApiTradersWalletAddressTips(ctx context.Context, walletAddre
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersWalletAddressTipsServices(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersWalletAddressTipsServicesRequest(c.Server, walletAddress, params)
+func (c *Client) GetTradersByWalletAddressTipsServices(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressTipsServicesRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3324,8 +3321,8 @@ func (c *Client) GetApiTradersWalletAddressTipsServices(ctx context.Context, wal
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiTradersWalletAddressTokens(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiTradersWalletAddressTokensRequest(c.Server, walletAddress, params)
+func (c *Client) GetTradersByWalletAddressTokens(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressTokensRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3336,8 +3333,8 @@ func (c *Client) GetApiTradersWalletAddressTokens(ctx context.Context, walletAdd
 	return c.Client.Do(req)
 }
 
-// NewGetApiBacktestsRequest generates requests for GetApiBacktests
-func NewGetApiBacktestsRequest(server string, params *GetApiBacktestsParams) (*http.Request, error) {
+// NewGetBacktestsRequest generates requests for GetBacktests
+func NewGetBacktestsRequest(server string, params *GetBacktestsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3390,19 +3387,19 @@ func NewGetApiBacktestsRequest(server string, params *GetApiBacktestsParams) (*h
 	return req, nil
 }
 
-// NewPostApiBacktestsRequest calls the generic PostApiBacktests builder with application/json body
-func NewPostApiBacktestsRequest(server string, body PostApiBacktestsJSONRequestBody) (*http.Request, error) {
+// NewPostBacktestsRequest calls the generic PostBacktests builder with application/json body
+func NewPostBacktestsRequest(server string, body PostBacktestsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiBacktestsRequestWithBody(server, "application/json", bodyReader)
+	return NewPostBacktestsRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiBacktestsRequestWithBody generates requests for PostApiBacktests with any type of body
-func NewPostApiBacktestsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostBacktestsRequestWithBody generates requests for PostBacktests with any type of body
+func NewPostBacktestsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3430,8 +3427,8 @@ func NewPostApiBacktestsRequestWithBody(server string, contentType string, body 
 	return req, nil
 }
 
-// NewGetApiBacktestsLimitsRequest generates requests for GetApiBacktestsLimits
-func NewGetApiBacktestsLimitsRequest(server string) (*http.Request, error) {
+// NewGetBacktestsLimitsRequest generates requests for GetBacktestsLimits
+func NewGetBacktestsLimitsRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3457,8 +3454,8 @@ func NewGetApiBacktestsLimitsRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewDeleteApiBacktestsIdRequest generates requests for DeleteApiBacktestsId
-func NewDeleteApiBacktestsIdRequest(server string, id string) (*http.Request, error) {
+// NewDeleteBacktestsByIdRequest generates requests for DeleteBacktestsById
+func NewDeleteBacktestsByIdRequest(server string, id string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3491,8 +3488,8 @@ func NewDeleteApiBacktestsIdRequest(server string, id string) (*http.Request, er
 	return req, nil
 }
 
-// NewGetApiBacktestsIdRequest generates requests for GetApiBacktestsId
-func NewGetApiBacktestsIdRequest(server string, id string) (*http.Request, error) {
+// NewGetBacktestsByIdRequest generates requests for GetBacktestsById
+func NewGetBacktestsByIdRequest(server string, id string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3525,8 +3522,8 @@ func NewGetApiBacktestsIdRequest(server string, id string) (*http.Request, error
 	return req, nil
 }
 
-// NewGetApiBacktestsIdTradesRequest generates requests for GetApiBacktestsIdTrades
-func NewGetApiBacktestsIdTradesRequest(server string, id string, params *GetApiBacktestsIdTradesParams) (*http.Request, error) {
+// NewGetBacktestsByIdTradesRequest generates requests for GetBacktestsByIdTrades
+func NewGetBacktestsByIdTradesRequest(server string, id string, params *GetBacktestsByIdTradesParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3598,8 +3595,8 @@ func NewGetApiBacktestsIdTradesRequest(server string, id string, params *GetApiB
 	return req, nil
 }
 
-// NewGetApiHealthRequest generates requests for GetApiHealth
-func NewGetApiHealthRequest(server string) (*http.Request, error) {
+// NewGetHealthRequest generates requests for GetHealth
+func NewGetHealthRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3625,8 +3622,8 @@ func NewGetApiHealthRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetApiMeApiKeysRequest generates requests for GetApiMeApiKeys
-func NewGetApiMeApiKeysRequest(server string) (*http.Request, error) {
+// NewGetMeApiKeysRequest generates requests for GetMeApiKeys
+func NewGetMeApiKeysRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3652,19 +3649,19 @@ func NewGetApiMeApiKeysRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewPostApiMeApiKeysRequest calls the generic PostApiMeApiKeys builder with application/json body
-func NewPostApiMeApiKeysRequest(server string, body PostApiMeApiKeysJSONRequestBody) (*http.Request, error) {
+// NewPostMeApiKeysRequest calls the generic PostMeApiKeys builder with application/json body
+func NewPostMeApiKeysRequest(server string, body PostMeApiKeysJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiMeApiKeysRequestWithBody(server, "application/json", bodyReader)
+	return NewPostMeApiKeysRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiMeApiKeysRequestWithBody generates requests for PostApiMeApiKeys with any type of body
-func NewPostApiMeApiKeysRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostMeApiKeysRequestWithBody generates requests for PostMeApiKeys with any type of body
+func NewPostMeApiKeysRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3692,8 +3689,8 @@ func NewPostApiMeApiKeysRequestWithBody(server string, contentType string, body 
 	return req, nil
 }
 
-// NewDeleteApiMeApiKeysIdRequest generates requests for DeleteApiMeApiKeysId
-func NewDeleteApiMeApiKeysIdRequest(server string, id string) (*http.Request, error) {
+// NewDeleteMeApiKeysByIdRequest generates requests for DeleteMeApiKeysById
+func NewDeleteMeApiKeysByIdRequest(server string, id string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3726,19 +3723,19 @@ func NewDeleteApiMeApiKeysIdRequest(server string, id string) (*http.Request, er
 	return req, nil
 }
 
-// NewPatchApiMeApiKeysIdRequest calls the generic PatchApiMeApiKeysId builder with application/json body
-func NewPatchApiMeApiKeysIdRequest(server string, id string, body PatchApiMeApiKeysIdJSONRequestBody) (*http.Request, error) {
+// NewPatchMeApiKeysByIdRequest calls the generic PatchMeApiKeysById builder with application/json body
+func NewPatchMeApiKeysByIdRequest(server string, id string, body PatchMeApiKeysByIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPatchApiMeApiKeysIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPatchMeApiKeysByIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPatchApiMeApiKeysIdRequestWithBody generates requests for PatchApiMeApiKeysId with any type of body
-func NewPatchApiMeApiKeysIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPatchMeApiKeysByIdRequestWithBody generates requests for PatchMeApiKeysById with any type of body
+func NewPatchMeApiKeysByIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -3773,8 +3770,8 @@ func NewPatchApiMeApiKeysIdRequestWithBody(server string, id string, contentType
 	return req, nil
 }
 
-// NewGetApiMeCreditsRequest generates requests for GetApiMeCredits
-func NewGetApiMeCreditsRequest(server string) (*http.Request, error) {
+// NewGetMeCreditsRequest generates requests for GetMeCredits
+func NewGetMeCreditsRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3800,8 +3797,8 @@ func NewGetApiMeCreditsRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetApiMeCreditsLedgerRequest generates requests for GetApiMeCreditsLedger
-func NewGetApiMeCreditsLedgerRequest(server string, params *GetApiMeCreditsLedgerParams) (*http.Request, error) {
+// NewGetMeCreditsLedgerRequest generates requests for GetMeCreditsLedger
+func NewGetMeCreditsLedgerRequest(server string, params *GetMeCreditsLedgerParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3854,8 +3851,8 @@ func NewGetApiMeCreditsLedgerRequest(server string, params *GetApiMeCreditsLedge
 	return req, nil
 }
 
-// NewGetApiMintsRequest generates requests for GetApiMints
-func NewGetApiMintsRequest(server string, params *GetApiMintsParams) (*http.Request, error) {
+// NewGetMintsRequest generates requests for GetMints
+func NewGetMintsRequest(server string, params *GetMintsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3988,8 +3985,8 @@ func NewGetApiMintsRequest(server string, params *GetApiMintsParams) (*http.Requ
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyRequest generates requests for GetApiMintsPubkey
-func NewGetApiMintsPubkeyRequest(server string, pubkey string) (*http.Request, error) {
+// NewGetMintsByPubkeyRequest generates requests for GetMintsByPubkey
+func NewGetMintsByPubkeyRequest(server string, pubkey string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4022,8 +4019,8 @@ func NewGetApiMintsPubkeyRequest(server string, pubkey string) (*http.Request, e
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyLpEventsRequest generates requests for GetApiMintsPubkeyLpEvents
-func NewGetApiMintsPubkeyLpEventsRequest(server string, pubkey string, params *GetApiMintsPubkeyLpEventsParams) (*http.Request, error) {
+// NewGetMintsByPubkeyLpEventsRequest generates requests for GetMintsByPubkeyLpEvents
+func NewGetMintsByPubkeyLpEventsRequest(server string, pubkey string, params *GetMintsByPubkeyLpEventsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4095,8 +4092,8 @@ func NewGetApiMintsPubkeyLpEventsRequest(server string, pubkey string, params *G
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyMarketsRequest generates requests for GetApiMintsPubkeyMarkets
-func NewGetApiMintsPubkeyMarketsRequest(server string, pubkey string, params *GetApiMintsPubkeyMarketsParams) (*http.Request, error) {
+// NewGetMintsByPubkeyMarketsRequest generates requests for GetMintsByPubkeyMarkets
+func NewGetMintsByPubkeyMarketsRequest(server string, pubkey string, params *GetMintsByPubkeyMarketsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4156,8 +4153,8 @@ func NewGetApiMintsPubkeyMarketsRequest(server string, pubkey string, params *Ge
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyMigrationsRequest generates requests for GetApiMintsPubkeyMigrations
-func NewGetApiMintsPubkeyMigrationsRequest(server string, pubkey string) (*http.Request, error) {
+// NewGetMintsByPubkeyMigrationsRequest generates requests for GetMintsByPubkeyMigrations
+func NewGetMintsByPubkeyMigrationsRequest(server string, pubkey string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4190,8 +4187,8 @@ func NewGetApiMintsPubkeyMigrationsRequest(server string, pubkey string) (*http.
 	return req, nil
 }
 
-// NewGetApiMintsPubkeySafetyEventsRequest generates requests for GetApiMintsPubkeySafetyEvents
-func NewGetApiMintsPubkeySafetyEventsRequest(server string, pubkey string, params *GetApiMintsPubkeySafetyEventsParams) (*http.Request, error) {
+// NewGetMintsByPubkeySafetyEventsRequest generates requests for GetMintsByPubkeySafetyEvents
+func NewGetMintsByPubkeySafetyEventsRequest(server string, pubkey string, params *GetMintsByPubkeySafetyEventsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4263,8 +4260,8 @@ func NewGetApiMintsPubkeySafetyEventsRequest(server string, pubkey string, param
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyStatsRequest generates requests for GetApiMintsPubkeyStats
-func NewGetApiMintsPubkeyStatsRequest(server string, pubkey string) (*http.Request, error) {
+// NewGetMintsByPubkeyStatsRequest generates requests for GetMintsByPubkeyStats
+func NewGetMintsByPubkeyStatsRequest(server string, pubkey string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4297,8 +4294,8 @@ func NewGetApiMintsPubkeyStatsRequest(server string, pubkey string) (*http.Reque
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyTopHoldersRequest generates requests for GetApiMintsPubkeyTopHolders
-func NewGetApiMintsPubkeyTopHoldersRequest(server string, pubkey string, params *GetApiMintsPubkeyTopHoldersParams) (*http.Request, error) {
+// NewGetMintsByPubkeyTopHoldersRequest generates requests for GetMintsByPubkeyTopHolders
+func NewGetMintsByPubkeyTopHoldersRequest(server string, pubkey string, params *GetMintsByPubkeyTopHoldersParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4382,8 +4379,8 @@ func NewGetApiMintsPubkeyTopHoldersRequest(server string, pubkey string, params 
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyTopTradersRequest generates requests for GetApiMintsPubkeyTopTraders
-func NewGetApiMintsPubkeyTopTradersRequest(server string, pubkey string, params *GetApiMintsPubkeyTopTradersParams) (*http.Request, error) {
+// NewGetMintsByPubkeyTopTradersRequest generates requests for GetMintsByPubkeyTopTraders
+func NewGetMintsByPubkeyTopTradersRequest(server string, pubkey string, params *GetMintsByPubkeyTopTradersParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4467,8 +4464,8 @@ func NewGetApiMintsPubkeyTopTradersRequest(server string, pubkey string, params 
 	return req, nil
 }
 
-// NewGetApiMintsPubkeyTradersTraderRequest generates requests for GetApiMintsPubkeyTradersTrader
-func NewGetApiMintsPubkeyTradersTraderRequest(server string, pubkey string, trader string) (*http.Request, error) {
+// NewGetMintsByPubkeyTradersByTraderRequest generates requests for GetMintsByPubkeyTradersByTrader
+func NewGetMintsByPubkeyTradersByTraderRequest(server string, pubkey string, trader string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4508,8 +4505,8 @@ func NewGetApiMintsPubkeyTradersTraderRequest(server string, pubkey string, trad
 	return req, nil
 }
 
-// NewGetApiOhlcvRequest generates requests for GetApiOhlcv
-func NewGetApiOhlcvRequest(server string, params *GetApiOhlcvParams) (*http.Request, error) {
+// NewGetOhlcvRequest generates requests for GetOhlcv
+func NewGetOhlcvRequest(server string, params *GetOhlcvParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4614,8 +4611,8 @@ func NewGetApiOhlcvRequest(server string, params *GetApiOhlcvParams) (*http.Requ
 	return req, nil
 }
 
-// NewGetApiStrategiesRequest generates requests for GetApiStrategies
-func NewGetApiStrategiesRequest(server string, params *GetApiStrategiesParams) (*http.Request, error) {
+// NewGetStrategiesRequest generates requests for GetStrategies
+func NewGetStrategiesRequest(server string, params *GetStrategiesParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4680,19 +4677,19 @@ func NewGetApiStrategiesRequest(server string, params *GetApiStrategiesParams) (
 	return req, nil
 }
 
-// NewPostApiStrategiesRequest calls the generic PostApiStrategies builder with application/json body
-func NewPostApiStrategiesRequest(server string, body PostApiStrategiesJSONRequestBody) (*http.Request, error) {
+// NewPostStrategiesRequest calls the generic PostStrategies builder with application/json body
+func NewPostStrategiesRequest(server string, body PostStrategiesJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiStrategiesRequestWithBody(server, "application/json", bodyReader)
+	return NewPostStrategiesRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiStrategiesRequestWithBody generates requests for PostApiStrategies with any type of body
-func NewPostApiStrategiesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostStrategiesRequestWithBody generates requests for PostStrategies with any type of body
+func NewPostStrategiesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4720,8 +4717,8 @@ func NewPostApiStrategiesRequestWithBody(server string, contentType string, body
 	return req, nil
 }
 
-// NewGetApiStrategiesDashboardRequest generates requests for GetApiStrategiesDashboard
-func NewGetApiStrategiesDashboardRequest(server string) (*http.Request, error) {
+// NewGetStrategiesDashboardRequest generates requests for GetStrategiesDashboard
+func NewGetStrategiesDashboardRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4747,19 +4744,19 @@ func NewGetApiStrategiesDashboardRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewPostApiStrategiesPreviewRequest calls the generic PostApiStrategiesPreview builder with application/json body
-func NewPostApiStrategiesPreviewRequest(server string, body PostApiStrategiesPreviewJSONRequestBody) (*http.Request, error) {
+// NewPostStrategiesPreviewRequest calls the generic PostStrategiesPreview builder with application/json body
+func NewPostStrategiesPreviewRequest(server string, body PostStrategiesPreviewJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiStrategiesPreviewRequestWithBody(server, "application/json", bodyReader)
+	return NewPostStrategiesPreviewRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiStrategiesPreviewRequestWithBody generates requests for PostApiStrategiesPreview with any type of body
-func NewPostApiStrategiesPreviewRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostStrategiesPreviewRequestWithBody generates requests for PostStrategiesPreview with any type of body
+func NewPostStrategiesPreviewRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4787,8 +4784,8 @@ func NewPostApiStrategiesPreviewRequestWithBody(server string, contentType strin
 	return req, nil
 }
 
-// NewGetApiStrategiesWithStatsRequest generates requests for GetApiStrategiesWithStats
-func NewGetApiStrategiesWithStatsRequest(server string, params *GetApiStrategiesWithStatsParams) (*http.Request, error) {
+// NewGetStrategiesWithStatsRequest generates requests for GetStrategiesWithStats
+func NewGetStrategiesWithStatsRequest(server string, params *GetStrategiesWithStatsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4853,8 +4850,8 @@ func NewGetApiStrategiesWithStatsRequest(server string, params *GetApiStrategies
 	return req, nil
 }
 
-// NewDeleteApiStrategiesIdRequest generates requests for DeleteApiStrategiesId
-func NewDeleteApiStrategiesIdRequest(server string, id string) (*http.Request, error) {
+// NewDeleteStrategiesByIdRequest generates requests for DeleteStrategiesById
+func NewDeleteStrategiesByIdRequest(server string, id string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4887,8 +4884,8 @@ func NewDeleteApiStrategiesIdRequest(server string, id string) (*http.Request, e
 	return req, nil
 }
 
-// NewGetApiStrategiesIdRequest generates requests for GetApiStrategiesId
-func NewGetApiStrategiesIdRequest(server string, id string) (*http.Request, error) {
+// NewGetStrategiesByIdRequest generates requests for GetStrategiesById
+func NewGetStrategiesByIdRequest(server string, id string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4921,19 +4918,19 @@ func NewGetApiStrategiesIdRequest(server string, id string) (*http.Request, erro
 	return req, nil
 }
 
-// NewPutApiStrategiesIdRequest calls the generic PutApiStrategiesId builder with application/json body
-func NewPutApiStrategiesIdRequest(server string, id string, body PutApiStrategiesIdJSONRequestBody) (*http.Request, error) {
+// NewPutStrategiesByIdRequest calls the generic PutStrategiesById builder with application/json body
+func NewPutStrategiesByIdRequest(server string, id string, body PutStrategiesByIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutApiStrategiesIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPutStrategiesByIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPutApiStrategiesIdRequestWithBody generates requests for PutApiStrategiesId with any type of body
-func NewPutApiStrategiesIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutStrategiesByIdRequestWithBody generates requests for PutStrategiesById with any type of body
+func NewPutStrategiesByIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -4968,8 +4965,8 @@ func NewPutApiStrategiesIdRequestWithBody(server string, id string, contentType 
 	return req, nil
 }
 
-// NewGetApiSubscriptionsMeRequest generates requests for GetApiSubscriptionsMe
-func NewGetApiSubscriptionsMeRequest(server string) (*http.Request, error) {
+// NewGetSubscriptionsMeRequest generates requests for GetSubscriptionsMe
+func NewGetSubscriptionsMeRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -4995,8 +4992,8 @@ func NewGetApiSubscriptionsMeRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetApiSwapsRequest generates requests for GetApiSwaps
-func NewGetApiSwapsRequest(server string, params *GetApiSwapsParams) (*http.Request, error) {
+// NewGetSwapsRequest generates requests for GetSwaps
+func NewGetSwapsRequest(server string, params *GetSwapsParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5145,8 +5142,8 @@ func NewGetApiSwapsRequest(server string, params *GetApiSwapsParams) (*http.Requ
 	return req, nil
 }
 
-// NewGetApiTipsGlobalRequest generates requests for GetApiTipsGlobal
-func NewGetApiTipsGlobalRequest(server string, params *GetApiTipsGlobalParams) (*http.Request, error) {
+// NewGetTipsGlobalRequest generates requests for GetTipsGlobal
+func NewGetTipsGlobalRequest(server string, params *GetTipsGlobalParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5199,8 +5196,8 @@ func NewGetApiTipsGlobalRequest(server string, params *GetApiTipsGlobalParams) (
 	return req, nil
 }
 
-// NewGetApiTipsHeatmapRequest generates requests for GetApiTipsHeatmap
-func NewGetApiTipsHeatmapRequest(server string, params *GetApiTipsHeatmapParams) (*http.Request, error) {
+// NewGetTipsHeatmapRequest generates requests for GetTipsHeatmap
+func NewGetTipsHeatmapRequest(server string, params *GetTipsHeatmapParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5265,8 +5262,8 @@ func NewGetApiTipsHeatmapRequest(server string, params *GetApiTipsHeatmapParams)
 	return req, nil
 }
 
-// NewGetApiTipsLeaderboardJitoEfficiencyRequest generates requests for GetApiTipsLeaderboardJitoEfficiency
-func NewGetApiTipsLeaderboardJitoEfficiencyRequest(server string, params *GetApiTipsLeaderboardJitoEfficiencyParams) (*http.Request, error) {
+// NewGetTipsLeaderboardJitoEfficiencyRequest generates requests for GetTipsLeaderboardJitoEfficiency
+func NewGetTipsLeaderboardJitoEfficiencyRequest(server string, params *GetTipsLeaderboardJitoEfficiencyParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5331,8 +5328,8 @@ func NewGetApiTipsLeaderboardJitoEfficiencyRequest(server string, params *GetApi
 	return req, nil
 }
 
-// NewGetApiTipsMatRequest generates requests for GetApiTipsMat
-func NewGetApiTipsMatRequest(server string, params *GetApiTipsMatParams) (*http.Request, error) {
+// NewGetTipsMatRequest generates requests for GetTipsMat
+func NewGetTipsMatRequest(server string, params *GetTipsMatParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5385,8 +5382,8 @@ func NewGetApiTipsMatRequest(server string, params *GetApiTipsMatParams) (*http.
 	return req, nil
 }
 
-// NewGetApiTipsMevShareRequest generates requests for GetApiTipsMevShare
-func NewGetApiTipsMevShareRequest(server string, params *GetApiTipsMevShareParams) (*http.Request, error) {
+// NewGetTipsMevShareRequest generates requests for GetTipsMevShare
+func NewGetTipsMevShareRequest(server string, params *GetTipsMevShareParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5439,8 +5436,8 @@ func NewGetApiTipsMevShareRequest(server string, params *GetApiTipsMevShareParam
 	return req, nil
 }
 
-// NewGetApiTipsPriorityRatioRequest generates requests for GetApiTipsPriorityRatio
-func NewGetApiTipsPriorityRatioRequest(server string, params *GetApiTipsPriorityRatioParams) (*http.Request, error) {
+// NewGetTipsPriorityRatioRequest generates requests for GetTipsPriorityRatio
+func NewGetTipsPriorityRatioRequest(server string, params *GetTipsPriorityRatioParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5493,8 +5490,8 @@ func NewGetApiTipsPriorityRatioRequest(server string, params *GetApiTipsPriority
 	return req, nil
 }
 
-// NewGetApiTipsServicesRequest generates requests for GetApiTipsServices
-func NewGetApiTipsServicesRequest(server string, params *GetApiTipsServicesParams) (*http.Request, error) {
+// NewGetTipsServicesRequest generates requests for GetTipsServices
+func NewGetTipsServicesRequest(server string, params *GetTipsServicesParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5547,8 +5544,8 @@ func NewGetApiTipsServicesRequest(server string, params *GetApiTipsServicesParam
 	return req, nil
 }
 
-// NewGetApiTraderFiltersRequest generates requests for GetApiTraderFilters
-func NewGetApiTraderFiltersRequest(server string) (*http.Request, error) {
+// NewGetTraderFiltersRequest generates requests for GetTraderFilters
+func NewGetTraderFiltersRequest(server string) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5574,19 +5571,19 @@ func NewGetApiTraderFiltersRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewPostApiTraderFiltersRequest calls the generic PostApiTraderFilters builder with application/json body
-func NewPostApiTraderFiltersRequest(server string, body PostApiTraderFiltersJSONRequestBody) (*http.Request, error) {
+// NewPostTraderFiltersRequest calls the generic PostTraderFilters builder with application/json body
+func NewPostTraderFiltersRequest(server string, body PostTraderFiltersJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiTraderFiltersRequestWithBody(server, "application/json", bodyReader)
+	return NewPostTraderFiltersRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiTraderFiltersRequestWithBody generates requests for PostApiTraderFilters with any type of body
-func NewPostApiTraderFiltersRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostTraderFiltersRequestWithBody generates requests for PostTraderFilters with any type of body
+func NewPostTraderFiltersRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5614,8 +5611,8 @@ func NewPostApiTraderFiltersRequestWithBody(server string, contentType string, b
 	return req, nil
 }
 
-// NewDeleteApiTraderFiltersIdRequest generates requests for DeleteApiTraderFiltersId
-func NewDeleteApiTraderFiltersIdRequest(server string, id string) (*http.Request, error) {
+// NewDeleteTraderFiltersByIdRequest generates requests for DeleteTraderFiltersById
+func NewDeleteTraderFiltersByIdRequest(server string, id string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5648,8 +5645,8 @@ func NewDeleteApiTraderFiltersIdRequest(server string, id string) (*http.Request
 	return req, nil
 }
 
-// NewGetApiTraderFiltersIdRequest generates requests for GetApiTraderFiltersId
-func NewGetApiTraderFiltersIdRequest(server string, id string) (*http.Request, error) {
+// NewGetTraderFiltersByIdRequest generates requests for GetTraderFiltersById
+func NewGetTraderFiltersByIdRequest(server string, id string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5682,19 +5679,19 @@ func NewGetApiTraderFiltersIdRequest(server string, id string) (*http.Request, e
 	return req, nil
 }
 
-// NewPutApiTraderFiltersIdRequest calls the generic PutApiTraderFiltersId builder with application/json body
-func NewPutApiTraderFiltersIdRequest(server string, id string, body PutApiTraderFiltersIdJSONRequestBody) (*http.Request, error) {
+// NewPutTraderFiltersByIdRequest calls the generic PutTraderFiltersById builder with application/json body
+func NewPutTraderFiltersByIdRequest(server string, id string, body PutTraderFiltersByIdJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPutApiTraderFiltersIdRequestWithBody(server, id, "application/json", bodyReader)
+	return NewPutTraderFiltersByIdRequestWithBody(server, id, "application/json", bodyReader)
 }
 
-// NewPutApiTraderFiltersIdRequestWithBody generates requests for PutApiTraderFiltersId with any type of body
-func NewPutApiTraderFiltersIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPutTraderFiltersByIdRequestWithBody generates requests for PutTraderFiltersById with any type of body
+func NewPutTraderFiltersByIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5729,8 +5726,8 @@ func NewPutApiTraderFiltersIdRequestWithBody(server string, id string, contentTy
 	return req, nil
 }
 
-// NewGetApiTradersRequest generates requests for GetApiTraders
-func NewGetApiTradersRequest(server string, params *GetApiTradersParams) (*http.Request, error) {
+// NewGetTradersRequest generates requests for GetTraders
+func NewGetTradersRequest(server string, params *GetTradersParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5831,8 +5828,8 @@ func NewGetApiTradersRequest(server string, params *GetApiTradersParams) (*http.
 	return req, nil
 }
 
-// NewGetApiTradersByIdTraderIDRequest generates requests for GetApiTradersByIdTraderID
-func NewGetApiTradersByIdTraderIDRequest(server string, traderID string) (*http.Request, error) {
+// NewGetTradersByIdByTraderIDRequest generates requests for GetTradersByIdByTraderID
+func NewGetTradersByIdByTraderIDRequest(server string, traderID string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5865,8 +5862,8 @@ func NewGetApiTradersByIdTraderIDRequest(server string, traderID string) (*http.
 	return req, nil
 }
 
-// NewGetApiTradersByWalletWalletAddressRequest generates requests for GetApiTradersByWalletWalletAddress
-func NewGetApiTradersByWalletWalletAddressRequest(server string, walletAddress string) (*http.Request, error) {
+// NewGetTradersByWalletByWalletAddressRequest generates requests for GetTradersByWalletByWalletAddress
+func NewGetTradersByWalletByWalletAddressRequest(server string, walletAddress string) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -5899,19 +5896,19 @@ func NewGetApiTradersByWalletWalletAddressRequest(server string, walletAddress s
 	return req, nil
 }
 
-// NewPostApiTradersExportRequest calls the generic PostApiTradersExport builder with application/json body
-func NewPostApiTradersExportRequest(server string, body PostApiTradersExportJSONRequestBody) (*http.Request, error) {
+// NewPostTradersExportRequest calls the generic PostTradersExport builder with application/json body
+func NewPostTradersExportRequest(server string, body PostTradersExportJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiTradersExportRequestWithBody(server, "application/json", bodyReader)
+	return NewPostTradersExportRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiTradersExportRequestWithBody generates requests for PostApiTradersExport with any type of body
-func NewPostApiTradersExportRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostTradersExportRequestWithBody generates requests for PostTradersExport with any type of body
+func NewPostTradersExportRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -5939,8 +5936,8 @@ func NewPostApiTradersExportRequestWithBody(server string, contentType string, b
 	return req, nil
 }
 
-// NewGetApiTradersSearchRequest generates requests for GetApiTradersSearch
-func NewGetApiTradersSearchRequest(server string, params *GetApiTradersSearchParams) (*http.Request, error) {
+// NewGetTradersSearchRequest generates requests for GetTradersSearch
+func NewGetTradersSearchRequest(server string, params *GetTradersSearchParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -6017,8 +6014,8 @@ func NewGetApiTradersSearchRequest(server string, params *GetApiTradersSearchPar
 	return req, nil
 }
 
-// NewGetApiTradersSnapshotRequest generates requests for GetApiTradersSnapshot
-func NewGetApiTradersSnapshotRequest(server string, params *GetApiTradersSnapshotParams) (*http.Request, error) {
+// NewGetTradersSnapshotRequest generates requests for GetTradersSnapshot
+func NewGetTradersSnapshotRequest(server string, params *GetTradersSnapshotParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -6079,8 +6076,8 @@ func NewGetApiTradersSnapshotRequest(server string, params *GetApiTradersSnapsho
 	return req, nil
 }
 
-// NewGetApiTradersTraderIDDailyProfitsRequest generates requests for GetApiTradersTraderIDDailyProfits
-func NewGetApiTradersTraderIDDailyProfitsRequest(server string, traderID string, params *GetApiTradersTraderIDDailyProfitsParams) (*http.Request, error) {
+// NewGetTradersByTraderIDDailyProfitsRequest generates requests for GetTradersByTraderIDDailyProfits
+func NewGetTradersByTraderIDDailyProfitsRequest(server string, traderID string, params *GetTradersByTraderIDDailyProfitsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6200,8 +6197,8 @@ func NewGetApiTradersTraderIDDailyProfitsRequest(server string, traderID string,
 	return req, nil
 }
 
-// NewGetApiTradersTraderIDPnlsRequest generates requests for GetApiTradersTraderIDPnls
-func NewGetApiTradersTraderIDPnlsRequest(server string, traderID string, params *GetApiTradersTraderIDPnlsParams) (*http.Request, error) {
+// NewGetTradersByTraderIDPnlsRequest generates requests for GetTradersByTraderIDPnls
+func NewGetTradersByTraderIDPnlsRequest(server string, traderID string, params *GetTradersByTraderIDPnlsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6309,8 +6306,8 @@ func NewGetApiTradersTraderIDPnlsRequest(server string, traderID string, params 
 	return req, nil
 }
 
-// NewGetApiTradersWalletAddressCreatedTokensRequest generates requests for GetApiTradersWalletAddressCreatedTokens
-func NewGetApiTradersWalletAddressCreatedTokensRequest(server string, walletAddress string, params *GetApiTradersWalletAddressCreatedTokensParams) (*http.Request, error) {
+// NewGetTradersByWalletAddressCreatedTokensRequest generates requests for GetTradersByWalletAddressCreatedTokens
+func NewGetTradersByWalletAddressCreatedTokensRequest(server string, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6382,8 +6379,8 @@ func NewGetApiTradersWalletAddressCreatedTokensRequest(server string, walletAddr
 	return req, nil
 }
 
-// NewGetApiTradersWalletAddressPnlSeriesRequest generates requests for GetApiTradersWalletAddressPnlSeries
-func NewGetApiTradersWalletAddressPnlSeriesRequest(server string, walletAddress string, params *GetApiTradersWalletAddressPnlSeriesParams) (*http.Request, error) {
+// NewGetTradersByWalletAddressPnlSeriesRequest generates requests for GetTradersByWalletAddressPnlSeries
+func NewGetTradersByWalletAddressPnlSeriesRequest(server string, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6443,8 +6440,8 @@ func NewGetApiTradersWalletAddressPnlSeriesRequest(server string, walletAddress 
 	return req, nil
 }
 
-// NewGetApiTradersWalletAddressTipsRequest generates requests for GetApiTradersWalletAddressTips
-func NewGetApiTradersWalletAddressTipsRequest(server string, walletAddress string, params *GetApiTradersWalletAddressTipsParams) (*http.Request, error) {
+// NewGetTradersByWalletAddressTipsRequest generates requests for GetTradersByWalletAddressTips
+func NewGetTradersByWalletAddressTipsRequest(server string, walletAddress string, params *GetTradersByWalletAddressTipsParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6504,8 +6501,8 @@ func NewGetApiTradersWalletAddressTipsRequest(server string, walletAddress strin
 	return req, nil
 }
 
-// NewGetApiTradersWalletAddressTipsServicesRequest generates requests for GetApiTradersWalletAddressTipsServices
-func NewGetApiTradersWalletAddressTipsServicesRequest(server string, walletAddress string, params *GetApiTradersWalletAddressTipsServicesParams) (*http.Request, error) {
+// NewGetTradersByWalletAddressTipsServicesRequest generates requests for GetTradersByWalletAddressTipsServices
+func NewGetTradersByWalletAddressTipsServicesRequest(server string, walletAddress string, params *GetTradersByWalletAddressTipsServicesParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6565,8 +6562,8 @@ func NewGetApiTradersWalletAddressTipsServicesRequest(server string, walletAddre
 	return req, nil
 }
 
-// NewGetApiTradersWalletAddressTokensRequest generates requests for GetApiTradersWalletAddressTokens
-func NewGetApiTradersWalletAddressTokensRequest(server string, walletAddress string, params *GetApiTradersWalletAddressTokensParams) (*http.Request, error) {
+// NewGetTradersByWalletAddressTokensRequest generates requests for GetTradersByWalletAddressTokens
+func NewGetTradersByWalletAddressTokensRequest(server string, walletAddress string, params *GetTradersByWalletAddressTokensParams) (*http.Request, error) {
 	var err error
 
 	var pathParam0 string
@@ -6693,203 +6690,203 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetApiBacktestsWithResponse request
-	GetApiBacktestsWithResponse(ctx context.Context, params *GetApiBacktestsParams, reqEditors ...RequestEditorFn) (*GetApiBacktestsResponse, error)
+	// GetBacktestsWithResponse request
+	GetBacktestsWithResponse(ctx context.Context, params *GetBacktestsParams, reqEditors ...RequestEditorFn) (*GetBacktestsResponse, error)
 
-	// PostApiBacktestsWithBodyWithResponse request with any body
-	PostApiBacktestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiBacktestsResponse, error)
+	// PostBacktestsWithBodyWithResponse request with any body
+	PostBacktestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostBacktestsResponse, error)
 
-	PostApiBacktestsWithResponse(ctx context.Context, body PostApiBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiBacktestsResponse, error)
+	PostBacktestsWithResponse(ctx context.Context, body PostBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostBacktestsResponse, error)
 
-	// GetApiBacktestsLimitsWithResponse request
-	GetApiBacktestsLimitsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiBacktestsLimitsResponse, error)
+	// GetBacktestsLimitsWithResponse request
+	GetBacktestsLimitsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBacktestsLimitsResponse, error)
 
-	// DeleteApiBacktestsIdWithResponse request
-	DeleteApiBacktestsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiBacktestsIdResponse, error)
+	// DeleteBacktestsByIdWithResponse request
+	DeleteBacktestsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteBacktestsByIdResponse, error)
 
-	// GetApiBacktestsIdWithResponse request
-	GetApiBacktestsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetApiBacktestsIdResponse, error)
+	// GetBacktestsByIdWithResponse request
+	GetBacktestsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetBacktestsByIdResponse, error)
 
-	// GetApiBacktestsIdTradesWithResponse request
-	GetApiBacktestsIdTradesWithResponse(ctx context.Context, id string, params *GetApiBacktestsIdTradesParams, reqEditors ...RequestEditorFn) (*GetApiBacktestsIdTradesResponse, error)
+	// GetBacktestsByIdTradesWithResponse request
+	GetBacktestsByIdTradesWithResponse(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdTradesResponse, error)
 
-	// GetApiHealthWithResponse request
-	GetApiHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiHealthResponse, error)
+	// GetHealthWithResponse request
+	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
 
-	// GetApiMeApiKeysWithResponse request
-	GetApiMeApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiMeApiKeysResponse, error)
+	// GetMeApiKeysWithResponse request
+	GetMeApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMeApiKeysResponse, error)
 
-	// PostApiMeApiKeysWithBodyWithResponse request with any body
-	PostApiMeApiKeysWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiMeApiKeysResponse, error)
+	// PostMeApiKeysWithBodyWithResponse request with any body
+	PostMeApiKeysWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMeApiKeysResponse, error)
 
-	PostApiMeApiKeysWithResponse(ctx context.Context, body PostApiMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiMeApiKeysResponse, error)
+	PostMeApiKeysWithResponse(ctx context.Context, body PostMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMeApiKeysResponse, error)
 
-	// DeleteApiMeApiKeysIdWithResponse request
-	DeleteApiMeApiKeysIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiMeApiKeysIdResponse, error)
+	// DeleteMeApiKeysByIdWithResponse request
+	DeleteMeApiKeysByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteMeApiKeysByIdResponse, error)
 
-	// PatchApiMeApiKeysIdWithBodyWithResponse request with any body
-	PatchApiMeApiKeysIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiMeApiKeysIdResponse, error)
+	// PatchMeApiKeysByIdWithBodyWithResponse request with any body
+	PatchMeApiKeysByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMeApiKeysByIdResponse, error)
 
-	PatchApiMeApiKeysIdWithResponse(ctx context.Context, id string, body PatchApiMeApiKeysIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiMeApiKeysIdResponse, error)
+	PatchMeApiKeysByIdWithResponse(ctx context.Context, id string, body PatchMeApiKeysByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMeApiKeysByIdResponse, error)
 
-	// GetApiMeCreditsWithResponse request
-	GetApiMeCreditsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiMeCreditsResponse, error)
+	// GetMeCreditsWithResponse request
+	GetMeCreditsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMeCreditsResponse, error)
 
-	// GetApiMeCreditsLedgerWithResponse request
-	GetApiMeCreditsLedgerWithResponse(ctx context.Context, params *GetApiMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*GetApiMeCreditsLedgerResponse, error)
+	// GetMeCreditsLedgerWithResponse request
+	GetMeCreditsLedgerWithResponse(ctx context.Context, params *GetMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*GetMeCreditsLedgerResponse, error)
 
-	// GetApiMintsWithResponse request
-	GetApiMintsWithResponse(ctx context.Context, params *GetApiMintsParams, reqEditors ...RequestEditorFn) (*GetApiMintsResponse, error)
+	// GetMintsWithResponse request
+	GetMintsWithResponse(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*GetMintsResponse, error)
 
-	// GetApiMintsPubkeyWithResponse request
-	GetApiMintsPubkeyWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyResponse, error)
+	// GetMintsByPubkeyWithResponse request
+	GetMintsByPubkeyWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyResponse, error)
 
-	// GetApiMintsPubkeyLpEventsWithResponse request
-	GetApiMintsPubkeyLpEventsWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyLpEventsResponse, error)
+	// GetMintsByPubkeyLpEventsWithResponse request
+	GetMintsByPubkeyLpEventsWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyLpEventsResponse, error)
 
-	// GetApiMintsPubkeyMarketsWithResponse request
-	GetApiMintsPubkeyMarketsWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyMarketsResponse, error)
+	// GetMintsByPubkeyMarketsWithResponse request
+	GetMintsByPubkeyMarketsWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyMarketsResponse, error)
 
-	// GetApiMintsPubkeyMigrationsWithResponse request
-	GetApiMintsPubkeyMigrationsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyMigrationsResponse, error)
+	// GetMintsByPubkeyMigrationsWithResponse request
+	GetMintsByPubkeyMigrationsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyMigrationsResponse, error)
 
-	// GetApiMintsPubkeySafetyEventsWithResponse request
-	GetApiMintsPubkeySafetyEventsWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeySafetyEventsResponse, error)
+	// GetMintsByPubkeySafetyEventsWithResponse request
+	GetMintsByPubkeySafetyEventsWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeySafetyEventsResponse, error)
 
-	// GetApiMintsPubkeyStatsWithResponse request
-	GetApiMintsPubkeyStatsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyStatsResponse, error)
+	// GetMintsByPubkeyStatsWithResponse request
+	GetMintsByPubkeyStatsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyStatsResponse, error)
 
-	// GetApiMintsPubkeyTopHoldersWithResponse request
-	GetApiMintsPubkeyTopHoldersWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyTopHoldersResponse, error)
+	// GetMintsByPubkeyTopHoldersWithResponse request
+	GetMintsByPubkeyTopHoldersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyTopHoldersResponse, error)
 
-	// GetApiMintsPubkeyTopTradersWithResponse request
-	GetApiMintsPubkeyTopTradersWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyTopTradersResponse, error)
+	// GetMintsByPubkeyTopTradersWithResponse request
+	GetMintsByPubkeyTopTradersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyTopTradersResponse, error)
 
-	// GetApiMintsPubkeyTradersTraderWithResponse request
-	GetApiMintsPubkeyTradersTraderWithResponse(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyTradersTraderResponse, error)
+	// GetMintsByPubkeyTradersByTraderWithResponse request
+	GetMintsByPubkeyTradersByTraderWithResponse(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyTradersByTraderResponse, error)
 
-	// GetApiOhlcvWithResponse request
-	GetApiOhlcvWithResponse(ctx context.Context, params *GetApiOhlcvParams, reqEditors ...RequestEditorFn) (*GetApiOhlcvResponse, error)
+	// GetOhlcvWithResponse request
+	GetOhlcvWithResponse(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*GetOhlcvResponse, error)
 
-	// GetApiStrategiesWithResponse request
-	GetApiStrategiesWithResponse(ctx context.Context, params *GetApiStrategiesParams, reqEditors ...RequestEditorFn) (*GetApiStrategiesResponse, error)
+	// GetStrategiesWithResponse request
+	GetStrategiesWithResponse(ctx context.Context, params *GetStrategiesParams, reqEditors ...RequestEditorFn) (*GetStrategiesResponse, error)
 
-	// PostApiStrategiesWithBodyWithResponse request with any body
-	PostApiStrategiesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiStrategiesResponse, error)
+	// PostStrategiesWithBodyWithResponse request with any body
+	PostStrategiesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStrategiesResponse, error)
 
-	PostApiStrategiesWithResponse(ctx context.Context, body PostApiStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiStrategiesResponse, error)
+	PostStrategiesWithResponse(ctx context.Context, body PostStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStrategiesResponse, error)
 
-	// GetApiStrategiesDashboardWithResponse request
-	GetApiStrategiesDashboardWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiStrategiesDashboardResponse, error)
+	// GetStrategiesDashboardWithResponse request
+	GetStrategiesDashboardWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetStrategiesDashboardResponse, error)
 
-	// PostApiStrategiesPreviewWithBodyWithResponse request with any body
-	PostApiStrategiesPreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiStrategiesPreviewResponse, error)
+	// PostStrategiesPreviewWithBodyWithResponse request with any body
+	PostStrategiesPreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStrategiesPreviewResponse, error)
 
-	PostApiStrategiesPreviewWithResponse(ctx context.Context, body PostApiStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiStrategiesPreviewResponse, error)
+	PostStrategiesPreviewWithResponse(ctx context.Context, body PostStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStrategiesPreviewResponse, error)
 
-	// GetApiStrategiesWithStatsWithResponse request
-	GetApiStrategiesWithStatsWithResponse(ctx context.Context, params *GetApiStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*GetApiStrategiesWithStatsResponse, error)
+	// GetStrategiesWithStatsWithResponse request
+	GetStrategiesWithStatsWithResponse(ctx context.Context, params *GetStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*GetStrategiesWithStatsResponse, error)
 
-	// DeleteApiStrategiesIdWithResponse request
-	DeleteApiStrategiesIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiStrategiesIdResponse, error)
+	// DeleteStrategiesByIdWithResponse request
+	DeleteStrategiesByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteStrategiesByIdResponse, error)
 
-	// GetApiStrategiesIdWithResponse request
-	GetApiStrategiesIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetApiStrategiesIdResponse, error)
+	// GetStrategiesByIdWithResponse request
+	GetStrategiesByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetStrategiesByIdResponse, error)
 
-	// PutApiStrategiesIdWithBodyWithResponse request with any body
-	PutApiStrategiesIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiStrategiesIdResponse, error)
+	// PutStrategiesByIdWithBodyWithResponse request with any body
+	PutStrategiesByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutStrategiesByIdResponse, error)
 
-	PutApiStrategiesIdWithResponse(ctx context.Context, id string, body PutApiStrategiesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiStrategiesIdResponse, error)
+	PutStrategiesByIdWithResponse(ctx context.Context, id string, body PutStrategiesByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutStrategiesByIdResponse, error)
 
-	// GetApiSubscriptionsMeWithResponse request
-	GetApiSubscriptionsMeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiSubscriptionsMeResponse, error)
+	// GetSubscriptionsMeWithResponse request
+	GetSubscriptionsMeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubscriptionsMeResponse, error)
 
-	// GetApiSwapsWithResponse request
-	GetApiSwapsWithResponse(ctx context.Context, params *GetApiSwapsParams, reqEditors ...RequestEditorFn) (*GetApiSwapsResponse, error)
+	// GetSwapsWithResponse request
+	GetSwapsWithResponse(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*GetSwapsResponse, error)
 
-	// GetApiTipsGlobalWithResponse request
-	GetApiTipsGlobalWithResponse(ctx context.Context, params *GetApiTipsGlobalParams, reqEditors ...RequestEditorFn) (*GetApiTipsGlobalResponse, error)
+	// GetTipsGlobalWithResponse request
+	GetTipsGlobalWithResponse(ctx context.Context, params *GetTipsGlobalParams, reqEditors ...RequestEditorFn) (*GetTipsGlobalResponse, error)
 
-	// GetApiTipsHeatmapWithResponse request
-	GetApiTipsHeatmapWithResponse(ctx context.Context, params *GetApiTipsHeatmapParams, reqEditors ...RequestEditorFn) (*GetApiTipsHeatmapResponse, error)
+	// GetTipsHeatmapWithResponse request
+	GetTipsHeatmapWithResponse(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*GetTipsHeatmapResponse, error)
 
-	// GetApiTipsLeaderboardJitoEfficiencyWithResponse request
-	GetApiTipsLeaderboardJitoEfficiencyWithResponse(ctx context.Context, params *GetApiTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*GetApiTipsLeaderboardJitoEfficiencyResponse, error)
+	// GetTipsLeaderboardJitoEfficiencyWithResponse request
+	GetTipsLeaderboardJitoEfficiencyWithResponse(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*GetTipsLeaderboardJitoEfficiencyResponse, error)
 
-	// GetApiTipsMatWithResponse request
-	GetApiTipsMatWithResponse(ctx context.Context, params *GetApiTipsMatParams, reqEditors ...RequestEditorFn) (*GetApiTipsMatResponse, error)
+	// GetTipsMatWithResponse request
+	GetTipsMatWithResponse(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*GetTipsMatResponse, error)
 
-	// GetApiTipsMevShareWithResponse request
-	GetApiTipsMevShareWithResponse(ctx context.Context, params *GetApiTipsMevShareParams, reqEditors ...RequestEditorFn) (*GetApiTipsMevShareResponse, error)
+	// GetTipsMevShareWithResponse request
+	GetTipsMevShareWithResponse(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*GetTipsMevShareResponse, error)
 
-	// GetApiTipsPriorityRatioWithResponse request
-	GetApiTipsPriorityRatioWithResponse(ctx context.Context, params *GetApiTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*GetApiTipsPriorityRatioResponse, error)
+	// GetTipsPriorityRatioWithResponse request
+	GetTipsPriorityRatioWithResponse(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*GetTipsPriorityRatioResponse, error)
 
-	// GetApiTipsServicesWithResponse request
-	GetApiTipsServicesWithResponse(ctx context.Context, params *GetApiTipsServicesParams, reqEditors ...RequestEditorFn) (*GetApiTipsServicesResponse, error)
+	// GetTipsServicesWithResponse request
+	GetTipsServicesWithResponse(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*GetTipsServicesResponse, error)
 
-	// GetApiTraderFiltersWithResponse request
-	GetApiTraderFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiTraderFiltersResponse, error)
+	// GetTraderFiltersWithResponse request
+	GetTraderFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTraderFiltersResponse, error)
 
-	// PostApiTraderFiltersWithBodyWithResponse request with any body
-	PostApiTraderFiltersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiTraderFiltersResponse, error)
+	// PostTraderFiltersWithBodyWithResponse request with any body
+	PostTraderFiltersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTraderFiltersResponse, error)
 
-	PostApiTraderFiltersWithResponse(ctx context.Context, body PostApiTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiTraderFiltersResponse, error)
+	PostTraderFiltersWithResponse(ctx context.Context, body PostTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTraderFiltersResponse, error)
 
-	// DeleteApiTraderFiltersIdWithResponse request
-	DeleteApiTraderFiltersIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiTraderFiltersIdResponse, error)
+	// DeleteTraderFiltersByIdWithResponse request
+	DeleteTraderFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteTraderFiltersByIdResponse, error)
 
-	// GetApiTraderFiltersIdWithResponse request
-	GetApiTraderFiltersIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetApiTraderFiltersIdResponse, error)
+	// GetTraderFiltersByIdWithResponse request
+	GetTraderFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraderFiltersByIdResponse, error)
 
-	// PutApiTraderFiltersIdWithBodyWithResponse request with any body
-	PutApiTraderFiltersIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiTraderFiltersIdResponse, error)
+	// PutTraderFiltersByIdWithBodyWithResponse request with any body
+	PutTraderFiltersByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTraderFiltersByIdResponse, error)
 
-	PutApiTraderFiltersIdWithResponse(ctx context.Context, id string, body PutApiTraderFiltersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiTraderFiltersIdResponse, error)
+	PutTraderFiltersByIdWithResponse(ctx context.Context, id string, body PutTraderFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTraderFiltersByIdResponse, error)
 
-	// GetApiTradersWithResponse request
-	GetApiTradersWithResponse(ctx context.Context, params *GetApiTradersParams, reqEditors ...RequestEditorFn) (*GetApiTradersResponse, error)
+	// GetTradersWithResponse request
+	GetTradersWithResponse(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*GetTradersResponse, error)
 
-	// GetApiTradersByIdTraderIDWithResponse request
-	GetApiTradersByIdTraderIDWithResponse(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*GetApiTradersByIdTraderIDResponse, error)
+	// GetTradersByIdByTraderIDWithResponse request
+	GetTradersByIdByTraderIDWithResponse(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*GetTradersByIdByTraderIDResponse, error)
 
-	// GetApiTradersByWalletWalletAddressWithResponse request
-	GetApiTradersByWalletWalletAddressWithResponse(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*GetApiTradersByWalletWalletAddressResponse, error)
+	// GetTradersByWalletByWalletAddressWithResponse request
+	GetTradersByWalletByWalletAddressWithResponse(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*GetTradersByWalletByWalletAddressResponse, error)
 
-	// PostApiTradersExportWithBodyWithResponse request with any body
-	PostApiTradersExportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiTradersExportResponse, error)
+	// PostTradersExportWithBodyWithResponse request with any body
+	PostTradersExportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error)
 
-	PostApiTradersExportWithResponse(ctx context.Context, body PostApiTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiTradersExportResponse, error)
+	PostTradersExportWithResponse(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error)
 
-	// GetApiTradersSearchWithResponse request
-	GetApiTradersSearchWithResponse(ctx context.Context, params *GetApiTradersSearchParams, reqEditors ...RequestEditorFn) (*GetApiTradersSearchResponse, error)
+	// GetTradersSearchWithResponse request
+	GetTradersSearchWithResponse(ctx context.Context, params *GetTradersSearchParams, reqEditors ...RequestEditorFn) (*GetTradersSearchResponse, error)
 
-	// GetApiTradersSnapshotWithResponse request
-	GetApiTradersSnapshotWithResponse(ctx context.Context, params *GetApiTradersSnapshotParams, reqEditors ...RequestEditorFn) (*GetApiTradersSnapshotResponse, error)
+	// GetTradersSnapshotWithResponse request
+	GetTradersSnapshotWithResponse(ctx context.Context, params *GetTradersSnapshotParams, reqEditors ...RequestEditorFn) (*GetTradersSnapshotResponse, error)
 
-	// GetApiTradersTraderIDDailyProfitsWithResponse request
-	GetApiTradersTraderIDDailyProfitsWithResponse(ctx context.Context, traderID string, params *GetApiTradersTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*GetApiTradersTraderIDDailyProfitsResponse, error)
+	// GetTradersByTraderIDDailyProfitsWithResponse request
+	GetTradersByTraderIDDailyProfitsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDDailyProfitsResponse, error)
 
-	// GetApiTradersTraderIDPnlsWithResponse request
-	GetApiTradersTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetApiTradersTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetApiTradersTraderIDPnlsResponse, error)
+	// GetTradersByTraderIDPnlsWithResponse request
+	GetTradersByTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDPnlsResponse, error)
 
-	// GetApiTradersWalletAddressCreatedTokensWithResponse request
-	GetApiTradersWalletAddressCreatedTokensWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressCreatedTokensResponse, error)
+	// GetTradersByWalletAddressCreatedTokensWithResponse request
+	GetTradersByWalletAddressCreatedTokensWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCreatedTokensResponse, error)
 
-	// GetApiTradersWalletAddressPnlSeriesWithResponse request
-	GetApiTradersWalletAddressPnlSeriesWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressPnlSeriesResponse, error)
+	// GetTradersByWalletAddressPnlSeriesWithResponse request
+	GetTradersByWalletAddressPnlSeriesWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressPnlSeriesResponse, error)
 
-	// GetApiTradersWalletAddressTipsWithResponse request
-	GetApiTradersWalletAddressTipsWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressTipsResponse, error)
+	// GetTradersByWalletAddressTipsWithResponse request
+	GetTradersByWalletAddressTipsWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressTipsResponse, error)
 
-	// GetApiTradersWalletAddressTipsServicesWithResponse request
-	GetApiTradersWalletAddressTipsServicesWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressTipsServicesResponse, error)
+	// GetTradersByWalletAddressTipsServicesWithResponse request
+	GetTradersByWalletAddressTipsServicesWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressTipsServicesResponse, error)
 
-	// GetApiTradersWalletAddressTokensWithResponse request
-	GetApiTradersWalletAddressTokensWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressTokensResponse, error)
+	// GetTradersByWalletAddressTokensWithResponse request
+	GetTradersByWalletAddressTokensWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressTokensResponse, error)
 }
 
-type GetApiBacktestsResponse struct {
+type GetBacktestsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreUsecasesBacktestBacktestRecord
@@ -6897,7 +6894,7 @@ type GetApiBacktestsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiBacktestsResponse) Status() string {
+func (r GetBacktestsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -6905,7 +6902,7 @@ func (r GetApiBacktestsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiBacktestsResponse) StatusCode() int {
+func (r GetBacktestsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6913,14 +6910,14 @@ func (r GetApiBacktestsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiBacktestsResponse) ContentType() string {
+func (r GetBacktestsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostApiBacktestsResponse struct {
+type PostBacktestsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON202      *PulsightInternalCoreUsecasesBacktestBacktestRecord
@@ -6929,7 +6926,7 @@ type PostApiBacktestsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiBacktestsResponse) Status() string {
+func (r PostBacktestsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -6937,7 +6934,7 @@ func (r PostApiBacktestsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiBacktestsResponse) StatusCode() int {
+func (r PostBacktestsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6945,14 +6942,14 @@ func (r PostApiBacktestsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostApiBacktestsResponse) ContentType() string {
+func (r PostBacktestsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiBacktestsLimitsResponse struct {
+type GetBacktestsLimitsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *InternalAdaptersPrimaryHttpHandlerBacktestSettingsResponse
@@ -6960,7 +6957,7 @@ type GetApiBacktestsLimitsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiBacktestsLimitsResponse) Status() string {
+func (r GetBacktestsLimitsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -6968,7 +6965,7 @@ func (r GetApiBacktestsLimitsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiBacktestsLimitsResponse) StatusCode() int {
+func (r GetBacktestsLimitsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6976,20 +6973,20 @@ func (r GetApiBacktestsLimitsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiBacktestsLimitsResponse) ContentType() string {
+func (r GetBacktestsLimitsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type DeleteApiBacktestsIdResponse struct {
+type DeleteBacktestsByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteApiBacktestsIdResponse) Status() string {
+func (r DeleteBacktestsByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -6997,7 +6994,7 @@ func (r DeleteApiBacktestsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteApiBacktestsIdResponse) StatusCode() int {
+func (r DeleteBacktestsByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7005,14 +7002,14 @@ func (r DeleteApiBacktestsIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteApiBacktestsIdResponse) ContentType() string {
+func (r DeleteBacktestsByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiBacktestsIdResponse struct {
+type GetBacktestsByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreUsecasesBacktestBacktestRecord
@@ -7020,7 +7017,7 @@ type GetApiBacktestsIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiBacktestsIdResponse) Status() string {
+func (r GetBacktestsByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7028,7 +7025,7 @@ func (r GetApiBacktestsIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiBacktestsIdResponse) StatusCode() int {
+func (r GetBacktestsByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7036,14 +7033,14 @@ func (r GetApiBacktestsIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiBacktestsIdResponse) ContentType() string {
+func (r GetBacktestsByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiBacktestsIdTradesResponse struct {
+type GetBacktestsByIdTradesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreUsecasesBacktestBacktestTrade
@@ -7051,7 +7048,7 @@ type GetApiBacktestsIdTradesResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiBacktestsIdTradesResponse) Status() string {
+func (r GetBacktestsByIdTradesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7059,7 +7056,7 @@ func (r GetApiBacktestsIdTradesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiBacktestsIdTradesResponse) StatusCode() int {
+func (r GetBacktestsByIdTradesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7067,14 +7064,14 @@ func (r GetApiBacktestsIdTradesResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiBacktestsIdTradesResponse) ContentType() string {
+func (r GetBacktestsByIdTradesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiHealthResponse struct {
+type GetHealthResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *map[string]interface{}
@@ -7082,7 +7079,7 @@ type GetApiHealthResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiHealthResponse) Status() string {
+func (r GetHealthResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7090,7 +7087,7 @@ func (r GetApiHealthResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiHealthResponse) StatusCode() int {
+func (r GetHealthResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7098,14 +7095,14 @@ func (r GetApiHealthResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiHealthResponse) ContentType() string {
+func (r GetHealthResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMeApiKeysResponse struct {
+type GetMeApiKeysResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainApikeyKey
@@ -7114,7 +7111,7 @@ type GetApiMeApiKeysResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMeApiKeysResponse) Status() string {
+func (r GetMeApiKeysResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7122,7 +7119,7 @@ func (r GetApiMeApiKeysResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMeApiKeysResponse) StatusCode() int {
+func (r GetMeApiKeysResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7130,14 +7127,14 @@ func (r GetApiMeApiKeysResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMeApiKeysResponse) ContentType() string {
+func (r GetMeApiKeysResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostApiMeApiKeysResponse struct {
+type PostMeApiKeysResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *PulsightInternalCorePortsInputCreatedAPIKey
@@ -7148,7 +7145,7 @@ type PostApiMeApiKeysResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiMeApiKeysResponse) Status() string {
+func (r PostMeApiKeysResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7156,7 +7153,7 @@ func (r PostApiMeApiKeysResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiMeApiKeysResponse) StatusCode() int {
+func (r PostMeApiKeysResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7164,14 +7161,14 @@ func (r PostApiMeApiKeysResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostApiMeApiKeysResponse) ContentType() string {
+func (r PostMeApiKeysResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type DeleteApiMeApiKeysIdResponse struct {
+type DeleteMeApiKeysByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *InternalAdaptersPrimaryHttpHandlerErrorResponse
@@ -7181,7 +7178,7 @@ type DeleteApiMeApiKeysIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteApiMeApiKeysIdResponse) Status() string {
+func (r DeleteMeApiKeysByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7189,7 +7186,7 @@ func (r DeleteApiMeApiKeysIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteApiMeApiKeysIdResponse) StatusCode() int {
+func (r DeleteMeApiKeysByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7197,14 +7194,14 @@ func (r DeleteApiMeApiKeysIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteApiMeApiKeysIdResponse) ContentType() string {
+func (r DeleteMeApiKeysByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PatchApiMeApiKeysIdResponse struct {
+type PatchMeApiKeysByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *InternalAdaptersPrimaryHttpHandlerErrorResponse
@@ -7214,7 +7211,7 @@ type PatchApiMeApiKeysIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PatchApiMeApiKeysIdResponse) Status() string {
+func (r PatchMeApiKeysByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7222,7 +7219,7 @@ func (r PatchApiMeApiKeysIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PatchApiMeApiKeysIdResponse) StatusCode() int {
+func (r PatchMeApiKeysByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7230,14 +7227,14 @@ func (r PatchApiMeApiKeysIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PatchApiMeApiKeysIdResponse) ContentType() string {
+func (r PatchMeApiKeysByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMeCreditsResponse struct {
+type GetMeCreditsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCorePortsInputUserPoolCredits
@@ -7246,7 +7243,7 @@ type GetApiMeCreditsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMeCreditsResponse) Status() string {
+func (r GetMeCreditsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7254,7 +7251,7 @@ func (r GetApiMeCreditsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMeCreditsResponse) StatusCode() int {
+func (r GetMeCreditsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7262,14 +7259,14 @@ func (r GetApiMeCreditsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMeCreditsResponse) ContentType() string {
+func (r GetMeCreditsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMeCreditsLedgerResponse struct {
+type GetMeCreditsLedgerResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainCreditTransaction
@@ -7278,7 +7275,7 @@ type GetApiMeCreditsLedgerResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMeCreditsLedgerResponse) Status() string {
+func (r GetMeCreditsLedgerResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7286,7 +7283,7 @@ func (r GetApiMeCreditsLedgerResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMeCreditsLedgerResponse) StatusCode() int {
+func (r GetMeCreditsLedgerResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7294,14 +7291,14 @@ func (r GetApiMeCreditsLedgerResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMeCreditsLedgerResponse) ContentType() string {
+func (r GetMeCreditsLedgerResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsResponse struct {
+type GetMintsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorMintRow
@@ -7311,7 +7308,7 @@ type GetApiMintsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsResponse) Status() string {
+func (r GetMintsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7319,7 +7316,7 @@ func (r GetApiMintsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsResponse) StatusCode() int {
+func (r GetMintsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7327,14 +7324,14 @@ func (r GetApiMintsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsResponse) ContentType() string {
+func (r GetMintsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyResponse struct {
+type GetMintsByPubkeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainAggregatorMintRow
@@ -7343,7 +7340,7 @@ type GetApiMintsPubkeyResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyResponse) Status() string {
+func (r GetMintsByPubkeyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7351,7 +7348,7 @@ func (r GetApiMintsPubkeyResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyResponse) StatusCode() int {
+func (r GetMintsByPubkeyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7359,14 +7356,14 @@ func (r GetApiMintsPubkeyResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyResponse) ContentType() string {
+func (r GetMintsByPubkeyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyLpEventsResponse struct {
+type GetMintsByPubkeyLpEventsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorLpEvent
@@ -7375,7 +7372,7 @@ type GetApiMintsPubkeyLpEventsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyLpEventsResponse) Status() string {
+func (r GetMintsByPubkeyLpEventsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7383,7 +7380,7 @@ func (r GetApiMintsPubkeyLpEventsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyLpEventsResponse) StatusCode() int {
+func (r GetMintsByPubkeyLpEventsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7391,14 +7388,14 @@ func (r GetApiMintsPubkeyLpEventsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyLpEventsResponse) ContentType() string {
+func (r GetMintsByPubkeyLpEventsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyMarketsResponse struct {
+type GetMintsByPubkeyMarketsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorMintMarket
@@ -7407,7 +7404,7 @@ type GetApiMintsPubkeyMarketsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyMarketsResponse) Status() string {
+func (r GetMintsByPubkeyMarketsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7415,7 +7412,7 @@ func (r GetApiMintsPubkeyMarketsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyMarketsResponse) StatusCode() int {
+func (r GetMintsByPubkeyMarketsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7423,14 +7420,14 @@ func (r GetApiMintsPubkeyMarketsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyMarketsResponse) ContentType() string {
+func (r GetMintsByPubkeyMarketsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyMigrationsResponse struct {
+type GetMintsByPubkeyMigrationsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorMintMigration
@@ -7439,7 +7436,7 @@ type GetApiMintsPubkeyMigrationsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyMigrationsResponse) Status() string {
+func (r GetMintsByPubkeyMigrationsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7447,7 +7444,7 @@ func (r GetApiMintsPubkeyMigrationsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyMigrationsResponse) StatusCode() int {
+func (r GetMintsByPubkeyMigrationsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7455,14 +7452,14 @@ func (r GetApiMintsPubkeyMigrationsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyMigrationsResponse) ContentType() string {
+func (r GetMintsByPubkeyMigrationsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeySafetyEventsResponse struct {
+type GetMintsByPubkeySafetyEventsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorSafetyEvent
@@ -7471,7 +7468,7 @@ type GetApiMintsPubkeySafetyEventsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeySafetyEventsResponse) Status() string {
+func (r GetMintsByPubkeySafetyEventsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7479,7 +7476,7 @@ func (r GetApiMintsPubkeySafetyEventsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeySafetyEventsResponse) StatusCode() int {
+func (r GetMintsByPubkeySafetyEventsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7487,14 +7484,14 @@ func (r GetApiMintsPubkeySafetyEventsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeySafetyEventsResponse) ContentType() string {
+func (r GetMintsByPubkeySafetyEventsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyStatsResponse struct {
+type GetMintsByPubkeyStatsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainAggregatorMintWindowStatsBundle
@@ -7503,7 +7500,7 @@ type GetApiMintsPubkeyStatsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyStatsResponse) Status() string {
+func (r GetMintsByPubkeyStatsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7511,7 +7508,7 @@ func (r GetApiMintsPubkeyStatsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyStatsResponse) StatusCode() int {
+func (r GetMintsByPubkeyStatsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7519,14 +7516,14 @@ func (r GetApiMintsPubkeyStatsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyStatsResponse) ContentType() string {
+func (r GetMintsByPubkeyStatsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyTopHoldersResponse struct {
+type GetMintsByPubkeyTopHoldersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorMintTraderRow
@@ -7535,7 +7532,7 @@ type GetApiMintsPubkeyTopHoldersResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyTopHoldersResponse) Status() string {
+func (r GetMintsByPubkeyTopHoldersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7543,7 +7540,7 @@ func (r GetApiMintsPubkeyTopHoldersResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyTopHoldersResponse) StatusCode() int {
+func (r GetMintsByPubkeyTopHoldersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7551,14 +7548,14 @@ func (r GetApiMintsPubkeyTopHoldersResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyTopHoldersResponse) ContentType() string {
+func (r GetMintsByPubkeyTopHoldersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyTopTradersResponse struct {
+type GetMintsByPubkeyTopTradersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorMintTraderRow
@@ -7567,7 +7564,7 @@ type GetApiMintsPubkeyTopTradersResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyTopTradersResponse) Status() string {
+func (r GetMintsByPubkeyTopTradersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7575,7 +7572,7 @@ func (r GetApiMintsPubkeyTopTradersResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyTopTradersResponse) StatusCode() int {
+func (r GetMintsByPubkeyTopTradersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7583,14 +7580,14 @@ func (r GetApiMintsPubkeyTopTradersResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyTopTradersResponse) ContentType() string {
+func (r GetMintsByPubkeyTopTradersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiMintsPubkeyTradersTraderResponse struct {
+type GetMintsByPubkeyTradersByTraderResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainAggregatorMintTraderRow
@@ -7600,7 +7597,7 @@ type GetApiMintsPubkeyTradersTraderResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiMintsPubkeyTradersTraderResponse) Status() string {
+func (r GetMintsByPubkeyTradersByTraderResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7608,7 +7605,7 @@ func (r GetApiMintsPubkeyTradersTraderResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiMintsPubkeyTradersTraderResponse) StatusCode() int {
+func (r GetMintsByPubkeyTradersByTraderResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7616,14 +7613,14 @@ func (r GetApiMintsPubkeyTradersTraderResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiMintsPubkeyTradersTraderResponse) ContentType() string {
+func (r GetMintsByPubkeyTradersByTraderResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiOhlcvResponse struct {
+type GetOhlcvResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorOHLCVCandle
@@ -7633,7 +7630,7 @@ type GetApiOhlcvResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiOhlcvResponse) Status() string {
+func (r GetOhlcvResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7641,7 +7638,7 @@ func (r GetApiOhlcvResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiOhlcvResponse) StatusCode() int {
+func (r GetOhlcvResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7649,14 +7646,14 @@ func (r GetApiOhlcvResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiOhlcvResponse) ContentType() string {
+func (r GetOhlcvResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiStrategiesResponse struct {
+type GetStrategiesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainStrategyRecord
@@ -7665,7 +7662,7 @@ type GetApiStrategiesResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiStrategiesResponse) Status() string {
+func (r GetStrategiesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7673,7 +7670,7 @@ func (r GetApiStrategiesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiStrategiesResponse) StatusCode() int {
+func (r GetStrategiesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7681,14 +7678,14 @@ func (r GetApiStrategiesResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiStrategiesResponse) ContentType() string {
+func (r GetStrategiesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostApiStrategiesResponse struct {
+type PostStrategiesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *PulsightInternalCoreDomainStrategyRecord
@@ -7696,7 +7693,7 @@ type PostApiStrategiesResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiStrategiesResponse) Status() string {
+func (r PostStrategiesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7704,7 +7701,7 @@ func (r PostApiStrategiesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiStrategiesResponse) StatusCode() int {
+func (r PostStrategiesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7712,14 +7709,14 @@ func (r PostApiStrategiesResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostApiStrategiesResponse) ContentType() string {
+func (r PostStrategiesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiStrategiesDashboardResponse struct {
+type GetStrategiesDashboardResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *InternalAdaptersPrimaryHttpHandlerDashboardStats
@@ -7727,7 +7724,7 @@ type GetApiStrategiesDashboardResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiStrategiesDashboardResponse) Status() string {
+func (r GetStrategiesDashboardResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7735,7 +7732,7 @@ func (r GetApiStrategiesDashboardResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiStrategiesDashboardResponse) StatusCode() int {
+func (r GetStrategiesDashboardResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7743,14 +7740,14 @@ func (r GetApiStrategiesDashboardResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiStrategiesDashboardResponse) ContentType() string {
+func (r GetStrategiesDashboardResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostApiStrategiesPreviewResponse struct {
+type PostStrategiesPreviewResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreUsecasesBacktestPreviewResponse
@@ -7758,7 +7755,7 @@ type PostApiStrategiesPreviewResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiStrategiesPreviewResponse) Status() string {
+func (r PostStrategiesPreviewResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7766,7 +7763,7 @@ func (r PostApiStrategiesPreviewResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiStrategiesPreviewResponse) StatusCode() int {
+func (r PostStrategiesPreviewResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7774,14 +7771,14 @@ func (r PostApiStrategiesPreviewResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostApiStrategiesPreviewResponse) ContentType() string {
+func (r PostStrategiesPreviewResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiStrategiesWithStatsResponse struct {
+type GetStrategiesWithStatsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]InternalAdaptersPrimaryHttpHandlerStrategyListItem
@@ -7789,7 +7786,7 @@ type GetApiStrategiesWithStatsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiStrategiesWithStatsResponse) Status() string {
+func (r GetStrategiesWithStatsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7797,7 +7794,7 @@ func (r GetApiStrategiesWithStatsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiStrategiesWithStatsResponse) StatusCode() int {
+func (r GetStrategiesWithStatsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7805,20 +7802,20 @@ func (r GetApiStrategiesWithStatsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiStrategiesWithStatsResponse) ContentType() string {
+func (r GetStrategiesWithStatsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type DeleteApiStrategiesIdResponse struct {
+type DeleteStrategiesByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteApiStrategiesIdResponse) Status() string {
+func (r DeleteStrategiesByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7826,7 +7823,7 @@ func (r DeleteApiStrategiesIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteApiStrategiesIdResponse) StatusCode() int {
+func (r DeleteStrategiesByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7834,14 +7831,14 @@ func (r DeleteApiStrategiesIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteApiStrategiesIdResponse) ContentType() string {
+func (r DeleteStrategiesByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiStrategiesIdResponse struct {
+type GetStrategiesByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainStrategyRecord
@@ -7849,7 +7846,7 @@ type GetApiStrategiesIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiStrategiesIdResponse) Status() string {
+func (r GetStrategiesByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7857,7 +7854,7 @@ func (r GetApiStrategiesIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiStrategiesIdResponse) StatusCode() int {
+func (r GetStrategiesByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7865,14 +7862,14 @@ func (r GetApiStrategiesIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiStrategiesIdResponse) ContentType() string {
+func (r GetStrategiesByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PutApiStrategiesIdResponse struct {
+type PutStrategiesByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainStrategyRecord
@@ -7881,7 +7878,7 @@ type PutApiStrategiesIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PutApiStrategiesIdResponse) Status() string {
+func (r PutStrategiesByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7889,7 +7886,7 @@ func (r PutApiStrategiesIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutApiStrategiesIdResponse) StatusCode() int {
+func (r PutStrategiesByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7897,14 +7894,14 @@ func (r PutApiStrategiesIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PutApiStrategiesIdResponse) ContentType() string {
+func (r PutStrategiesByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiSubscriptionsMeResponse struct {
+type GetSubscriptionsMeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCorePortsInputSubscriptionInfo
@@ -7913,7 +7910,7 @@ type GetApiSubscriptionsMeResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiSubscriptionsMeResponse) Status() string {
+func (r GetSubscriptionsMeResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7921,7 +7918,7 @@ func (r GetApiSubscriptionsMeResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiSubscriptionsMeResponse) StatusCode() int {
+func (r GetSubscriptionsMeResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7929,14 +7926,14 @@ func (r GetApiSubscriptionsMeResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiSubscriptionsMeResponse) ContentType() string {
+func (r GetSubscriptionsMeResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiSwapsResponse struct {
+type GetSwapsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]InternalAdaptersPrimaryHttpHandlerSwapEventRow
@@ -7946,7 +7943,7 @@ type GetApiSwapsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiSwapsResponse) Status() string {
+func (r GetSwapsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7954,7 +7951,7 @@ func (r GetApiSwapsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiSwapsResponse) StatusCode() int {
+func (r GetSwapsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7962,14 +7959,14 @@ func (r GetApiSwapsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiSwapsResponse) ContentType() string {
+func (r GetSwapsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTipsGlobalResponse struct {
+type GetTipsGlobalResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainAggregatorGlobalTipStats
@@ -7977,7 +7974,7 @@ type GetApiTipsGlobalResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTipsGlobalResponse) Status() string {
+func (r GetTipsGlobalResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -7985,7 +7982,7 @@ func (r GetApiTipsGlobalResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTipsGlobalResponse) StatusCode() int {
+func (r GetTipsGlobalResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7993,14 +7990,14 @@ func (r GetApiTipsGlobalResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTipsGlobalResponse) ContentType() string {
+func (r GetTipsGlobalResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTipsHeatmapResponse struct {
+type GetTipsHeatmapResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainAggregatorHeatmapResponse
@@ -8008,7 +8005,7 @@ type GetApiTipsHeatmapResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTipsHeatmapResponse) Status() string {
+func (r GetTipsHeatmapResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8016,7 +8013,7 @@ func (r GetApiTipsHeatmapResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTipsHeatmapResponse) StatusCode() int {
+func (r GetTipsHeatmapResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8024,14 +8021,14 @@ func (r GetApiTipsHeatmapResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTipsHeatmapResponse) ContentType() string {
+func (r GetTipsHeatmapResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTipsLeaderboardJitoEfficiencyResponse struct {
+type GetTipsLeaderboardJitoEfficiencyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorJitoEfficiencyRow
@@ -8039,7 +8036,7 @@ type GetApiTipsLeaderboardJitoEfficiencyResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTipsLeaderboardJitoEfficiencyResponse) Status() string {
+func (r GetTipsLeaderboardJitoEfficiencyResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8047,7 +8044,7 @@ func (r GetApiTipsLeaderboardJitoEfficiencyResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTipsLeaderboardJitoEfficiencyResponse) StatusCode() int {
+func (r GetTipsLeaderboardJitoEfficiencyResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8055,14 +8052,14 @@ func (r GetApiTipsLeaderboardJitoEfficiencyResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTipsLeaderboardJitoEfficiencyResponse) ContentType() string {
+func (r GetTipsLeaderboardJitoEfficiencyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTipsMatResponse struct {
+type GetTipsMatResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorMatPoint
@@ -8070,7 +8067,7 @@ type GetApiTipsMatResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTipsMatResponse) Status() string {
+func (r GetTipsMatResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8078,7 +8075,7 @@ func (r GetApiTipsMatResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTipsMatResponse) StatusCode() int {
+func (r GetTipsMatResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8086,14 +8083,14 @@ func (r GetApiTipsMatResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTipsMatResponse) ContentType() string {
+func (r GetTipsMatResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTipsMevShareResponse struct {
+type GetTipsMevShareResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorMevTipSharePoint
@@ -8101,7 +8098,7 @@ type GetApiTipsMevShareResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTipsMevShareResponse) Status() string {
+func (r GetTipsMevShareResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8109,7 +8106,7 @@ func (r GetApiTipsMevShareResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTipsMevShareResponse) StatusCode() int {
+func (r GetTipsMevShareResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8117,14 +8114,14 @@ func (r GetApiTipsMevShareResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTipsMevShareResponse) ContentType() string {
+func (r GetTipsMevShareResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTipsPriorityRatioResponse struct {
+type GetTipsPriorityRatioResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint
@@ -8132,7 +8129,7 @@ type GetApiTipsPriorityRatioResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTipsPriorityRatioResponse) Status() string {
+func (r GetTipsPriorityRatioResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8140,7 +8137,7 @@ func (r GetApiTipsPriorityRatioResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTipsPriorityRatioResponse) StatusCode() int {
+func (r GetTipsPriorityRatioResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8148,14 +8145,14 @@ func (r GetApiTipsPriorityRatioResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTipsPriorityRatioResponse) ContentType() string {
+func (r GetTipsPriorityRatioResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTipsServicesResponse struct {
+type GetTipsServicesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorServiceDominanceRow
@@ -8163,7 +8160,7 @@ type GetApiTipsServicesResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTipsServicesResponse) Status() string {
+func (r GetTipsServicesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8171,7 +8168,7 @@ func (r GetApiTipsServicesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTipsServicesResponse) StatusCode() int {
+func (r GetTipsServicesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8179,14 +8176,14 @@ func (r GetApiTipsServicesResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTipsServicesResponse) ContentType() string {
+func (r GetTipsServicesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTraderFiltersResponse struct {
+type GetTraderFiltersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainTraderFilter
@@ -8195,7 +8192,7 @@ type GetApiTraderFiltersResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTraderFiltersResponse) Status() string {
+func (r GetTraderFiltersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8203,7 +8200,7 @@ func (r GetApiTraderFiltersResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTraderFiltersResponse) StatusCode() int {
+func (r GetTraderFiltersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8211,14 +8208,14 @@ func (r GetApiTraderFiltersResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTraderFiltersResponse) ContentType() string {
+func (r GetTraderFiltersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostApiTraderFiltersResponse struct {
+type PostTraderFiltersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON201      *PulsightInternalCoreDomainTraderFilter
@@ -8229,7 +8226,7 @@ type PostApiTraderFiltersResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiTraderFiltersResponse) Status() string {
+func (r PostTraderFiltersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8237,7 +8234,7 @@ func (r PostApiTraderFiltersResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiTraderFiltersResponse) StatusCode() int {
+func (r PostTraderFiltersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8245,14 +8242,14 @@ func (r PostApiTraderFiltersResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostApiTraderFiltersResponse) ContentType() string {
+func (r PostTraderFiltersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type DeleteApiTraderFiltersIdResponse struct {
+type DeleteTraderFiltersByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON400      *InternalAdaptersPrimaryHttpHandlerErrorResponse
@@ -8262,7 +8259,7 @@ type DeleteApiTraderFiltersIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r DeleteApiTraderFiltersIdResponse) Status() string {
+func (r DeleteTraderFiltersByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8270,7 +8267,7 @@ func (r DeleteApiTraderFiltersIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r DeleteApiTraderFiltersIdResponse) StatusCode() int {
+func (r DeleteTraderFiltersByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8278,48 +8275,14 @@ func (r DeleteApiTraderFiltersIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r DeleteApiTraderFiltersIdResponse) ContentType() string {
+func (r DeleteTraderFiltersByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTraderFiltersIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *PulsightInternalCoreDomainTraderFilter
-	JSON400      *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	JSON401      *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	JSON404      *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	JSON500      *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiTraderFiltersIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTraderFiltersIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTraderFiltersIdResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type PutApiTraderFiltersIdResponse struct {
+type GetTraderFiltersByIdResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreDomainTraderFilter
@@ -8330,7 +8293,7 @@ type PutApiTraderFiltersIdResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PutApiTraderFiltersIdResponse) Status() string {
+func (r GetTraderFiltersByIdResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8338,7 +8301,7 @@ func (r PutApiTraderFiltersIdResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PutApiTraderFiltersIdResponse) StatusCode() int {
+func (r GetTraderFiltersByIdResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8346,14 +8309,48 @@ func (r PutApiTraderFiltersIdResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PutApiTraderFiltersIdResponse) ContentType() string {
+func (r GetTraderFiltersByIdResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersResponse struct {
+type PutTraderFiltersByIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PulsightInternalCoreDomainTraderFilter
+	JSON400      *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	JSON401      *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	JSON404      *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	JSON500      *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// Status returns HTTPResponse.Status
+func (r PutTraderFiltersByIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutTraderFiltersByIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutTraderFiltersByIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTradersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreUsecasesTraderTraderListResult
@@ -8364,7 +8361,7 @@ type GetApiTradersResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersResponse) Status() string {
+func (r GetTradersResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8372,7 +8369,7 @@ func (r GetApiTradersResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersResponse) StatusCode() int {
+func (r GetTradersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8380,14 +8377,14 @@ func (r GetApiTradersResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersResponse) ContentType() string {
+func (r GetTradersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersByIdTraderIDResponse struct {
+type GetTradersByIdByTraderIDResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreUsecasesTraderTraderListItem
@@ -8398,7 +8395,7 @@ type GetApiTradersByIdTraderIDResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersByIdTraderIDResponse) Status() string {
+func (r GetTradersByIdByTraderIDResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8406,7 +8403,7 @@ func (r GetApiTradersByIdTraderIDResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersByIdTraderIDResponse) StatusCode() int {
+func (r GetTradersByIdByTraderIDResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8414,14 +8411,14 @@ func (r GetApiTradersByIdTraderIDResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersByIdTraderIDResponse) ContentType() string {
+func (r GetTradersByIdByTraderIDResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersByWalletWalletAddressResponse struct {
+type GetTradersByWalletByWalletAddressResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreUsecasesTraderTraderListItem
@@ -8431,7 +8428,7 @@ type GetApiTradersByWalletWalletAddressResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersByWalletWalletAddressResponse) Status() string {
+func (r GetTradersByWalletByWalletAddressResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8439,7 +8436,7 @@ func (r GetApiTradersByWalletWalletAddressResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersByWalletWalletAddressResponse) StatusCode() int {
+func (r GetTradersByWalletByWalletAddressResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8447,14 +8444,14 @@ func (r GetApiTradersByWalletWalletAddressResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersByWalletWalletAddressResponse) ContentType() string {
+func (r GetTradersByWalletByWalletAddressResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type PostApiTradersExportResponse struct {
+type PostTradersExportResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainTraderTrader
@@ -8465,7 +8462,7 @@ type PostApiTradersExportResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiTradersExportResponse) Status() string {
+func (r PostTradersExportResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8473,7 +8470,7 @@ func (r PostApiTradersExportResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiTradersExportResponse) StatusCode() int {
+func (r PostTradersExportResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8481,14 +8478,14 @@ func (r PostApiTradersExportResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostApiTradersExportResponse) ContentType() string {
+func (r PostTradersExportResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersSearchResponse struct {
+type GetTradersSearchResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainTraderTrader
@@ -8498,7 +8495,7 @@ type GetApiTradersSearchResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersSearchResponse) Status() string {
+func (r GetTradersSearchResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8506,7 +8503,7 @@ func (r GetApiTradersSearchResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersSearchResponse) StatusCode() int {
+func (r GetTradersSearchResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8514,14 +8511,14 @@ func (r GetApiTradersSearchResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersSearchResponse) ContentType() string {
+func (r GetTradersSearchResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersSnapshotResponse struct {
+type GetTradersSnapshotResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *InternalAdaptersPrimaryHttpHandlerSnapshotResponse
@@ -8529,7 +8526,7 @@ type GetApiTradersSnapshotResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersSnapshotResponse) Status() string {
+func (r GetTradersSnapshotResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8537,7 +8534,7 @@ func (r GetApiTradersSnapshotResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersSnapshotResponse) StatusCode() int {
+func (r GetTradersSnapshotResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8545,14 +8542,14 @@ func (r GetApiTradersSnapshotResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersSnapshotResponse) ContentType() string {
+func (r GetTradersSnapshotResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersTraderIDDailyProfitsResponse struct {
+type GetTradersByTraderIDDailyProfitsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreUsecasesTraderDailyProfitsResult
@@ -8562,7 +8559,7 @@ type GetApiTradersTraderIDDailyProfitsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersTraderIDDailyProfitsResponse) Status() string {
+func (r GetTradersByTraderIDDailyProfitsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8570,7 +8567,7 @@ func (r GetApiTradersTraderIDDailyProfitsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersTraderIDDailyProfitsResponse) StatusCode() int {
+func (r GetTradersByTraderIDDailyProfitsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8578,14 +8575,14 @@ func (r GetApiTradersTraderIDDailyProfitsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersTraderIDDailyProfitsResponse) ContentType() string {
+func (r GetTradersByTraderIDDailyProfitsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersTraderIDPnlsResponse struct {
+type GetTradersByTraderIDPnlsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *InternalAdaptersPrimaryHttpHandlerPaginatedPnls
@@ -8594,7 +8591,7 @@ type GetApiTradersTraderIDPnlsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersTraderIDPnlsResponse) Status() string {
+func (r GetTradersByTraderIDPnlsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8602,7 +8599,7 @@ func (r GetApiTradersTraderIDPnlsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersTraderIDPnlsResponse) StatusCode() int {
+func (r GetTradersByTraderIDPnlsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8610,14 +8607,14 @@ func (r GetApiTradersTraderIDPnlsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersTraderIDPnlsResponse) ContentType() string {
+func (r GetTradersByTraderIDPnlsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersWalletAddressCreatedTokensResponse struct {
+type GetTradersByWalletAddressCreatedTokensResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]PulsightInternalCoreDomainAggregatorCreatedMintRow
@@ -8626,7 +8623,7 @@ type GetApiTradersWalletAddressCreatedTokensResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersWalletAddressCreatedTokensResponse) Status() string {
+func (r GetTradersByWalletAddressCreatedTokensResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8634,7 +8631,7 @@ func (r GetApiTradersWalletAddressCreatedTokensResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersWalletAddressCreatedTokensResponse) StatusCode() int {
+func (r GetTradersByWalletAddressCreatedTokensResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8642,14 +8639,14 @@ func (r GetApiTradersWalletAddressCreatedTokensResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersWalletAddressCreatedTokensResponse) ContentType() string {
+func (r GetTradersByWalletAddressCreatedTokensResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersWalletAddressPnlSeriesResponse struct {
+type GetTradersByWalletAddressPnlSeriesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *PulsightInternalCoreUsecasesTraderPnlSeriesResult
@@ -8659,7 +8656,7 @@ type GetApiTradersWalletAddressPnlSeriesResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersWalletAddressPnlSeriesResponse) Status() string {
+func (r GetTradersByWalletAddressPnlSeriesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8667,7 +8664,7 @@ func (r GetApiTradersWalletAddressPnlSeriesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersWalletAddressPnlSeriesResponse) StatusCode() int {
+func (r GetTradersByWalletAddressPnlSeriesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8675,14 +8672,14 @@ func (r GetApiTradersWalletAddressPnlSeriesResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersWalletAddressPnlSeriesResponse) ContentType() string {
+func (r GetTradersByWalletAddressPnlSeriesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersWalletAddressTipsResponse struct {
+type GetTradersByWalletAddressTipsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *InternalAdaptersPrimaryHttpHandlerTraderTipStatsResponse
@@ -8693,7 +8690,7 @@ type GetApiTradersWalletAddressTipsResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersWalletAddressTipsResponse) Status() string {
+func (r GetTradersByWalletAddressTipsResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8701,7 +8698,7 @@ func (r GetApiTradersWalletAddressTipsResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersWalletAddressTipsResponse) StatusCode() int {
+func (r GetTradersByWalletAddressTipsResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8709,14 +8706,14 @@ func (r GetApiTradersWalletAddressTipsResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersWalletAddressTipsResponse) ContentType() string {
+func (r GetTradersByWalletAddressTipsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersWalletAddressTipsServicesResponse struct {
+type GetTradersByWalletAddressTipsServicesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]InternalAdaptersPrimaryHttpHandlerServiceLoyaltyRow
@@ -8726,7 +8723,7 @@ type GetApiTradersWalletAddressTipsServicesResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersWalletAddressTipsServicesResponse) Status() string {
+func (r GetTradersByWalletAddressTipsServicesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8734,7 +8731,7 @@ func (r GetApiTradersWalletAddressTipsServicesResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersWalletAddressTipsServicesResponse) StatusCode() int {
+func (r GetTradersByWalletAddressTipsServicesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8742,14 +8739,14 @@ func (r GetApiTradersWalletAddressTipsServicesResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersWalletAddressTipsServicesResponse) ContentType() string {
+func (r GetTradersByWalletAddressTipsServicesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-type GetApiTradersWalletAddressTokensResponse struct {
+type GetTradersByWalletAddressTokensResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *[]InternalAdaptersPrimaryHttpHandlerTokensRow
@@ -8758,7 +8755,7 @@ type GetApiTradersWalletAddressTokensResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r GetApiTradersWalletAddressTokensResponse) Status() string {
+func (r GetTradersByWalletAddressTokensResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -8766,7 +8763,7 @@ func (r GetApiTradersWalletAddressTokensResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetApiTradersWalletAddressTokensResponse) StatusCode() int {
+func (r GetTradersByWalletAddressTokensResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8774,625 +8771,625 @@ func (r GetApiTradersWalletAddressTokensResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetApiTradersWalletAddressTokensResponse) ContentType() string {
+func (r GetTradersByWalletAddressTokensResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
 	return ""
 }
 
-// GetApiBacktestsWithResponse request returning *GetApiBacktestsResponse
-func (c *ClientWithResponses) GetApiBacktestsWithResponse(ctx context.Context, params *GetApiBacktestsParams, reqEditors ...RequestEditorFn) (*GetApiBacktestsResponse, error) {
-	rsp, err := c.GetApiBacktests(ctx, params, reqEditors...)
+// GetBacktestsWithResponse request returning *GetBacktestsResponse
+func (c *ClientWithResponses) GetBacktestsWithResponse(ctx context.Context, params *GetBacktestsParams, reqEditors ...RequestEditorFn) (*GetBacktestsResponse, error) {
+	rsp, err := c.GetBacktests(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiBacktestsResponse(rsp)
+	return ParseGetBacktestsResponse(rsp)
 }
 
-// PostApiBacktestsWithBodyWithResponse request with arbitrary body returning *PostApiBacktestsResponse
-func (c *ClientWithResponses) PostApiBacktestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiBacktestsResponse, error) {
-	rsp, err := c.PostApiBacktestsWithBody(ctx, contentType, body, reqEditors...)
+// PostBacktestsWithBodyWithResponse request with arbitrary body returning *PostBacktestsResponse
+func (c *ClientWithResponses) PostBacktestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostBacktestsResponse, error) {
+	rsp, err := c.PostBacktestsWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiBacktestsResponse(rsp)
+	return ParsePostBacktestsResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiBacktestsWithResponse(ctx context.Context, body PostApiBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiBacktestsResponse, error) {
-	rsp, err := c.PostApiBacktests(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostBacktestsWithResponse(ctx context.Context, body PostBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostBacktestsResponse, error) {
+	rsp, err := c.PostBacktests(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiBacktestsResponse(rsp)
+	return ParsePostBacktestsResponse(rsp)
 }
 
-// GetApiBacktestsLimitsWithResponse request returning *GetApiBacktestsLimitsResponse
-func (c *ClientWithResponses) GetApiBacktestsLimitsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiBacktestsLimitsResponse, error) {
-	rsp, err := c.GetApiBacktestsLimits(ctx, reqEditors...)
+// GetBacktestsLimitsWithResponse request returning *GetBacktestsLimitsResponse
+func (c *ClientWithResponses) GetBacktestsLimitsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBacktestsLimitsResponse, error) {
+	rsp, err := c.GetBacktestsLimits(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiBacktestsLimitsResponse(rsp)
+	return ParseGetBacktestsLimitsResponse(rsp)
 }
 
-// DeleteApiBacktestsIdWithResponse request returning *DeleteApiBacktestsIdResponse
-func (c *ClientWithResponses) DeleteApiBacktestsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiBacktestsIdResponse, error) {
-	rsp, err := c.DeleteApiBacktestsId(ctx, id, reqEditors...)
+// DeleteBacktestsByIdWithResponse request returning *DeleteBacktestsByIdResponse
+func (c *ClientWithResponses) DeleteBacktestsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteBacktestsByIdResponse, error) {
+	rsp, err := c.DeleteBacktestsById(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteApiBacktestsIdResponse(rsp)
+	return ParseDeleteBacktestsByIdResponse(rsp)
 }
 
-// GetApiBacktestsIdWithResponse request returning *GetApiBacktestsIdResponse
-func (c *ClientWithResponses) GetApiBacktestsIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetApiBacktestsIdResponse, error) {
-	rsp, err := c.GetApiBacktestsId(ctx, id, reqEditors...)
+// GetBacktestsByIdWithResponse request returning *GetBacktestsByIdResponse
+func (c *ClientWithResponses) GetBacktestsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetBacktestsByIdResponse, error) {
+	rsp, err := c.GetBacktestsById(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiBacktestsIdResponse(rsp)
+	return ParseGetBacktestsByIdResponse(rsp)
 }
 
-// GetApiBacktestsIdTradesWithResponse request returning *GetApiBacktestsIdTradesResponse
-func (c *ClientWithResponses) GetApiBacktestsIdTradesWithResponse(ctx context.Context, id string, params *GetApiBacktestsIdTradesParams, reqEditors ...RequestEditorFn) (*GetApiBacktestsIdTradesResponse, error) {
-	rsp, err := c.GetApiBacktestsIdTrades(ctx, id, params, reqEditors...)
+// GetBacktestsByIdTradesWithResponse request returning *GetBacktestsByIdTradesResponse
+func (c *ClientWithResponses) GetBacktestsByIdTradesWithResponse(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdTradesResponse, error) {
+	rsp, err := c.GetBacktestsByIdTrades(ctx, id, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiBacktestsIdTradesResponse(rsp)
+	return ParseGetBacktestsByIdTradesResponse(rsp)
 }
 
-// GetApiHealthWithResponse request returning *GetApiHealthResponse
-func (c *ClientWithResponses) GetApiHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiHealthResponse, error) {
-	rsp, err := c.GetApiHealth(ctx, reqEditors...)
+// GetHealthWithResponse request returning *GetHealthResponse
+func (c *ClientWithResponses) GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error) {
+	rsp, err := c.GetHealth(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiHealthResponse(rsp)
+	return ParseGetHealthResponse(rsp)
 }
 
-// GetApiMeApiKeysWithResponse request returning *GetApiMeApiKeysResponse
-func (c *ClientWithResponses) GetApiMeApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiMeApiKeysResponse, error) {
-	rsp, err := c.GetApiMeApiKeys(ctx, reqEditors...)
+// GetMeApiKeysWithResponse request returning *GetMeApiKeysResponse
+func (c *ClientWithResponses) GetMeApiKeysWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMeApiKeysResponse, error) {
+	rsp, err := c.GetMeApiKeys(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMeApiKeysResponse(rsp)
+	return ParseGetMeApiKeysResponse(rsp)
 }
 
-// PostApiMeApiKeysWithBodyWithResponse request with arbitrary body returning *PostApiMeApiKeysResponse
-func (c *ClientWithResponses) PostApiMeApiKeysWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiMeApiKeysResponse, error) {
-	rsp, err := c.PostApiMeApiKeysWithBody(ctx, contentType, body, reqEditors...)
+// PostMeApiKeysWithBodyWithResponse request with arbitrary body returning *PostMeApiKeysResponse
+func (c *ClientWithResponses) PostMeApiKeysWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostMeApiKeysResponse, error) {
+	rsp, err := c.PostMeApiKeysWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiMeApiKeysResponse(rsp)
+	return ParsePostMeApiKeysResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiMeApiKeysWithResponse(ctx context.Context, body PostApiMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiMeApiKeysResponse, error) {
-	rsp, err := c.PostApiMeApiKeys(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostMeApiKeysWithResponse(ctx context.Context, body PostMeApiKeysJSONRequestBody, reqEditors ...RequestEditorFn) (*PostMeApiKeysResponse, error) {
+	rsp, err := c.PostMeApiKeys(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiMeApiKeysResponse(rsp)
+	return ParsePostMeApiKeysResponse(rsp)
 }
 
-// DeleteApiMeApiKeysIdWithResponse request returning *DeleteApiMeApiKeysIdResponse
-func (c *ClientWithResponses) DeleteApiMeApiKeysIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiMeApiKeysIdResponse, error) {
-	rsp, err := c.DeleteApiMeApiKeysId(ctx, id, reqEditors...)
+// DeleteMeApiKeysByIdWithResponse request returning *DeleteMeApiKeysByIdResponse
+func (c *ClientWithResponses) DeleteMeApiKeysByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteMeApiKeysByIdResponse, error) {
+	rsp, err := c.DeleteMeApiKeysById(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteApiMeApiKeysIdResponse(rsp)
+	return ParseDeleteMeApiKeysByIdResponse(rsp)
 }
 
-// PatchApiMeApiKeysIdWithBodyWithResponse request with arbitrary body returning *PatchApiMeApiKeysIdResponse
-func (c *ClientWithResponses) PatchApiMeApiKeysIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchApiMeApiKeysIdResponse, error) {
-	rsp, err := c.PatchApiMeApiKeysIdWithBody(ctx, id, contentType, body, reqEditors...)
+// PatchMeApiKeysByIdWithBodyWithResponse request with arbitrary body returning *PatchMeApiKeysByIdResponse
+func (c *ClientWithResponses) PatchMeApiKeysByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PatchMeApiKeysByIdResponse, error) {
+	rsp, err := c.PatchMeApiKeysByIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchApiMeApiKeysIdResponse(rsp)
+	return ParsePatchMeApiKeysByIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PatchApiMeApiKeysIdWithResponse(ctx context.Context, id string, body PatchApiMeApiKeysIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchApiMeApiKeysIdResponse, error) {
-	rsp, err := c.PatchApiMeApiKeysId(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) PatchMeApiKeysByIdWithResponse(ctx context.Context, id string, body PatchMeApiKeysByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchMeApiKeysByIdResponse, error) {
+	rsp, err := c.PatchMeApiKeysById(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePatchApiMeApiKeysIdResponse(rsp)
+	return ParsePatchMeApiKeysByIdResponse(rsp)
 }
 
-// GetApiMeCreditsWithResponse request returning *GetApiMeCreditsResponse
-func (c *ClientWithResponses) GetApiMeCreditsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiMeCreditsResponse, error) {
-	rsp, err := c.GetApiMeCredits(ctx, reqEditors...)
+// GetMeCreditsWithResponse request returning *GetMeCreditsResponse
+func (c *ClientWithResponses) GetMeCreditsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMeCreditsResponse, error) {
+	rsp, err := c.GetMeCredits(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMeCreditsResponse(rsp)
+	return ParseGetMeCreditsResponse(rsp)
 }
 
-// GetApiMeCreditsLedgerWithResponse request returning *GetApiMeCreditsLedgerResponse
-func (c *ClientWithResponses) GetApiMeCreditsLedgerWithResponse(ctx context.Context, params *GetApiMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*GetApiMeCreditsLedgerResponse, error) {
-	rsp, err := c.GetApiMeCreditsLedger(ctx, params, reqEditors...)
+// GetMeCreditsLedgerWithResponse request returning *GetMeCreditsLedgerResponse
+func (c *ClientWithResponses) GetMeCreditsLedgerWithResponse(ctx context.Context, params *GetMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*GetMeCreditsLedgerResponse, error) {
+	rsp, err := c.GetMeCreditsLedger(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMeCreditsLedgerResponse(rsp)
+	return ParseGetMeCreditsLedgerResponse(rsp)
 }
 
-// GetApiMintsWithResponse request returning *GetApiMintsResponse
-func (c *ClientWithResponses) GetApiMintsWithResponse(ctx context.Context, params *GetApiMintsParams, reqEditors ...RequestEditorFn) (*GetApiMintsResponse, error) {
-	rsp, err := c.GetApiMints(ctx, params, reqEditors...)
+// GetMintsWithResponse request returning *GetMintsResponse
+func (c *ClientWithResponses) GetMintsWithResponse(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*GetMintsResponse, error) {
+	rsp, err := c.GetMints(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsResponse(rsp)
+	return ParseGetMintsResponse(rsp)
 }
 
-// GetApiMintsPubkeyWithResponse request returning *GetApiMintsPubkeyResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyResponse, error) {
-	rsp, err := c.GetApiMintsPubkey(ctx, pubkey, reqEditors...)
+// GetMintsByPubkeyWithResponse request returning *GetMintsByPubkeyResponse
+func (c *ClientWithResponses) GetMintsByPubkeyWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyResponse, error) {
+	rsp, err := c.GetMintsByPubkey(ctx, pubkey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyResponse(rsp)
+	return ParseGetMintsByPubkeyResponse(rsp)
 }
 
-// GetApiMintsPubkeyLpEventsWithResponse request returning *GetApiMintsPubkeyLpEventsResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyLpEventsWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyLpEventsResponse, error) {
-	rsp, err := c.GetApiMintsPubkeyLpEvents(ctx, pubkey, params, reqEditors...)
+// GetMintsByPubkeyLpEventsWithResponse request returning *GetMintsByPubkeyLpEventsResponse
+func (c *ClientWithResponses) GetMintsByPubkeyLpEventsWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyLpEventsParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyLpEventsResponse, error) {
+	rsp, err := c.GetMintsByPubkeyLpEvents(ctx, pubkey, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyLpEventsResponse(rsp)
+	return ParseGetMintsByPubkeyLpEventsResponse(rsp)
 }
 
-// GetApiMintsPubkeyMarketsWithResponse request returning *GetApiMintsPubkeyMarketsResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyMarketsWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyMarketsResponse, error) {
-	rsp, err := c.GetApiMintsPubkeyMarkets(ctx, pubkey, params, reqEditors...)
+// GetMintsByPubkeyMarketsWithResponse request returning *GetMintsByPubkeyMarketsResponse
+func (c *ClientWithResponses) GetMintsByPubkeyMarketsWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyMarketsResponse, error) {
+	rsp, err := c.GetMintsByPubkeyMarkets(ctx, pubkey, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyMarketsResponse(rsp)
+	return ParseGetMintsByPubkeyMarketsResponse(rsp)
 }
 
-// GetApiMintsPubkeyMigrationsWithResponse request returning *GetApiMintsPubkeyMigrationsResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyMigrationsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyMigrationsResponse, error) {
-	rsp, err := c.GetApiMintsPubkeyMigrations(ctx, pubkey, reqEditors...)
+// GetMintsByPubkeyMigrationsWithResponse request returning *GetMintsByPubkeyMigrationsResponse
+func (c *ClientWithResponses) GetMintsByPubkeyMigrationsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyMigrationsResponse, error) {
+	rsp, err := c.GetMintsByPubkeyMigrations(ctx, pubkey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyMigrationsResponse(rsp)
+	return ParseGetMintsByPubkeyMigrationsResponse(rsp)
 }
 
-// GetApiMintsPubkeySafetyEventsWithResponse request returning *GetApiMintsPubkeySafetyEventsResponse
-func (c *ClientWithResponses) GetApiMintsPubkeySafetyEventsWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeySafetyEventsResponse, error) {
-	rsp, err := c.GetApiMintsPubkeySafetyEvents(ctx, pubkey, params, reqEditors...)
+// GetMintsByPubkeySafetyEventsWithResponse request returning *GetMintsByPubkeySafetyEventsResponse
+func (c *ClientWithResponses) GetMintsByPubkeySafetyEventsWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeySafetyEventsResponse, error) {
+	rsp, err := c.GetMintsByPubkeySafetyEvents(ctx, pubkey, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeySafetyEventsResponse(rsp)
+	return ParseGetMintsByPubkeySafetyEventsResponse(rsp)
 }
 
-// GetApiMintsPubkeyStatsWithResponse request returning *GetApiMintsPubkeyStatsResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyStatsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyStatsResponse, error) {
-	rsp, err := c.GetApiMintsPubkeyStats(ctx, pubkey, reqEditors...)
+// GetMintsByPubkeyStatsWithResponse request returning *GetMintsByPubkeyStatsResponse
+func (c *ClientWithResponses) GetMintsByPubkeyStatsWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyStatsResponse, error) {
+	rsp, err := c.GetMintsByPubkeyStats(ctx, pubkey, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyStatsResponse(rsp)
+	return ParseGetMintsByPubkeyStatsResponse(rsp)
 }
 
-// GetApiMintsPubkeyTopHoldersWithResponse request returning *GetApiMintsPubkeyTopHoldersResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyTopHoldersWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyTopHoldersResponse, error) {
-	rsp, err := c.GetApiMintsPubkeyTopHolders(ctx, pubkey, params, reqEditors...)
+// GetMintsByPubkeyTopHoldersWithResponse request returning *GetMintsByPubkeyTopHoldersResponse
+func (c *ClientWithResponses) GetMintsByPubkeyTopHoldersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyTopHoldersResponse, error) {
+	rsp, err := c.GetMintsByPubkeyTopHolders(ctx, pubkey, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyTopHoldersResponse(rsp)
+	return ParseGetMintsByPubkeyTopHoldersResponse(rsp)
 }
 
-// GetApiMintsPubkeyTopTradersWithResponse request returning *GetApiMintsPubkeyTopTradersResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyTopTradersWithResponse(ctx context.Context, pubkey string, params *GetApiMintsPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyTopTradersResponse, error) {
-	rsp, err := c.GetApiMintsPubkeyTopTraders(ctx, pubkey, params, reqEditors...)
+// GetMintsByPubkeyTopTradersWithResponse request returning *GetMintsByPubkeyTopTradersResponse
+func (c *ClientWithResponses) GetMintsByPubkeyTopTradersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyTopTradersResponse, error) {
+	rsp, err := c.GetMintsByPubkeyTopTraders(ctx, pubkey, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyTopTradersResponse(rsp)
+	return ParseGetMintsByPubkeyTopTradersResponse(rsp)
 }
 
-// GetApiMintsPubkeyTradersTraderWithResponse request returning *GetApiMintsPubkeyTradersTraderResponse
-func (c *ClientWithResponses) GetApiMintsPubkeyTradersTraderWithResponse(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*GetApiMintsPubkeyTradersTraderResponse, error) {
-	rsp, err := c.GetApiMintsPubkeyTradersTrader(ctx, pubkey, trader, reqEditors...)
+// GetMintsByPubkeyTradersByTraderWithResponse request returning *GetMintsByPubkeyTradersByTraderResponse
+func (c *ClientWithResponses) GetMintsByPubkeyTradersByTraderWithResponse(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyTradersByTraderResponse, error) {
+	rsp, err := c.GetMintsByPubkeyTradersByTrader(ctx, pubkey, trader, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiMintsPubkeyTradersTraderResponse(rsp)
+	return ParseGetMintsByPubkeyTradersByTraderResponse(rsp)
 }
 
-// GetApiOhlcvWithResponse request returning *GetApiOhlcvResponse
-func (c *ClientWithResponses) GetApiOhlcvWithResponse(ctx context.Context, params *GetApiOhlcvParams, reqEditors ...RequestEditorFn) (*GetApiOhlcvResponse, error) {
-	rsp, err := c.GetApiOhlcv(ctx, params, reqEditors...)
+// GetOhlcvWithResponse request returning *GetOhlcvResponse
+func (c *ClientWithResponses) GetOhlcvWithResponse(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*GetOhlcvResponse, error) {
+	rsp, err := c.GetOhlcv(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiOhlcvResponse(rsp)
+	return ParseGetOhlcvResponse(rsp)
 }
 
-// GetApiStrategiesWithResponse request returning *GetApiStrategiesResponse
-func (c *ClientWithResponses) GetApiStrategiesWithResponse(ctx context.Context, params *GetApiStrategiesParams, reqEditors ...RequestEditorFn) (*GetApiStrategiesResponse, error) {
-	rsp, err := c.GetApiStrategies(ctx, params, reqEditors...)
+// GetStrategiesWithResponse request returning *GetStrategiesResponse
+func (c *ClientWithResponses) GetStrategiesWithResponse(ctx context.Context, params *GetStrategiesParams, reqEditors ...RequestEditorFn) (*GetStrategiesResponse, error) {
+	rsp, err := c.GetStrategies(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiStrategiesResponse(rsp)
+	return ParseGetStrategiesResponse(rsp)
 }
 
-// PostApiStrategiesWithBodyWithResponse request with arbitrary body returning *PostApiStrategiesResponse
-func (c *ClientWithResponses) PostApiStrategiesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiStrategiesResponse, error) {
-	rsp, err := c.PostApiStrategiesWithBody(ctx, contentType, body, reqEditors...)
+// PostStrategiesWithBodyWithResponse request with arbitrary body returning *PostStrategiesResponse
+func (c *ClientWithResponses) PostStrategiesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStrategiesResponse, error) {
+	rsp, err := c.PostStrategiesWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiStrategiesResponse(rsp)
+	return ParsePostStrategiesResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiStrategiesWithResponse(ctx context.Context, body PostApiStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiStrategiesResponse, error) {
-	rsp, err := c.PostApiStrategies(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostStrategiesWithResponse(ctx context.Context, body PostStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStrategiesResponse, error) {
+	rsp, err := c.PostStrategies(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiStrategiesResponse(rsp)
+	return ParsePostStrategiesResponse(rsp)
 }
 
-// GetApiStrategiesDashboardWithResponse request returning *GetApiStrategiesDashboardResponse
-func (c *ClientWithResponses) GetApiStrategiesDashboardWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiStrategiesDashboardResponse, error) {
-	rsp, err := c.GetApiStrategiesDashboard(ctx, reqEditors...)
+// GetStrategiesDashboardWithResponse request returning *GetStrategiesDashboardResponse
+func (c *ClientWithResponses) GetStrategiesDashboardWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetStrategiesDashboardResponse, error) {
+	rsp, err := c.GetStrategiesDashboard(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiStrategiesDashboardResponse(rsp)
+	return ParseGetStrategiesDashboardResponse(rsp)
 }
 
-// PostApiStrategiesPreviewWithBodyWithResponse request with arbitrary body returning *PostApiStrategiesPreviewResponse
-func (c *ClientWithResponses) PostApiStrategiesPreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiStrategiesPreviewResponse, error) {
-	rsp, err := c.PostApiStrategiesPreviewWithBody(ctx, contentType, body, reqEditors...)
+// PostStrategiesPreviewWithBodyWithResponse request with arbitrary body returning *PostStrategiesPreviewResponse
+func (c *ClientWithResponses) PostStrategiesPreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStrategiesPreviewResponse, error) {
+	rsp, err := c.PostStrategiesPreviewWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiStrategiesPreviewResponse(rsp)
+	return ParsePostStrategiesPreviewResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiStrategiesPreviewWithResponse(ctx context.Context, body PostApiStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiStrategiesPreviewResponse, error) {
-	rsp, err := c.PostApiStrategiesPreview(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostStrategiesPreviewWithResponse(ctx context.Context, body PostStrategiesPreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStrategiesPreviewResponse, error) {
+	rsp, err := c.PostStrategiesPreview(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiStrategiesPreviewResponse(rsp)
+	return ParsePostStrategiesPreviewResponse(rsp)
 }
 
-// GetApiStrategiesWithStatsWithResponse request returning *GetApiStrategiesWithStatsResponse
-func (c *ClientWithResponses) GetApiStrategiesWithStatsWithResponse(ctx context.Context, params *GetApiStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*GetApiStrategiesWithStatsResponse, error) {
-	rsp, err := c.GetApiStrategiesWithStats(ctx, params, reqEditors...)
+// GetStrategiesWithStatsWithResponse request returning *GetStrategiesWithStatsResponse
+func (c *ClientWithResponses) GetStrategiesWithStatsWithResponse(ctx context.Context, params *GetStrategiesWithStatsParams, reqEditors ...RequestEditorFn) (*GetStrategiesWithStatsResponse, error) {
+	rsp, err := c.GetStrategiesWithStats(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiStrategiesWithStatsResponse(rsp)
+	return ParseGetStrategiesWithStatsResponse(rsp)
 }
 
-// DeleteApiStrategiesIdWithResponse request returning *DeleteApiStrategiesIdResponse
-func (c *ClientWithResponses) DeleteApiStrategiesIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiStrategiesIdResponse, error) {
-	rsp, err := c.DeleteApiStrategiesId(ctx, id, reqEditors...)
+// DeleteStrategiesByIdWithResponse request returning *DeleteStrategiesByIdResponse
+func (c *ClientWithResponses) DeleteStrategiesByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteStrategiesByIdResponse, error) {
+	rsp, err := c.DeleteStrategiesById(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteApiStrategiesIdResponse(rsp)
+	return ParseDeleteStrategiesByIdResponse(rsp)
 }
 
-// GetApiStrategiesIdWithResponse request returning *GetApiStrategiesIdResponse
-func (c *ClientWithResponses) GetApiStrategiesIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetApiStrategiesIdResponse, error) {
-	rsp, err := c.GetApiStrategiesId(ctx, id, reqEditors...)
+// GetStrategiesByIdWithResponse request returning *GetStrategiesByIdResponse
+func (c *ClientWithResponses) GetStrategiesByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetStrategiesByIdResponse, error) {
+	rsp, err := c.GetStrategiesById(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiStrategiesIdResponse(rsp)
+	return ParseGetStrategiesByIdResponse(rsp)
 }
 
-// PutApiStrategiesIdWithBodyWithResponse request with arbitrary body returning *PutApiStrategiesIdResponse
-func (c *ClientWithResponses) PutApiStrategiesIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiStrategiesIdResponse, error) {
-	rsp, err := c.PutApiStrategiesIdWithBody(ctx, id, contentType, body, reqEditors...)
+// PutStrategiesByIdWithBodyWithResponse request with arbitrary body returning *PutStrategiesByIdResponse
+func (c *ClientWithResponses) PutStrategiesByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutStrategiesByIdResponse, error) {
+	rsp, err := c.PutStrategiesByIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiStrategiesIdResponse(rsp)
+	return ParsePutStrategiesByIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutApiStrategiesIdWithResponse(ctx context.Context, id string, body PutApiStrategiesIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiStrategiesIdResponse, error) {
-	rsp, err := c.PutApiStrategiesId(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) PutStrategiesByIdWithResponse(ctx context.Context, id string, body PutStrategiesByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutStrategiesByIdResponse, error) {
+	rsp, err := c.PutStrategiesById(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiStrategiesIdResponse(rsp)
+	return ParsePutStrategiesByIdResponse(rsp)
 }
 
-// GetApiSubscriptionsMeWithResponse request returning *GetApiSubscriptionsMeResponse
-func (c *ClientWithResponses) GetApiSubscriptionsMeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiSubscriptionsMeResponse, error) {
-	rsp, err := c.GetApiSubscriptionsMe(ctx, reqEditors...)
+// GetSubscriptionsMeWithResponse request returning *GetSubscriptionsMeResponse
+func (c *ClientWithResponses) GetSubscriptionsMeWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSubscriptionsMeResponse, error) {
+	rsp, err := c.GetSubscriptionsMe(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiSubscriptionsMeResponse(rsp)
+	return ParseGetSubscriptionsMeResponse(rsp)
 }
 
-// GetApiSwapsWithResponse request returning *GetApiSwapsResponse
-func (c *ClientWithResponses) GetApiSwapsWithResponse(ctx context.Context, params *GetApiSwapsParams, reqEditors ...RequestEditorFn) (*GetApiSwapsResponse, error) {
-	rsp, err := c.GetApiSwaps(ctx, params, reqEditors...)
+// GetSwapsWithResponse request returning *GetSwapsResponse
+func (c *ClientWithResponses) GetSwapsWithResponse(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*GetSwapsResponse, error) {
+	rsp, err := c.GetSwaps(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiSwapsResponse(rsp)
+	return ParseGetSwapsResponse(rsp)
 }
 
-// GetApiTipsGlobalWithResponse request returning *GetApiTipsGlobalResponse
-func (c *ClientWithResponses) GetApiTipsGlobalWithResponse(ctx context.Context, params *GetApiTipsGlobalParams, reqEditors ...RequestEditorFn) (*GetApiTipsGlobalResponse, error) {
-	rsp, err := c.GetApiTipsGlobal(ctx, params, reqEditors...)
+// GetTipsGlobalWithResponse request returning *GetTipsGlobalResponse
+func (c *ClientWithResponses) GetTipsGlobalWithResponse(ctx context.Context, params *GetTipsGlobalParams, reqEditors ...RequestEditorFn) (*GetTipsGlobalResponse, error) {
+	rsp, err := c.GetTipsGlobal(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTipsGlobalResponse(rsp)
+	return ParseGetTipsGlobalResponse(rsp)
 }
 
-// GetApiTipsHeatmapWithResponse request returning *GetApiTipsHeatmapResponse
-func (c *ClientWithResponses) GetApiTipsHeatmapWithResponse(ctx context.Context, params *GetApiTipsHeatmapParams, reqEditors ...RequestEditorFn) (*GetApiTipsHeatmapResponse, error) {
-	rsp, err := c.GetApiTipsHeatmap(ctx, params, reqEditors...)
+// GetTipsHeatmapWithResponse request returning *GetTipsHeatmapResponse
+func (c *ClientWithResponses) GetTipsHeatmapWithResponse(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*GetTipsHeatmapResponse, error) {
+	rsp, err := c.GetTipsHeatmap(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTipsHeatmapResponse(rsp)
+	return ParseGetTipsHeatmapResponse(rsp)
 }
 
-// GetApiTipsLeaderboardJitoEfficiencyWithResponse request returning *GetApiTipsLeaderboardJitoEfficiencyResponse
-func (c *ClientWithResponses) GetApiTipsLeaderboardJitoEfficiencyWithResponse(ctx context.Context, params *GetApiTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*GetApiTipsLeaderboardJitoEfficiencyResponse, error) {
-	rsp, err := c.GetApiTipsLeaderboardJitoEfficiency(ctx, params, reqEditors...)
+// GetTipsLeaderboardJitoEfficiencyWithResponse request returning *GetTipsLeaderboardJitoEfficiencyResponse
+func (c *ClientWithResponses) GetTipsLeaderboardJitoEfficiencyWithResponse(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*GetTipsLeaderboardJitoEfficiencyResponse, error) {
+	rsp, err := c.GetTipsLeaderboardJitoEfficiency(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTipsLeaderboardJitoEfficiencyResponse(rsp)
+	return ParseGetTipsLeaderboardJitoEfficiencyResponse(rsp)
 }
 
-// GetApiTipsMatWithResponse request returning *GetApiTipsMatResponse
-func (c *ClientWithResponses) GetApiTipsMatWithResponse(ctx context.Context, params *GetApiTipsMatParams, reqEditors ...RequestEditorFn) (*GetApiTipsMatResponse, error) {
-	rsp, err := c.GetApiTipsMat(ctx, params, reqEditors...)
+// GetTipsMatWithResponse request returning *GetTipsMatResponse
+func (c *ClientWithResponses) GetTipsMatWithResponse(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*GetTipsMatResponse, error) {
+	rsp, err := c.GetTipsMat(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTipsMatResponse(rsp)
+	return ParseGetTipsMatResponse(rsp)
 }
 
-// GetApiTipsMevShareWithResponse request returning *GetApiTipsMevShareResponse
-func (c *ClientWithResponses) GetApiTipsMevShareWithResponse(ctx context.Context, params *GetApiTipsMevShareParams, reqEditors ...RequestEditorFn) (*GetApiTipsMevShareResponse, error) {
-	rsp, err := c.GetApiTipsMevShare(ctx, params, reqEditors...)
+// GetTipsMevShareWithResponse request returning *GetTipsMevShareResponse
+func (c *ClientWithResponses) GetTipsMevShareWithResponse(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*GetTipsMevShareResponse, error) {
+	rsp, err := c.GetTipsMevShare(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTipsMevShareResponse(rsp)
+	return ParseGetTipsMevShareResponse(rsp)
 }
 
-// GetApiTipsPriorityRatioWithResponse request returning *GetApiTipsPriorityRatioResponse
-func (c *ClientWithResponses) GetApiTipsPriorityRatioWithResponse(ctx context.Context, params *GetApiTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*GetApiTipsPriorityRatioResponse, error) {
-	rsp, err := c.GetApiTipsPriorityRatio(ctx, params, reqEditors...)
+// GetTipsPriorityRatioWithResponse request returning *GetTipsPriorityRatioResponse
+func (c *ClientWithResponses) GetTipsPriorityRatioWithResponse(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*GetTipsPriorityRatioResponse, error) {
+	rsp, err := c.GetTipsPriorityRatio(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTipsPriorityRatioResponse(rsp)
+	return ParseGetTipsPriorityRatioResponse(rsp)
 }
 
-// GetApiTipsServicesWithResponse request returning *GetApiTipsServicesResponse
-func (c *ClientWithResponses) GetApiTipsServicesWithResponse(ctx context.Context, params *GetApiTipsServicesParams, reqEditors ...RequestEditorFn) (*GetApiTipsServicesResponse, error) {
-	rsp, err := c.GetApiTipsServices(ctx, params, reqEditors...)
+// GetTipsServicesWithResponse request returning *GetTipsServicesResponse
+func (c *ClientWithResponses) GetTipsServicesWithResponse(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*GetTipsServicesResponse, error) {
+	rsp, err := c.GetTipsServices(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTipsServicesResponse(rsp)
+	return ParseGetTipsServicesResponse(rsp)
 }
 
-// GetApiTraderFiltersWithResponse request returning *GetApiTraderFiltersResponse
-func (c *ClientWithResponses) GetApiTraderFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetApiTraderFiltersResponse, error) {
-	rsp, err := c.GetApiTraderFilters(ctx, reqEditors...)
+// GetTraderFiltersWithResponse request returning *GetTraderFiltersResponse
+func (c *ClientWithResponses) GetTraderFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTraderFiltersResponse, error) {
+	rsp, err := c.GetTraderFilters(ctx, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTraderFiltersResponse(rsp)
+	return ParseGetTraderFiltersResponse(rsp)
 }
 
-// PostApiTraderFiltersWithBodyWithResponse request with arbitrary body returning *PostApiTraderFiltersResponse
-func (c *ClientWithResponses) PostApiTraderFiltersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiTraderFiltersResponse, error) {
-	rsp, err := c.PostApiTraderFiltersWithBody(ctx, contentType, body, reqEditors...)
+// PostTraderFiltersWithBodyWithResponse request with arbitrary body returning *PostTraderFiltersResponse
+func (c *ClientWithResponses) PostTraderFiltersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTraderFiltersResponse, error) {
+	rsp, err := c.PostTraderFiltersWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiTraderFiltersResponse(rsp)
+	return ParsePostTraderFiltersResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiTraderFiltersWithResponse(ctx context.Context, body PostApiTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiTraderFiltersResponse, error) {
-	rsp, err := c.PostApiTraderFilters(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostTraderFiltersWithResponse(ctx context.Context, body PostTraderFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTraderFiltersResponse, error) {
+	rsp, err := c.PostTraderFilters(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiTraderFiltersResponse(rsp)
+	return ParsePostTraderFiltersResponse(rsp)
 }
 
-// DeleteApiTraderFiltersIdWithResponse request returning *DeleteApiTraderFiltersIdResponse
-func (c *ClientWithResponses) DeleteApiTraderFiltersIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteApiTraderFiltersIdResponse, error) {
-	rsp, err := c.DeleteApiTraderFiltersId(ctx, id, reqEditors...)
+// DeleteTraderFiltersByIdWithResponse request returning *DeleteTraderFiltersByIdResponse
+func (c *ClientWithResponses) DeleteTraderFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteTraderFiltersByIdResponse, error) {
+	rsp, err := c.DeleteTraderFiltersById(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseDeleteApiTraderFiltersIdResponse(rsp)
+	return ParseDeleteTraderFiltersByIdResponse(rsp)
 }
 
-// GetApiTraderFiltersIdWithResponse request returning *GetApiTraderFiltersIdResponse
-func (c *ClientWithResponses) GetApiTraderFiltersIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetApiTraderFiltersIdResponse, error) {
-	rsp, err := c.GetApiTraderFiltersId(ctx, id, reqEditors...)
+// GetTraderFiltersByIdWithResponse request returning *GetTraderFiltersByIdResponse
+func (c *ClientWithResponses) GetTraderFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTraderFiltersByIdResponse, error) {
+	rsp, err := c.GetTraderFiltersById(ctx, id, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTraderFiltersIdResponse(rsp)
+	return ParseGetTraderFiltersByIdResponse(rsp)
 }
 
-// PutApiTraderFiltersIdWithBodyWithResponse request with arbitrary body returning *PutApiTraderFiltersIdResponse
-func (c *ClientWithResponses) PutApiTraderFiltersIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutApiTraderFiltersIdResponse, error) {
-	rsp, err := c.PutApiTraderFiltersIdWithBody(ctx, id, contentType, body, reqEditors...)
+// PutTraderFiltersByIdWithBodyWithResponse request with arbitrary body returning *PutTraderFiltersByIdResponse
+func (c *ClientWithResponses) PutTraderFiltersByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTraderFiltersByIdResponse, error) {
+	rsp, err := c.PutTraderFiltersByIdWithBody(ctx, id, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiTraderFiltersIdResponse(rsp)
+	return ParsePutTraderFiltersByIdResponse(rsp)
 }
 
-func (c *ClientWithResponses) PutApiTraderFiltersIdWithResponse(ctx context.Context, id string, body PutApiTraderFiltersIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutApiTraderFiltersIdResponse, error) {
-	rsp, err := c.PutApiTraderFiltersId(ctx, id, body, reqEditors...)
+func (c *ClientWithResponses) PutTraderFiltersByIdWithResponse(ctx context.Context, id string, body PutTraderFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTraderFiltersByIdResponse, error) {
+	rsp, err := c.PutTraderFiltersById(ctx, id, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePutApiTraderFiltersIdResponse(rsp)
+	return ParsePutTraderFiltersByIdResponse(rsp)
 }
 
-// GetApiTradersWithResponse request returning *GetApiTradersResponse
-func (c *ClientWithResponses) GetApiTradersWithResponse(ctx context.Context, params *GetApiTradersParams, reqEditors ...RequestEditorFn) (*GetApiTradersResponse, error) {
-	rsp, err := c.GetApiTraders(ctx, params, reqEditors...)
+// GetTradersWithResponse request returning *GetTradersResponse
+func (c *ClientWithResponses) GetTradersWithResponse(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*GetTradersResponse, error) {
+	rsp, err := c.GetTraders(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersResponse(rsp)
+	return ParseGetTradersResponse(rsp)
 }
 
-// GetApiTradersByIdTraderIDWithResponse request returning *GetApiTradersByIdTraderIDResponse
-func (c *ClientWithResponses) GetApiTradersByIdTraderIDWithResponse(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*GetApiTradersByIdTraderIDResponse, error) {
-	rsp, err := c.GetApiTradersByIdTraderID(ctx, traderID, reqEditors...)
+// GetTradersByIdByTraderIDWithResponse request returning *GetTradersByIdByTraderIDResponse
+func (c *ClientWithResponses) GetTradersByIdByTraderIDWithResponse(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*GetTradersByIdByTraderIDResponse, error) {
+	rsp, err := c.GetTradersByIdByTraderID(ctx, traderID, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersByIdTraderIDResponse(rsp)
+	return ParseGetTradersByIdByTraderIDResponse(rsp)
 }
 
-// GetApiTradersByWalletWalletAddressWithResponse request returning *GetApiTradersByWalletWalletAddressResponse
-func (c *ClientWithResponses) GetApiTradersByWalletWalletAddressWithResponse(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*GetApiTradersByWalletWalletAddressResponse, error) {
-	rsp, err := c.GetApiTradersByWalletWalletAddress(ctx, walletAddress, reqEditors...)
+// GetTradersByWalletByWalletAddressWithResponse request returning *GetTradersByWalletByWalletAddressResponse
+func (c *ClientWithResponses) GetTradersByWalletByWalletAddressWithResponse(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*GetTradersByWalletByWalletAddressResponse, error) {
+	rsp, err := c.GetTradersByWalletByWalletAddress(ctx, walletAddress, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersByWalletWalletAddressResponse(rsp)
+	return ParseGetTradersByWalletByWalletAddressResponse(rsp)
 }
 
-// PostApiTradersExportWithBodyWithResponse request with arbitrary body returning *PostApiTradersExportResponse
-func (c *ClientWithResponses) PostApiTradersExportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiTradersExportResponse, error) {
-	rsp, err := c.PostApiTradersExportWithBody(ctx, contentType, body, reqEditors...)
+// PostTradersExportWithBodyWithResponse request with arbitrary body returning *PostTradersExportResponse
+func (c *ClientWithResponses) PostTradersExportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error) {
+	rsp, err := c.PostTradersExportWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiTradersExportResponse(rsp)
+	return ParsePostTradersExportResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiTradersExportWithResponse(ctx context.Context, body PostApiTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiTradersExportResponse, error) {
-	rsp, err := c.PostApiTradersExport(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostTradersExportWithResponse(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error) {
+	rsp, err := c.PostTradersExport(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiTradersExportResponse(rsp)
+	return ParsePostTradersExportResponse(rsp)
 }
 
-// GetApiTradersSearchWithResponse request returning *GetApiTradersSearchResponse
-func (c *ClientWithResponses) GetApiTradersSearchWithResponse(ctx context.Context, params *GetApiTradersSearchParams, reqEditors ...RequestEditorFn) (*GetApiTradersSearchResponse, error) {
-	rsp, err := c.GetApiTradersSearch(ctx, params, reqEditors...)
+// GetTradersSearchWithResponse request returning *GetTradersSearchResponse
+func (c *ClientWithResponses) GetTradersSearchWithResponse(ctx context.Context, params *GetTradersSearchParams, reqEditors ...RequestEditorFn) (*GetTradersSearchResponse, error) {
+	rsp, err := c.GetTradersSearch(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersSearchResponse(rsp)
+	return ParseGetTradersSearchResponse(rsp)
 }
 
-// GetApiTradersSnapshotWithResponse request returning *GetApiTradersSnapshotResponse
-func (c *ClientWithResponses) GetApiTradersSnapshotWithResponse(ctx context.Context, params *GetApiTradersSnapshotParams, reqEditors ...RequestEditorFn) (*GetApiTradersSnapshotResponse, error) {
-	rsp, err := c.GetApiTradersSnapshot(ctx, params, reqEditors...)
+// GetTradersSnapshotWithResponse request returning *GetTradersSnapshotResponse
+func (c *ClientWithResponses) GetTradersSnapshotWithResponse(ctx context.Context, params *GetTradersSnapshotParams, reqEditors ...RequestEditorFn) (*GetTradersSnapshotResponse, error) {
+	rsp, err := c.GetTradersSnapshot(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersSnapshotResponse(rsp)
+	return ParseGetTradersSnapshotResponse(rsp)
 }
 
-// GetApiTradersTraderIDDailyProfitsWithResponse request returning *GetApiTradersTraderIDDailyProfitsResponse
-func (c *ClientWithResponses) GetApiTradersTraderIDDailyProfitsWithResponse(ctx context.Context, traderID string, params *GetApiTradersTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*GetApiTradersTraderIDDailyProfitsResponse, error) {
-	rsp, err := c.GetApiTradersTraderIDDailyProfits(ctx, traderID, params, reqEditors...)
+// GetTradersByTraderIDDailyProfitsWithResponse request returning *GetTradersByTraderIDDailyProfitsResponse
+func (c *ClientWithResponses) GetTradersByTraderIDDailyProfitsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDDailyProfitsResponse, error) {
+	rsp, err := c.GetTradersByTraderIDDailyProfits(ctx, traderID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersTraderIDDailyProfitsResponse(rsp)
+	return ParseGetTradersByTraderIDDailyProfitsResponse(rsp)
 }
 
-// GetApiTradersTraderIDPnlsWithResponse request returning *GetApiTradersTraderIDPnlsResponse
-func (c *ClientWithResponses) GetApiTradersTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetApiTradersTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetApiTradersTraderIDPnlsResponse, error) {
-	rsp, err := c.GetApiTradersTraderIDPnls(ctx, traderID, params, reqEditors...)
+// GetTradersByTraderIDPnlsWithResponse request returning *GetTradersByTraderIDPnlsResponse
+func (c *ClientWithResponses) GetTradersByTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDPnlsResponse, error) {
+	rsp, err := c.GetTradersByTraderIDPnls(ctx, traderID, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersTraderIDPnlsResponse(rsp)
+	return ParseGetTradersByTraderIDPnlsResponse(rsp)
 }
 
-// GetApiTradersWalletAddressCreatedTokensWithResponse request returning *GetApiTradersWalletAddressCreatedTokensResponse
-func (c *ClientWithResponses) GetApiTradersWalletAddressCreatedTokensWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressCreatedTokensResponse, error) {
-	rsp, err := c.GetApiTradersWalletAddressCreatedTokens(ctx, walletAddress, params, reqEditors...)
+// GetTradersByWalletAddressCreatedTokensWithResponse request returning *GetTradersByWalletAddressCreatedTokensResponse
+func (c *ClientWithResponses) GetTradersByWalletAddressCreatedTokensWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCreatedTokensResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressCreatedTokens(ctx, walletAddress, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersWalletAddressCreatedTokensResponse(rsp)
+	return ParseGetTradersByWalletAddressCreatedTokensResponse(rsp)
 }
 
-// GetApiTradersWalletAddressPnlSeriesWithResponse request returning *GetApiTradersWalletAddressPnlSeriesResponse
-func (c *ClientWithResponses) GetApiTradersWalletAddressPnlSeriesWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressPnlSeriesResponse, error) {
-	rsp, err := c.GetApiTradersWalletAddressPnlSeries(ctx, walletAddress, params, reqEditors...)
+// GetTradersByWalletAddressPnlSeriesWithResponse request returning *GetTradersByWalletAddressPnlSeriesResponse
+func (c *ClientWithResponses) GetTradersByWalletAddressPnlSeriesWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressPnlSeriesResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressPnlSeries(ctx, walletAddress, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersWalletAddressPnlSeriesResponse(rsp)
+	return ParseGetTradersByWalletAddressPnlSeriesResponse(rsp)
 }
 
-// GetApiTradersWalletAddressTipsWithResponse request returning *GetApiTradersWalletAddressTipsResponse
-func (c *ClientWithResponses) GetApiTradersWalletAddressTipsWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressTipsResponse, error) {
-	rsp, err := c.GetApiTradersWalletAddressTips(ctx, walletAddress, params, reqEditors...)
+// GetTradersByWalletAddressTipsWithResponse request returning *GetTradersByWalletAddressTipsResponse
+func (c *ClientWithResponses) GetTradersByWalletAddressTipsWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressTipsResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressTips(ctx, walletAddress, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersWalletAddressTipsResponse(rsp)
+	return ParseGetTradersByWalletAddressTipsResponse(rsp)
 }
 
-// GetApiTradersWalletAddressTipsServicesWithResponse request returning *GetApiTradersWalletAddressTipsServicesResponse
-func (c *ClientWithResponses) GetApiTradersWalletAddressTipsServicesWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressTipsServicesResponse, error) {
-	rsp, err := c.GetApiTradersWalletAddressTipsServices(ctx, walletAddress, params, reqEditors...)
+// GetTradersByWalletAddressTipsServicesWithResponse request returning *GetTradersByWalletAddressTipsServicesResponse
+func (c *ClientWithResponses) GetTradersByWalletAddressTipsServicesWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTipsServicesParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressTipsServicesResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressTipsServices(ctx, walletAddress, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersWalletAddressTipsServicesResponse(rsp)
+	return ParseGetTradersByWalletAddressTipsServicesResponse(rsp)
 }
 
-// GetApiTradersWalletAddressTokensWithResponse request returning *GetApiTradersWalletAddressTokensResponse
-func (c *ClientWithResponses) GetApiTradersWalletAddressTokensWithResponse(ctx context.Context, walletAddress string, params *GetApiTradersWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*GetApiTradersWalletAddressTokensResponse, error) {
-	rsp, err := c.GetApiTradersWalletAddressTokens(ctx, walletAddress, params, reqEditors...)
+// GetTradersByWalletAddressTokensWithResponse request returning *GetTradersByWalletAddressTokensResponse
+func (c *ClientWithResponses) GetTradersByWalletAddressTokensWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressTokensParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressTokensResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressTokens(ctx, walletAddress, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetApiTradersWalletAddressTokensResponse(rsp)
+	return ParseGetTradersByWalletAddressTokensResponse(rsp)
 }
 
-// ParseGetApiBacktestsResponse parses an HTTP response from a GetApiBacktestsWithResponse call
-func ParseGetApiBacktestsResponse(rsp *http.Response) (*GetApiBacktestsResponse, error) {
+// ParseGetBacktestsResponse parses an HTTP response from a GetBacktestsWithResponse call
+func ParseGetBacktestsResponse(rsp *http.Response) (*GetBacktestsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiBacktestsResponse{
+	response := &GetBacktestsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9417,15 +9414,15 @@ func ParseGetApiBacktestsResponse(rsp *http.Response) (*GetApiBacktestsResponse,
 	return response, nil
 }
 
-// ParsePostApiBacktestsResponse parses an HTTP response from a PostApiBacktestsWithResponse call
-func ParsePostApiBacktestsResponse(rsp *http.Response) (*PostApiBacktestsResponse, error) {
+// ParsePostBacktestsResponse parses an HTTP response from a PostBacktestsWithResponse call
+func ParsePostBacktestsResponse(rsp *http.Response) (*PostBacktestsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiBacktestsResponse{
+	response := &PostBacktestsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9457,15 +9454,15 @@ func ParsePostApiBacktestsResponse(rsp *http.Response) (*PostApiBacktestsRespons
 	return response, nil
 }
 
-// ParseGetApiBacktestsLimitsResponse parses an HTTP response from a GetApiBacktestsLimitsWithResponse call
-func ParseGetApiBacktestsLimitsResponse(rsp *http.Response) (*GetApiBacktestsLimitsResponse, error) {
+// ParseGetBacktestsLimitsResponse parses an HTTP response from a GetBacktestsLimitsWithResponse call
+func ParseGetBacktestsLimitsResponse(rsp *http.Response) (*GetBacktestsLimitsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiBacktestsLimitsResponse{
+	response := &GetBacktestsLimitsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9490,15 +9487,15 @@ func ParseGetApiBacktestsLimitsResponse(rsp *http.Response) (*GetApiBacktestsLim
 	return response, nil
 }
 
-// ParseDeleteApiBacktestsIdResponse parses an HTTP response from a DeleteApiBacktestsIdWithResponse call
-func ParseDeleteApiBacktestsIdResponse(rsp *http.Response) (*DeleteApiBacktestsIdResponse, error) {
+// ParseDeleteBacktestsByIdResponse parses an HTTP response from a DeleteBacktestsByIdWithResponse call
+func ParseDeleteBacktestsByIdResponse(rsp *http.Response) (*DeleteBacktestsByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteApiBacktestsIdResponse{
+	response := &DeleteBacktestsByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9506,15 +9503,15 @@ func ParseDeleteApiBacktestsIdResponse(rsp *http.Response) (*DeleteApiBacktestsI
 	return response, nil
 }
 
-// ParseGetApiBacktestsIdResponse parses an HTTP response from a GetApiBacktestsIdWithResponse call
-func ParseGetApiBacktestsIdResponse(rsp *http.Response) (*GetApiBacktestsIdResponse, error) {
+// ParseGetBacktestsByIdResponse parses an HTTP response from a GetBacktestsByIdWithResponse call
+func ParseGetBacktestsByIdResponse(rsp *http.Response) (*GetBacktestsByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiBacktestsIdResponse{
+	response := &GetBacktestsByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9539,15 +9536,15 @@ func ParseGetApiBacktestsIdResponse(rsp *http.Response) (*GetApiBacktestsIdRespo
 	return response, nil
 }
 
-// ParseGetApiBacktestsIdTradesResponse parses an HTTP response from a GetApiBacktestsIdTradesWithResponse call
-func ParseGetApiBacktestsIdTradesResponse(rsp *http.Response) (*GetApiBacktestsIdTradesResponse, error) {
+// ParseGetBacktestsByIdTradesResponse parses an HTTP response from a GetBacktestsByIdTradesWithResponse call
+func ParseGetBacktestsByIdTradesResponse(rsp *http.Response) (*GetBacktestsByIdTradesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiBacktestsIdTradesResponse{
+	response := &GetBacktestsByIdTradesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9572,15 +9569,15 @@ func ParseGetApiBacktestsIdTradesResponse(rsp *http.Response) (*GetApiBacktestsI
 	return response, nil
 }
 
-// ParseGetApiHealthResponse parses an HTTP response from a GetApiHealthWithResponse call
-func ParseGetApiHealthResponse(rsp *http.Response) (*GetApiHealthResponse, error) {
+// ParseGetHealthResponse parses an HTTP response from a GetHealthWithResponse call
+func ParseGetHealthResponse(rsp *http.Response) (*GetHealthResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiHealthResponse{
+	response := &GetHealthResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9605,15 +9602,15 @@ func ParseGetApiHealthResponse(rsp *http.Response) (*GetApiHealthResponse, error
 	return response, nil
 }
 
-// ParseGetApiMeApiKeysResponse parses an HTTP response from a GetApiMeApiKeysWithResponse call
-func ParseGetApiMeApiKeysResponse(rsp *http.Response) (*GetApiMeApiKeysResponse, error) {
+// ParseGetMeApiKeysResponse parses an HTTP response from a GetMeApiKeysWithResponse call
+func ParseGetMeApiKeysResponse(rsp *http.Response) (*GetMeApiKeysResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMeApiKeysResponse{
+	response := &GetMeApiKeysResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9645,15 +9642,15 @@ func ParseGetApiMeApiKeysResponse(rsp *http.Response) (*GetApiMeApiKeysResponse,
 	return response, nil
 }
 
-// ParsePostApiMeApiKeysResponse parses an HTTP response from a PostApiMeApiKeysWithResponse call
-func ParsePostApiMeApiKeysResponse(rsp *http.Response) (*PostApiMeApiKeysResponse, error) {
+// ParsePostMeApiKeysResponse parses an HTTP response from a PostMeApiKeysWithResponse call
+func ParsePostMeApiKeysResponse(rsp *http.Response) (*PostMeApiKeysResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiMeApiKeysResponse{
+	response := &PostMeApiKeysResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9699,15 +9696,15 @@ func ParsePostApiMeApiKeysResponse(rsp *http.Response) (*PostApiMeApiKeysRespons
 	return response, nil
 }
 
-// ParseDeleteApiMeApiKeysIdResponse parses an HTTP response from a DeleteApiMeApiKeysIdWithResponse call
-func ParseDeleteApiMeApiKeysIdResponse(rsp *http.Response) (*DeleteApiMeApiKeysIdResponse, error) {
+// ParseDeleteMeApiKeysByIdResponse parses an HTTP response from a DeleteMeApiKeysByIdWithResponse call
+func ParseDeleteMeApiKeysByIdResponse(rsp *http.Response) (*DeleteMeApiKeysByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteApiMeApiKeysIdResponse{
+	response := &DeleteMeApiKeysByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9746,15 +9743,15 @@ func ParseDeleteApiMeApiKeysIdResponse(rsp *http.Response) (*DeleteApiMeApiKeysI
 	return response, nil
 }
 
-// ParsePatchApiMeApiKeysIdResponse parses an HTTP response from a PatchApiMeApiKeysIdWithResponse call
-func ParsePatchApiMeApiKeysIdResponse(rsp *http.Response) (*PatchApiMeApiKeysIdResponse, error) {
+// ParsePatchMeApiKeysByIdResponse parses an HTTP response from a PatchMeApiKeysByIdWithResponse call
+func ParsePatchMeApiKeysByIdResponse(rsp *http.Response) (*PatchMeApiKeysByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PatchApiMeApiKeysIdResponse{
+	response := &PatchMeApiKeysByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9793,15 +9790,15 @@ func ParsePatchApiMeApiKeysIdResponse(rsp *http.Response) (*PatchApiMeApiKeysIdR
 	return response, nil
 }
 
-// ParseGetApiMeCreditsResponse parses an HTTP response from a GetApiMeCreditsWithResponse call
-func ParseGetApiMeCreditsResponse(rsp *http.Response) (*GetApiMeCreditsResponse, error) {
+// ParseGetMeCreditsResponse parses an HTTP response from a GetMeCreditsWithResponse call
+func ParseGetMeCreditsResponse(rsp *http.Response) (*GetMeCreditsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMeCreditsResponse{
+	response := &GetMeCreditsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9833,15 +9830,15 @@ func ParseGetApiMeCreditsResponse(rsp *http.Response) (*GetApiMeCreditsResponse,
 	return response, nil
 }
 
-// ParseGetApiMeCreditsLedgerResponse parses an HTTP response from a GetApiMeCreditsLedgerWithResponse call
-func ParseGetApiMeCreditsLedgerResponse(rsp *http.Response) (*GetApiMeCreditsLedgerResponse, error) {
+// ParseGetMeCreditsLedgerResponse parses an HTTP response from a GetMeCreditsLedgerWithResponse call
+func ParseGetMeCreditsLedgerResponse(rsp *http.Response) (*GetMeCreditsLedgerResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMeCreditsLedgerResponse{
+	response := &GetMeCreditsLedgerResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9873,15 +9870,15 @@ func ParseGetApiMeCreditsLedgerResponse(rsp *http.Response) (*GetApiMeCreditsLed
 	return response, nil
 }
 
-// ParseGetApiMintsResponse parses an HTTP response from a GetApiMintsWithResponse call
-func ParseGetApiMintsResponse(rsp *http.Response) (*GetApiMintsResponse, error) {
+// ParseGetMintsResponse parses an HTTP response from a GetMintsWithResponse call
+func ParseGetMintsResponse(rsp *http.Response) (*GetMintsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsResponse{
+	response := &GetMintsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9920,15 +9917,15 @@ func ParseGetApiMintsResponse(rsp *http.Response) (*GetApiMintsResponse, error) 
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyResponse parses an HTTP response from a GetApiMintsPubkeyWithResponse call
-func ParseGetApiMintsPubkeyResponse(rsp *http.Response) (*GetApiMintsPubkeyResponse, error) {
+// ParseGetMintsByPubkeyResponse parses an HTTP response from a GetMintsByPubkeyWithResponse call
+func ParseGetMintsByPubkeyResponse(rsp *http.Response) (*GetMintsByPubkeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyResponse{
+	response := &GetMintsByPubkeyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -9960,15 +9957,15 @@ func ParseGetApiMintsPubkeyResponse(rsp *http.Response) (*GetApiMintsPubkeyRespo
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyLpEventsResponse parses an HTTP response from a GetApiMintsPubkeyLpEventsWithResponse call
-func ParseGetApiMintsPubkeyLpEventsResponse(rsp *http.Response) (*GetApiMintsPubkeyLpEventsResponse, error) {
+// ParseGetMintsByPubkeyLpEventsResponse parses an HTTP response from a GetMintsByPubkeyLpEventsWithResponse call
+func ParseGetMintsByPubkeyLpEventsResponse(rsp *http.Response) (*GetMintsByPubkeyLpEventsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyLpEventsResponse{
+	response := &GetMintsByPubkeyLpEventsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10000,15 +9997,15 @@ func ParseGetApiMintsPubkeyLpEventsResponse(rsp *http.Response) (*GetApiMintsPub
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyMarketsResponse parses an HTTP response from a GetApiMintsPubkeyMarketsWithResponse call
-func ParseGetApiMintsPubkeyMarketsResponse(rsp *http.Response) (*GetApiMintsPubkeyMarketsResponse, error) {
+// ParseGetMintsByPubkeyMarketsResponse parses an HTTP response from a GetMintsByPubkeyMarketsWithResponse call
+func ParseGetMintsByPubkeyMarketsResponse(rsp *http.Response) (*GetMintsByPubkeyMarketsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyMarketsResponse{
+	response := &GetMintsByPubkeyMarketsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10040,15 +10037,15 @@ func ParseGetApiMintsPubkeyMarketsResponse(rsp *http.Response) (*GetApiMintsPubk
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyMigrationsResponse parses an HTTP response from a GetApiMintsPubkeyMigrationsWithResponse call
-func ParseGetApiMintsPubkeyMigrationsResponse(rsp *http.Response) (*GetApiMintsPubkeyMigrationsResponse, error) {
+// ParseGetMintsByPubkeyMigrationsResponse parses an HTTP response from a GetMintsByPubkeyMigrationsWithResponse call
+func ParseGetMintsByPubkeyMigrationsResponse(rsp *http.Response) (*GetMintsByPubkeyMigrationsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyMigrationsResponse{
+	response := &GetMintsByPubkeyMigrationsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10080,15 +10077,15 @@ func ParseGetApiMintsPubkeyMigrationsResponse(rsp *http.Response) (*GetApiMintsP
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeySafetyEventsResponse parses an HTTP response from a GetApiMintsPubkeySafetyEventsWithResponse call
-func ParseGetApiMintsPubkeySafetyEventsResponse(rsp *http.Response) (*GetApiMintsPubkeySafetyEventsResponse, error) {
+// ParseGetMintsByPubkeySafetyEventsResponse parses an HTTP response from a GetMintsByPubkeySafetyEventsWithResponse call
+func ParseGetMintsByPubkeySafetyEventsResponse(rsp *http.Response) (*GetMintsByPubkeySafetyEventsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeySafetyEventsResponse{
+	response := &GetMintsByPubkeySafetyEventsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10120,15 +10117,15 @@ func ParseGetApiMintsPubkeySafetyEventsResponse(rsp *http.Response) (*GetApiMint
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyStatsResponse parses an HTTP response from a GetApiMintsPubkeyStatsWithResponse call
-func ParseGetApiMintsPubkeyStatsResponse(rsp *http.Response) (*GetApiMintsPubkeyStatsResponse, error) {
+// ParseGetMintsByPubkeyStatsResponse parses an HTTP response from a GetMintsByPubkeyStatsWithResponse call
+func ParseGetMintsByPubkeyStatsResponse(rsp *http.Response) (*GetMintsByPubkeyStatsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyStatsResponse{
+	response := &GetMintsByPubkeyStatsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10160,15 +10157,15 @@ func ParseGetApiMintsPubkeyStatsResponse(rsp *http.Response) (*GetApiMintsPubkey
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyTopHoldersResponse parses an HTTP response from a GetApiMintsPubkeyTopHoldersWithResponse call
-func ParseGetApiMintsPubkeyTopHoldersResponse(rsp *http.Response) (*GetApiMintsPubkeyTopHoldersResponse, error) {
+// ParseGetMintsByPubkeyTopHoldersResponse parses an HTTP response from a GetMintsByPubkeyTopHoldersWithResponse call
+func ParseGetMintsByPubkeyTopHoldersResponse(rsp *http.Response) (*GetMintsByPubkeyTopHoldersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyTopHoldersResponse{
+	response := &GetMintsByPubkeyTopHoldersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10200,15 +10197,15 @@ func ParseGetApiMintsPubkeyTopHoldersResponse(rsp *http.Response) (*GetApiMintsP
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyTopTradersResponse parses an HTTP response from a GetApiMintsPubkeyTopTradersWithResponse call
-func ParseGetApiMintsPubkeyTopTradersResponse(rsp *http.Response) (*GetApiMintsPubkeyTopTradersResponse, error) {
+// ParseGetMintsByPubkeyTopTradersResponse parses an HTTP response from a GetMintsByPubkeyTopTradersWithResponse call
+func ParseGetMintsByPubkeyTopTradersResponse(rsp *http.Response) (*GetMintsByPubkeyTopTradersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyTopTradersResponse{
+	response := &GetMintsByPubkeyTopTradersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10240,15 +10237,15 @@ func ParseGetApiMintsPubkeyTopTradersResponse(rsp *http.Response) (*GetApiMintsP
 	return response, nil
 }
 
-// ParseGetApiMintsPubkeyTradersTraderResponse parses an HTTP response from a GetApiMintsPubkeyTradersTraderWithResponse call
-func ParseGetApiMintsPubkeyTradersTraderResponse(rsp *http.Response) (*GetApiMintsPubkeyTradersTraderResponse, error) {
+// ParseGetMintsByPubkeyTradersByTraderResponse parses an HTTP response from a GetMintsByPubkeyTradersByTraderWithResponse call
+func ParseGetMintsByPubkeyTradersByTraderResponse(rsp *http.Response) (*GetMintsByPubkeyTradersByTraderResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiMintsPubkeyTradersTraderResponse{
+	response := &GetMintsByPubkeyTradersByTraderResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10287,15 +10284,15 @@ func ParseGetApiMintsPubkeyTradersTraderResponse(rsp *http.Response) (*GetApiMin
 	return response, nil
 }
 
-// ParseGetApiOhlcvResponse parses an HTTP response from a GetApiOhlcvWithResponse call
-func ParseGetApiOhlcvResponse(rsp *http.Response) (*GetApiOhlcvResponse, error) {
+// ParseGetOhlcvResponse parses an HTTP response from a GetOhlcvWithResponse call
+func ParseGetOhlcvResponse(rsp *http.Response) (*GetOhlcvResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiOhlcvResponse{
+	response := &GetOhlcvResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10334,15 +10331,15 @@ func ParseGetApiOhlcvResponse(rsp *http.Response) (*GetApiOhlcvResponse, error) 
 	return response, nil
 }
 
-// ParseGetApiStrategiesResponse parses an HTTP response from a GetApiStrategiesWithResponse call
-func ParseGetApiStrategiesResponse(rsp *http.Response) (*GetApiStrategiesResponse, error) {
+// ParseGetStrategiesResponse parses an HTTP response from a GetStrategiesWithResponse call
+func ParseGetStrategiesResponse(rsp *http.Response) (*GetStrategiesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiStrategiesResponse{
+	response := &GetStrategiesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10374,15 +10371,15 @@ func ParseGetApiStrategiesResponse(rsp *http.Response) (*GetApiStrategiesRespons
 	return response, nil
 }
 
-// ParsePostApiStrategiesResponse parses an HTTP response from a PostApiStrategiesWithResponse call
-func ParsePostApiStrategiesResponse(rsp *http.Response) (*PostApiStrategiesResponse, error) {
+// ParsePostStrategiesResponse parses an HTTP response from a PostStrategiesWithResponse call
+func ParsePostStrategiesResponse(rsp *http.Response) (*PostStrategiesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiStrategiesResponse{
+	response := &PostStrategiesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10407,15 +10404,15 @@ func ParsePostApiStrategiesResponse(rsp *http.Response) (*PostApiStrategiesRespo
 	return response, nil
 }
 
-// ParseGetApiStrategiesDashboardResponse parses an HTTP response from a GetApiStrategiesDashboardWithResponse call
-func ParseGetApiStrategiesDashboardResponse(rsp *http.Response) (*GetApiStrategiesDashboardResponse, error) {
+// ParseGetStrategiesDashboardResponse parses an HTTP response from a GetStrategiesDashboardWithResponse call
+func ParseGetStrategiesDashboardResponse(rsp *http.Response) (*GetStrategiesDashboardResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiStrategiesDashboardResponse{
+	response := &GetStrategiesDashboardResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10440,15 +10437,15 @@ func ParseGetApiStrategiesDashboardResponse(rsp *http.Response) (*GetApiStrategi
 	return response, nil
 }
 
-// ParsePostApiStrategiesPreviewResponse parses an HTTP response from a PostApiStrategiesPreviewWithResponse call
-func ParsePostApiStrategiesPreviewResponse(rsp *http.Response) (*PostApiStrategiesPreviewResponse, error) {
+// ParsePostStrategiesPreviewResponse parses an HTTP response from a PostStrategiesPreviewWithResponse call
+func ParsePostStrategiesPreviewResponse(rsp *http.Response) (*PostStrategiesPreviewResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiStrategiesPreviewResponse{
+	response := &PostStrategiesPreviewResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10473,15 +10470,15 @@ func ParsePostApiStrategiesPreviewResponse(rsp *http.Response) (*PostApiStrategi
 	return response, nil
 }
 
-// ParseGetApiStrategiesWithStatsResponse parses an HTTP response from a GetApiStrategiesWithStatsWithResponse call
-func ParseGetApiStrategiesWithStatsResponse(rsp *http.Response) (*GetApiStrategiesWithStatsResponse, error) {
+// ParseGetStrategiesWithStatsResponse parses an HTTP response from a GetStrategiesWithStatsWithResponse call
+func ParseGetStrategiesWithStatsResponse(rsp *http.Response) (*GetStrategiesWithStatsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiStrategiesWithStatsResponse{
+	response := &GetStrategiesWithStatsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10506,15 +10503,15 @@ func ParseGetApiStrategiesWithStatsResponse(rsp *http.Response) (*GetApiStrategi
 	return response, nil
 }
 
-// ParseDeleteApiStrategiesIdResponse parses an HTTP response from a DeleteApiStrategiesIdWithResponse call
-func ParseDeleteApiStrategiesIdResponse(rsp *http.Response) (*DeleteApiStrategiesIdResponse, error) {
+// ParseDeleteStrategiesByIdResponse parses an HTTP response from a DeleteStrategiesByIdWithResponse call
+func ParseDeleteStrategiesByIdResponse(rsp *http.Response) (*DeleteStrategiesByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteApiStrategiesIdResponse{
+	response := &DeleteStrategiesByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10522,15 +10519,15 @@ func ParseDeleteApiStrategiesIdResponse(rsp *http.Response) (*DeleteApiStrategie
 	return response, nil
 }
 
-// ParseGetApiStrategiesIdResponse parses an HTTP response from a GetApiStrategiesIdWithResponse call
-func ParseGetApiStrategiesIdResponse(rsp *http.Response) (*GetApiStrategiesIdResponse, error) {
+// ParseGetStrategiesByIdResponse parses an HTTP response from a GetStrategiesByIdWithResponse call
+func ParseGetStrategiesByIdResponse(rsp *http.Response) (*GetStrategiesByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiStrategiesIdResponse{
+	response := &GetStrategiesByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10555,15 +10552,15 @@ func ParseGetApiStrategiesIdResponse(rsp *http.Response) (*GetApiStrategiesIdRes
 	return response, nil
 }
 
-// ParsePutApiStrategiesIdResponse parses an HTTP response from a PutApiStrategiesIdWithResponse call
-func ParsePutApiStrategiesIdResponse(rsp *http.Response) (*PutApiStrategiesIdResponse, error) {
+// ParsePutStrategiesByIdResponse parses an HTTP response from a PutStrategiesByIdWithResponse call
+func ParsePutStrategiesByIdResponse(rsp *http.Response) (*PutStrategiesByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PutApiStrategiesIdResponse{
+	response := &PutStrategiesByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10595,15 +10592,15 @@ func ParsePutApiStrategiesIdResponse(rsp *http.Response) (*PutApiStrategiesIdRes
 	return response, nil
 }
 
-// ParseGetApiSubscriptionsMeResponse parses an HTTP response from a GetApiSubscriptionsMeWithResponse call
-func ParseGetApiSubscriptionsMeResponse(rsp *http.Response) (*GetApiSubscriptionsMeResponse, error) {
+// ParseGetSubscriptionsMeResponse parses an HTTP response from a GetSubscriptionsMeWithResponse call
+func ParseGetSubscriptionsMeResponse(rsp *http.Response) (*GetSubscriptionsMeResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiSubscriptionsMeResponse{
+	response := &GetSubscriptionsMeResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10635,15 +10632,15 @@ func ParseGetApiSubscriptionsMeResponse(rsp *http.Response) (*GetApiSubscription
 	return response, nil
 }
 
-// ParseGetApiSwapsResponse parses an HTTP response from a GetApiSwapsWithResponse call
-func ParseGetApiSwapsResponse(rsp *http.Response) (*GetApiSwapsResponse, error) {
+// ParseGetSwapsResponse parses an HTTP response from a GetSwapsWithResponse call
+func ParseGetSwapsResponse(rsp *http.Response) (*GetSwapsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiSwapsResponse{
+	response := &GetSwapsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10682,15 +10679,15 @@ func ParseGetApiSwapsResponse(rsp *http.Response) (*GetApiSwapsResponse, error) 
 	return response, nil
 }
 
-// ParseGetApiTipsGlobalResponse parses an HTTP response from a GetApiTipsGlobalWithResponse call
-func ParseGetApiTipsGlobalResponse(rsp *http.Response) (*GetApiTipsGlobalResponse, error) {
+// ParseGetTipsGlobalResponse parses an HTTP response from a GetTipsGlobalWithResponse call
+func ParseGetTipsGlobalResponse(rsp *http.Response) (*GetTipsGlobalResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTipsGlobalResponse{
+	response := &GetTipsGlobalResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10715,15 +10712,15 @@ func ParseGetApiTipsGlobalResponse(rsp *http.Response) (*GetApiTipsGlobalRespons
 	return response, nil
 }
 
-// ParseGetApiTipsHeatmapResponse parses an HTTP response from a GetApiTipsHeatmapWithResponse call
-func ParseGetApiTipsHeatmapResponse(rsp *http.Response) (*GetApiTipsHeatmapResponse, error) {
+// ParseGetTipsHeatmapResponse parses an HTTP response from a GetTipsHeatmapWithResponse call
+func ParseGetTipsHeatmapResponse(rsp *http.Response) (*GetTipsHeatmapResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTipsHeatmapResponse{
+	response := &GetTipsHeatmapResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10748,15 +10745,15 @@ func ParseGetApiTipsHeatmapResponse(rsp *http.Response) (*GetApiTipsHeatmapRespo
 	return response, nil
 }
 
-// ParseGetApiTipsLeaderboardJitoEfficiencyResponse parses an HTTP response from a GetApiTipsLeaderboardJitoEfficiencyWithResponse call
-func ParseGetApiTipsLeaderboardJitoEfficiencyResponse(rsp *http.Response) (*GetApiTipsLeaderboardJitoEfficiencyResponse, error) {
+// ParseGetTipsLeaderboardJitoEfficiencyResponse parses an HTTP response from a GetTipsLeaderboardJitoEfficiencyWithResponse call
+func ParseGetTipsLeaderboardJitoEfficiencyResponse(rsp *http.Response) (*GetTipsLeaderboardJitoEfficiencyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTipsLeaderboardJitoEfficiencyResponse{
+	response := &GetTipsLeaderboardJitoEfficiencyResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10781,15 +10778,15 @@ func ParseGetApiTipsLeaderboardJitoEfficiencyResponse(rsp *http.Response) (*GetA
 	return response, nil
 }
 
-// ParseGetApiTipsMatResponse parses an HTTP response from a GetApiTipsMatWithResponse call
-func ParseGetApiTipsMatResponse(rsp *http.Response) (*GetApiTipsMatResponse, error) {
+// ParseGetTipsMatResponse parses an HTTP response from a GetTipsMatWithResponse call
+func ParseGetTipsMatResponse(rsp *http.Response) (*GetTipsMatResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTipsMatResponse{
+	response := &GetTipsMatResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10814,15 +10811,15 @@ func ParseGetApiTipsMatResponse(rsp *http.Response) (*GetApiTipsMatResponse, err
 	return response, nil
 }
 
-// ParseGetApiTipsMevShareResponse parses an HTTP response from a GetApiTipsMevShareWithResponse call
-func ParseGetApiTipsMevShareResponse(rsp *http.Response) (*GetApiTipsMevShareResponse, error) {
+// ParseGetTipsMevShareResponse parses an HTTP response from a GetTipsMevShareWithResponse call
+func ParseGetTipsMevShareResponse(rsp *http.Response) (*GetTipsMevShareResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTipsMevShareResponse{
+	response := &GetTipsMevShareResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10847,15 +10844,15 @@ func ParseGetApiTipsMevShareResponse(rsp *http.Response) (*GetApiTipsMevShareRes
 	return response, nil
 }
 
-// ParseGetApiTipsPriorityRatioResponse parses an HTTP response from a GetApiTipsPriorityRatioWithResponse call
-func ParseGetApiTipsPriorityRatioResponse(rsp *http.Response) (*GetApiTipsPriorityRatioResponse, error) {
+// ParseGetTipsPriorityRatioResponse parses an HTTP response from a GetTipsPriorityRatioWithResponse call
+func ParseGetTipsPriorityRatioResponse(rsp *http.Response) (*GetTipsPriorityRatioResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTipsPriorityRatioResponse{
+	response := &GetTipsPriorityRatioResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10880,15 +10877,15 @@ func ParseGetApiTipsPriorityRatioResponse(rsp *http.Response) (*GetApiTipsPriori
 	return response, nil
 }
 
-// ParseGetApiTipsServicesResponse parses an HTTP response from a GetApiTipsServicesWithResponse call
-func ParseGetApiTipsServicesResponse(rsp *http.Response) (*GetApiTipsServicesResponse, error) {
+// ParseGetTipsServicesResponse parses an HTTP response from a GetTipsServicesWithResponse call
+func ParseGetTipsServicesResponse(rsp *http.Response) (*GetTipsServicesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTipsServicesResponse{
+	response := &GetTipsServicesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10913,15 +10910,15 @@ func ParseGetApiTipsServicesResponse(rsp *http.Response) (*GetApiTipsServicesRes
 	return response, nil
 }
 
-// ParseGetApiTraderFiltersResponse parses an HTTP response from a GetApiTraderFiltersWithResponse call
-func ParseGetApiTraderFiltersResponse(rsp *http.Response) (*GetApiTraderFiltersResponse, error) {
+// ParseGetTraderFiltersResponse parses an HTTP response from a GetTraderFiltersWithResponse call
+func ParseGetTraderFiltersResponse(rsp *http.Response) (*GetTraderFiltersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTraderFiltersResponse{
+	response := &GetTraderFiltersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -10953,15 +10950,15 @@ func ParseGetApiTraderFiltersResponse(rsp *http.Response) (*GetApiTraderFiltersR
 	return response, nil
 }
 
-// ParsePostApiTraderFiltersResponse parses an HTTP response from a PostApiTraderFiltersWithResponse call
-func ParsePostApiTraderFiltersResponse(rsp *http.Response) (*PostApiTraderFiltersResponse, error) {
+// ParsePostTraderFiltersResponse parses an HTTP response from a PostTraderFiltersWithResponse call
+func ParsePostTraderFiltersResponse(rsp *http.Response) (*PostTraderFiltersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiTraderFiltersResponse{
+	response := &PostTraderFiltersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11007,15 +11004,15 @@ func ParsePostApiTraderFiltersResponse(rsp *http.Response) (*PostApiTraderFilter
 	return response, nil
 }
 
-// ParseDeleteApiTraderFiltersIdResponse parses an HTTP response from a DeleteApiTraderFiltersIdWithResponse call
-func ParseDeleteApiTraderFiltersIdResponse(rsp *http.Response) (*DeleteApiTraderFiltersIdResponse, error) {
+// ParseDeleteTraderFiltersByIdResponse parses an HTTP response from a DeleteTraderFiltersByIdWithResponse call
+func ParseDeleteTraderFiltersByIdResponse(rsp *http.Response) (*DeleteTraderFiltersByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &DeleteApiTraderFiltersIdResponse{
+	response := &DeleteTraderFiltersByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11054,69 +11051,15 @@ func ParseDeleteApiTraderFiltersIdResponse(rsp *http.Response) (*DeleteApiTrader
 	return response, nil
 }
 
-// ParseGetApiTraderFiltersIdResponse parses an HTTP response from a GetApiTraderFiltersIdWithResponse call
-func ParseGetApiTraderFiltersIdResponse(rsp *http.Response) (*GetApiTraderFiltersIdResponse, error) {
+// ParseGetTraderFiltersByIdResponse parses an HTTP response from a GetTraderFiltersByIdWithResponse call
+func ParseGetTraderFiltersByIdResponse(rsp *http.Response) (*GetTraderFiltersByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTraderFiltersIdResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PulsightInternalCoreDomainTraderFilter
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePutApiTraderFiltersIdResponse parses an HTTP response from a PutApiTraderFiltersIdWithResponse call
-func ParsePutApiTraderFiltersIdResponse(rsp *http.Response) (*PutApiTraderFiltersIdResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PutApiTraderFiltersIdResponse{
+	response := &GetTraderFiltersByIdResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11162,15 +11105,69 @@ func ParsePutApiTraderFiltersIdResponse(rsp *http.Response) (*PutApiTraderFilter
 	return response, nil
 }
 
-// ParseGetApiTradersResponse parses an HTTP response from a GetApiTradersWithResponse call
-func ParseGetApiTradersResponse(rsp *http.Response) (*GetApiTradersResponse, error) {
+// ParsePutTraderFiltersByIdResponse parses an HTTP response from a PutTraderFiltersByIdWithResponse call
+func ParsePutTraderFiltersByIdResponse(rsp *http.Response) (*PutTraderFiltersByIdResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersResponse{
+	response := &PutTraderFiltersByIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainTraderFilter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTradersResponse parses an HTTP response from a GetTradersWithResponse call
+func ParseGetTradersResponse(rsp *http.Response) (*GetTradersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTradersResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11216,15 +11213,15 @@ func ParseGetApiTradersResponse(rsp *http.Response) (*GetApiTradersResponse, err
 	return response, nil
 }
 
-// ParseGetApiTradersByIdTraderIDResponse parses an HTTP response from a GetApiTradersByIdTraderIDWithResponse call
-func ParseGetApiTradersByIdTraderIDResponse(rsp *http.Response) (*GetApiTradersByIdTraderIDResponse, error) {
+// ParseGetTradersByIdByTraderIDResponse parses an HTTP response from a GetTradersByIdByTraderIDWithResponse call
+func ParseGetTradersByIdByTraderIDResponse(rsp *http.Response) (*GetTradersByIdByTraderIDResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersByIdTraderIDResponse{
+	response := &GetTradersByIdByTraderIDResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11270,15 +11267,15 @@ func ParseGetApiTradersByIdTraderIDResponse(rsp *http.Response) (*GetApiTradersB
 	return response, nil
 }
 
-// ParseGetApiTradersByWalletWalletAddressResponse parses an HTTP response from a GetApiTradersByWalletWalletAddressWithResponse call
-func ParseGetApiTradersByWalletWalletAddressResponse(rsp *http.Response) (*GetApiTradersByWalletWalletAddressResponse, error) {
+// ParseGetTradersByWalletByWalletAddressResponse parses an HTTP response from a GetTradersByWalletByWalletAddressWithResponse call
+func ParseGetTradersByWalletByWalletAddressResponse(rsp *http.Response) (*GetTradersByWalletByWalletAddressResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersByWalletWalletAddressResponse{
+	response := &GetTradersByWalletByWalletAddressResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11317,15 +11314,15 @@ func ParseGetApiTradersByWalletWalletAddressResponse(rsp *http.Response) (*GetAp
 	return response, nil
 }
 
-// ParsePostApiTradersExportResponse parses an HTTP response from a PostApiTradersExportWithResponse call
-func ParsePostApiTradersExportResponse(rsp *http.Response) (*PostApiTradersExportResponse, error) {
+// ParsePostTradersExportResponse parses an HTTP response from a PostTradersExportWithResponse call
+func ParsePostTradersExportResponse(rsp *http.Response) (*PostTradersExportResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiTradersExportResponse{
+	response := &PostTradersExportResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11386,15 +11383,15 @@ func ParsePostApiTradersExportResponse(rsp *http.Response) (*PostApiTradersExpor
 	return response, nil
 }
 
-// ParseGetApiTradersSearchResponse parses an HTTP response from a GetApiTradersSearchWithResponse call
-func ParseGetApiTradersSearchResponse(rsp *http.Response) (*GetApiTradersSearchResponse, error) {
+// ParseGetTradersSearchResponse parses an HTTP response from a GetTradersSearchWithResponse call
+func ParseGetTradersSearchResponse(rsp *http.Response) (*GetTradersSearchResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersSearchResponse{
+	response := &GetTradersSearchResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11433,15 +11430,15 @@ func ParseGetApiTradersSearchResponse(rsp *http.Response) (*GetApiTradersSearchR
 	return response, nil
 }
 
-// ParseGetApiTradersSnapshotResponse parses an HTTP response from a GetApiTradersSnapshotWithResponse call
-func ParseGetApiTradersSnapshotResponse(rsp *http.Response) (*GetApiTradersSnapshotResponse, error) {
+// ParseGetTradersSnapshotResponse parses an HTTP response from a GetTradersSnapshotWithResponse call
+func ParseGetTradersSnapshotResponse(rsp *http.Response) (*GetTradersSnapshotResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersSnapshotResponse{
+	response := &GetTradersSnapshotResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11466,15 +11463,15 @@ func ParseGetApiTradersSnapshotResponse(rsp *http.Response) (*GetApiTradersSnaps
 	return response, nil
 }
 
-// ParseGetApiTradersTraderIDDailyProfitsResponse parses an HTTP response from a GetApiTradersTraderIDDailyProfitsWithResponse call
-func ParseGetApiTradersTraderIDDailyProfitsResponse(rsp *http.Response) (*GetApiTradersTraderIDDailyProfitsResponse, error) {
+// ParseGetTradersByTraderIDDailyProfitsResponse parses an HTTP response from a GetTradersByTraderIDDailyProfitsWithResponse call
+func ParseGetTradersByTraderIDDailyProfitsResponse(rsp *http.Response) (*GetTradersByTraderIDDailyProfitsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersTraderIDDailyProfitsResponse{
+	response := &GetTradersByTraderIDDailyProfitsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11513,15 +11510,15 @@ func ParseGetApiTradersTraderIDDailyProfitsResponse(rsp *http.Response) (*GetApi
 	return response, nil
 }
 
-// ParseGetApiTradersTraderIDPnlsResponse parses an HTTP response from a GetApiTradersTraderIDPnlsWithResponse call
-func ParseGetApiTradersTraderIDPnlsResponse(rsp *http.Response) (*GetApiTradersTraderIDPnlsResponse, error) {
+// ParseGetTradersByTraderIDPnlsResponse parses an HTTP response from a GetTradersByTraderIDPnlsWithResponse call
+func ParseGetTradersByTraderIDPnlsResponse(rsp *http.Response) (*GetTradersByTraderIDPnlsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersTraderIDPnlsResponse{
+	response := &GetTradersByTraderIDPnlsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11553,15 +11550,15 @@ func ParseGetApiTradersTraderIDPnlsResponse(rsp *http.Response) (*GetApiTradersT
 	return response, nil
 }
 
-// ParseGetApiTradersWalletAddressCreatedTokensResponse parses an HTTP response from a GetApiTradersWalletAddressCreatedTokensWithResponse call
-func ParseGetApiTradersWalletAddressCreatedTokensResponse(rsp *http.Response) (*GetApiTradersWalletAddressCreatedTokensResponse, error) {
+// ParseGetTradersByWalletAddressCreatedTokensResponse parses an HTTP response from a GetTradersByWalletAddressCreatedTokensWithResponse call
+func ParseGetTradersByWalletAddressCreatedTokensResponse(rsp *http.Response) (*GetTradersByWalletAddressCreatedTokensResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersWalletAddressCreatedTokensResponse{
+	response := &GetTradersByWalletAddressCreatedTokensResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11593,15 +11590,15 @@ func ParseGetApiTradersWalletAddressCreatedTokensResponse(rsp *http.Response) (*
 	return response, nil
 }
 
-// ParseGetApiTradersWalletAddressPnlSeriesResponse parses an HTTP response from a GetApiTradersWalletAddressPnlSeriesWithResponse call
-func ParseGetApiTradersWalletAddressPnlSeriesResponse(rsp *http.Response) (*GetApiTradersWalletAddressPnlSeriesResponse, error) {
+// ParseGetTradersByWalletAddressPnlSeriesResponse parses an HTTP response from a GetTradersByWalletAddressPnlSeriesWithResponse call
+func ParseGetTradersByWalletAddressPnlSeriesResponse(rsp *http.Response) (*GetTradersByWalletAddressPnlSeriesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersWalletAddressPnlSeriesResponse{
+	response := &GetTradersByWalletAddressPnlSeriesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11640,15 +11637,15 @@ func ParseGetApiTradersWalletAddressPnlSeriesResponse(rsp *http.Response) (*GetA
 	return response, nil
 }
 
-// ParseGetApiTradersWalletAddressTipsResponse parses an HTTP response from a GetApiTradersWalletAddressTipsWithResponse call
-func ParseGetApiTradersWalletAddressTipsResponse(rsp *http.Response) (*GetApiTradersWalletAddressTipsResponse, error) {
+// ParseGetTradersByWalletAddressTipsResponse parses an HTTP response from a GetTradersByWalletAddressTipsWithResponse call
+func ParseGetTradersByWalletAddressTipsResponse(rsp *http.Response) (*GetTradersByWalletAddressTipsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersWalletAddressTipsResponse{
+	response := &GetTradersByWalletAddressTipsResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11694,15 +11691,15 @@ func ParseGetApiTradersWalletAddressTipsResponse(rsp *http.Response) (*GetApiTra
 	return response, nil
 }
 
-// ParseGetApiTradersWalletAddressTipsServicesResponse parses an HTTP response from a GetApiTradersWalletAddressTipsServicesWithResponse call
-func ParseGetApiTradersWalletAddressTipsServicesResponse(rsp *http.Response) (*GetApiTradersWalletAddressTipsServicesResponse, error) {
+// ParseGetTradersByWalletAddressTipsServicesResponse parses an HTTP response from a GetTradersByWalletAddressTipsServicesWithResponse call
+func ParseGetTradersByWalletAddressTipsServicesResponse(rsp *http.Response) (*GetTradersByWalletAddressTipsServicesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersWalletAddressTipsServicesResponse{
+	response := &GetTradersByWalletAddressTipsServicesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11741,15 +11738,15 @@ func ParseGetApiTradersWalletAddressTipsServicesResponse(rsp *http.Response) (*G
 	return response, nil
 }
 
-// ParseGetApiTradersWalletAddressTokensResponse parses an HTTP response from a GetApiTradersWalletAddressTokensWithResponse call
-func ParseGetApiTradersWalletAddressTokensResponse(rsp *http.Response) (*GetApiTradersWalletAddressTokensResponse, error) {
+// ParseGetTradersByWalletAddressTokensResponse parses an HTTP response from a GetTradersByWalletAddressTokensWithResponse call
+func ParseGetTradersByWalletAddressTokensResponse(rsp *http.Response) (*GetTradersByWalletAddressTokensResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetApiTradersWalletAddressTokensResponse{
+	response := &GetTradersByWalletAddressTokensResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
