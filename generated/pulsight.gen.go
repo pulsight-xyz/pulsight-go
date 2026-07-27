@@ -1049,9 +1049,17 @@ type PulsightInternalCoreDomainAggregatorMintMigration struct {
 	Slot            *int    `json:"slot,omitempty"`
 
 	// Source Source ∈ {"observed","inferred"} (CHECK constraint).
-	Source    *string `json:"source,omitempty"`
-	Timestamp *string `json:"timestamp,omitempty"`
-	ToDex     *string `json:"to_dex,omitempty"`
+	Source *string `json:"source,omitempty"`
+
+	// SourcePool SourcePool is the bonding-curve pool the mint traded on BEFORE
+	// graduating. Together with DestinationPool it is the mint's market
+	// lineage — the pools /api/ohlcv merges into one continuous chart when
+	// no pool is pinned. Empty when unknown (rows predating
+	// carbon-aggregator CH migration 000073, or a venue whose migration ix
+	// doesn't expose the curve); treat '' as "no pre-graduation side".
+	SourcePool *string `json:"source_pool,omitempty"`
+	Timestamp  *string `json:"timestamp,omitempty"`
+	ToDex      *string `json:"to_dex,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintRow defines model for pulsight_internal_core_domain_aggregator.MintRow.
@@ -1460,6 +1468,10 @@ type PulsightInternalCoreDomainCreditReason string
 
 // PulsightInternalCoreDomainCreditTransaction defines model for pulsight_internal_core_domain_credit.Transaction.
 type PulsightInternalCoreDomainCreditTransaction struct {
+	// ApiKeyId APIKeyID attributes a metered consume to the api token that caused
+	// it. nil for interactive sessions, OAuth callers, admin adjustments
+	// and period grants — and for every row written before changeset 079.
+	ApiKeyId  *string                                 `json:"api_key_id,omitempty"`
 	CreatedAt *string                                 `json:"created_at,omitempty"`
 	Delta     *int                                    `json:"delta,omitempty"`
 	Id        *string                                 `json:"id,omitempty"`
@@ -1956,17 +1968,22 @@ type PulsightInternalCoreUsecasesBacktestBacktestStatus string
 // PulsightInternalCoreUsecasesBacktestBacktestSummary defines model for pulsight_internal_core_usecases_backtest.BacktestSummary.
 type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// CopiesSkippedUnpriced CopiesSkippedUnpriced counts mirror trades that passed every rule and
-	// would have fired, but whose triggering swap carried no post-swap price
-	// — so no honest fill price exists for them and they were NOT traded.
+	// would have fired, but whose triggering swap could not be priced honestly
+	// — so they were NOT traded. Two causes, both data-side:
+	//
+	//   1. no post-swap price on the leg at all (every Meteora DLMM leg, and
+	//      every DAMM v2 / DBC leg ingested before those decoders were fixed);
+	//   2. a leg whose reserve is impossible for a post-swap snapshot, which
+	//      means it is a PRE-swap one and its price is the pre-swap price
+	//      (PumpSwap — see postSwapReserveConsistent).
 	//
 	// A non-zero value means the run under-represents the strategy: it is a
-	// COVERAGE gap, not a signal quality one. It is dominated by venues whose
-	// decoder emits no marginal price (every Meteora DLMM leg, and every
-	// DAMM v2 / DBC leg ingested before those decoders were fixed), so a
-	// launch-sniping mirror over historical data can skip most of its entries
-	// while a PumpSwap mirror skips none. Surfaced so a mostly-skipped run
-	// reads as "not enough data" instead of quietly looking like a thin
-	// strategy. Additive JSONB field — pre-existing rows decode as 0.
+	// COVERAGE gap, not a signal quality one. Cause 1 makes a launch-sniping
+	// mirror over historical data skip most of its entries; cause 2 fires on
+	// exactly the large launch buys such a strategy targets. Surfaced so a
+	// mostly-skipped run reads as "not enough data" instead of quietly looking
+	// like a thin strategy — or worse, than being filled at a fictional price
+	// and looking profitable. Additive JSONB field — old rows decode as 0.
 	CopiesSkippedUnpriced *int     `json:"copies_skipped_unpriced,omitempty"`
 	EndingBalanceSol      *float32 `json:"ending_balance_sol,omitempty"`
 	FeesPaidSol           *float32 `json:"fees_paid_sol,omitempty"`
@@ -2456,6 +2473,9 @@ type GetOhlcvParams struct {
 
 	// Pool Market (pool pubkey) to chart; defaults to the most active pool
 	Pool *string `form:"pool,omitempty" json:"pool,omitempty"`
+
+	// Market Scope of an unpinned chart (lineage|pool; default lineage). lineage merges a graduated token's bonding curve with the pool it migrated to so it charts as one continuous market; pool reads the single dominant pool. Ignored when `pool` is set.
+	Market *string `form:"market,omitempty" json:"market,omitempty"`
 
 	// Quote Price denomination (native|sol|usd; default native)
 	Quote *string `form:"quote,omitempty" json:"quote,omitempty"`
@@ -6115,6 +6135,18 @@ func NewGetOhlcvRequest(server string, params *GetOhlcvParams) (*http.Request, e
 		if params.Pool != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pool", *params.Pool, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Market != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "market", *params.Market, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -12487,8 +12519,6 @@ type GetTradersByWalletAddressTipsResponse struct {
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON401 the response for an HTTP 401 `application/json` response
 	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON404 the response for an HTTP 404 `application/json` response
-	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON500 the response for an HTTP 500 `application/json` response
 	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
@@ -12506,11 +12536,6 @@ func (r GetTradersByWalletAddressTipsResponse) GetJSON400() *InternalAdaptersPri
 // GetJSON401 returns the response for an HTTP 401 `application/json` response
 func (r GetTradersByWalletAddressTipsResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON401
-}
-
-// GetJSON404 returns the response for an HTTP 404 `application/json` response
-func (r GetTradersByWalletAddressTipsResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON404
 }
 
 // GetJSON500 returns the response for an HTTP 500 `application/json` response
@@ -16591,13 +16616,6 @@ func ParseGetTradersByWalletAddressTipsResponse(rsp *http.Response) (*GetTraders
 			return nil, err
 		}
 		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
