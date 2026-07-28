@@ -454,6 +454,7 @@ const (
 	TokenScopeMirrorsTraded PulsightInternalCoreUsecasesBacktestTokenScopeKind = "mirrors_traded"
 	TokenScopeSingleMint    PulsightInternalCoreUsecasesBacktestTokenScopeKind = "single_mint"
 	TokenScopeStandalone    PulsightInternalCoreUsecasesBacktestTokenScopeKind = "standalone"
+	TokenScopeStrategy      PulsightInternalCoreUsecasesBacktestTokenScopeKind = "strategy"
 	TokenScopeTraderTraded  PulsightInternalCoreUsecasesBacktestTokenScopeKind = "trader_traded"
 )
 
@@ -468,6 +469,8 @@ func (e PulsightInternalCoreUsecasesBacktestTokenScopeKind) Valid() bool {
 		return true
 	case TokenScopeStandalone:
 		return true
+	case TokenScopeStrategy:
+		return true
 	case TokenScopeTraderTraded:
 		return true
 	default:
@@ -477,10 +480,11 @@ func (e PulsightInternalCoreUsecasesBacktestTokenScopeKind) Valid() bool {
 
 // Defines values for PulsightInternalCoreUsecasesBacktestTradeSource.
 const (
-	TradeSourceCopyBuy  PulsightInternalCoreUsecasesBacktestTradeSource = "copy_buy"
-	TradeSourceCopySell PulsightInternalCoreUsecasesBacktestTradeSource = "copy_sell"
-	TradeSourceEmitBuy  PulsightInternalCoreUsecasesBacktestTradeSource = "emit_buy"
-	TradeSourceEmitSell PulsightInternalCoreUsecasesBacktestTradeSource = "emit_sell"
+	TradeSourceCopyBuy   PulsightInternalCoreUsecasesBacktestTradeSource = "copy_buy"
+	TradeSourceCopySell  PulsightInternalCoreUsecasesBacktestTradeSource = "copy_sell"
+	TradeSourceEmitBuy   PulsightInternalCoreUsecasesBacktestTradeSource = "emit_buy"
+	TradeSourceEmitSell  PulsightInternalCoreUsecasesBacktestTradeSource = "emit_sell"
+	TradeSourceScopeExit PulsightInternalCoreUsecasesBacktestTradeSource = "scope_exit"
 )
 
 // Valid indicates whether the value is a known member of the PulsightInternalCoreUsecasesBacktestTradeSource enum.
@@ -493,6 +497,8 @@ func (e PulsightInternalCoreUsecasesBacktestTradeSource) Valid() bool {
 	case TradeSourceEmitBuy:
 		return true
 	case TradeSourceEmitSell:
+		return true
+	case TradeSourceScopeExit:
 		return true
 	default:
 		return false
@@ -626,8 +632,10 @@ type InternalAdaptersPrimaryHttpHandlerErrorResponse struct {
 
 // InternalAdaptersPrimaryHttpHandlerPickTokensRequest defines model for internal_adapters_primary_http_handler.pickTokensRequest.
 type InternalAdaptersPrimaryHttpHandlerPickTokensRequest struct {
-	Scope     *PulsightInternalCoreUsecasesBacktestTokenScope `json:"scope,omitempty"`
-	TimeRange *PulsightInternalCoreUsecasesBacktestTimeRange  `json:"time_range,omitempty"`
+	Def        *PulsightInternalCoreDomainStrategyStrategyDef  `json:"def,omitempty"`
+	Scope      *PulsightInternalCoreUsecasesBacktestTokenScope `json:"scope,omitempty"`
+	StrategyId *string                                         `json:"strategy_id,omitempty"`
+	TimeRange  *PulsightInternalCoreUsecasesBacktestTimeRange  `json:"time_range,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerPickTokensResponse defines model for internal_adapters_primary_http_handler.pickTokensResponse.
@@ -685,6 +693,11 @@ type InternalAdaptersPrimaryHttpHandlerSnapshotRow struct {
 	// TokensGraduated subset that graduated
 	TokensGraduated *int    `json:"tokens_graduated,omitempty"`
 	Trader          *string `json:"trader,omitempty"`
+}
+
+// InternalAdaptersPrimaryHttpHandlerSolPriceResponse defines model for internal_adapters_primary_http_handler.solPriceResponse.
+type InternalAdaptersPrimaryHttpHandlerSolPriceResponse struct {
+	SolUsd *float32 `json:"sol_usd,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerStrategyCreateRequest defines model for internal_adapters_primary_http_handler.strategyCreateRequest.
@@ -1549,6 +1562,12 @@ type PulsightInternalCoreDomainStrategyStrategyDef struct {
 	Constraints *PulsightInternalCoreDomainStrategyGlobalConstraints `json:"constraints,omitempty"`
 	Entry       *PulsightInternalCoreDomainStrategySubGraph          `json:"entry,omitempty"`
 	Exit        *PulsightInternalCoreDomainStrategySubGraph          `json:"exit,omitempty"`
+
+	// Selection Selection is the token-universe plane: a boolean tree of selection
+	// predicates rooted at a single Universe node. nil (or empty) ⇒ the
+	// strategy does not describe its own universe — it needs mirror
+	// wallets or an explicit run-time scope.
+	Selection *PulsightInternalCoreDomainStrategySubGraph `json:"selection,omitempty"`
 }
 
 // PulsightInternalCoreDomainStrategySubGraph defines model for pulsight_internal_core_domain_strategy.SubGraph.
@@ -2136,7 +2155,10 @@ type PulsightInternalCoreUsecasesBacktestTokenScope struct {
 	Include *PulsightInternalCoreUsecasesBacktestSelectionFilter `json:"include,omitempty"`
 	Kind    *PulsightInternalCoreUsecasesBacktestTokenScopeKind  `json:"kind,omitempty"`
 
-	// MaxMints MirrorsTraded + TraderTraded + Standalone (cap on selected mints).
+	// MaxMints MaxMints — on a Strategy scope this is STAMPED BY THE RUNNER at submit
+	// (from the def's Universe node / mirror default) so the tick-budget and
+	// credit math have a mint bound; requests don't set it. Legacy kinds
+	// carried it on the wire.
 	MaxMints *int `json:"max_mints,omitempty"`
 
 	// Mint SingleMint
@@ -2154,11 +2176,11 @@ type PulsightInternalCoreUsecasesBacktestTokenScope struct {
 	// previewed.
 	Pool *string `json:"pool,omitempty"`
 
-	// Trader TraderTraded only.
+	// Trader Legacy TraderTraded only.
 	Trader *string `json:"trader,omitempty"`
 
-	// Window Standalone only — the point-in-time selection window + the
-	// include / exclude ("unselect") predicate filters.
+	// Window Legacy Standalone only — kept so old rows round-trip and the
+	// pick-tokens legacy form parses.
 	Window *PulsightInternalCoreUsecasesBacktestTimeRange `json:"window,omitempty"`
 }
 
@@ -3042,6 +3064,13 @@ type ClientInterface interface {
 	// Corresponds with GET /api/ohlcv (the `GetOhlcv` operationId).
 	GetOhlcv(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetSolPrice Get the SOL/USD reference rate
+	//
+	// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+	//
+	// Corresponds with GET /api/sol-price (the `GetSolPrice` operationId).
+	GetSolPrice(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetStrategies List Strategies
 	//
 	// Corresponds with GET /api/strategies (the `GetStrategies` operationId).
@@ -3898,6 +3927,23 @@ func (c *Client) GetMintsByPubkeyTradersByTrader(ctx context.Context, pubkey str
 // Corresponds with GET /api/ohlcv (the `GetOhlcv` operationId).
 func (c *Client) GetOhlcv(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetOhlcvRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSolPrice Get the SOL/USD reference rate
+//
+// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+//
+// Corresponds with GET /api/sol-price (the `GetSolPrice` operationId).
+func (c *Client) GetSolPrice(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSolPriceRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -6220,6 +6266,33 @@ func NewGetOhlcvRequest(server string, params *GetOhlcvParams) (*http.Request, e
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
 		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSolPriceRequest constructs an http.Request for the GetSolPrice method
+func NewGetSolPriceRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/sol-price")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -8807,6 +8880,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/ohlcv (the `GetOhlcv` operationId).
 	GetOhlcvWithResponse(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*GetOhlcvResponse, error)
 
+	// GetSolPriceWithResponse Get the SOL/USD reference rate
+	//
+	// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/sol-price (the `GetSolPrice` operationId).
+	GetSolPriceWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSolPriceResponse, error)
+
 	// GetStrategiesWithResponse List Strategies
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -9368,6 +9450,8 @@ type PostBacktestsPickTokensResponse struct {
 	JSON200 *InternalAdaptersPrimaryHttpHandlerPickTokensResponse
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -9378,6 +9462,11 @@ func (r PostBacktestsPickTokensResponse) GetJSON200() *InternalAdaptersPrimaryHt
 // GetJSON400 returns the response for an HTTP 400 `application/json` response
 func (r PostBacktestsPickTokensResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r PostBacktestsPickTokensResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
 }
 
 // GetBody returns the raw response body bytes
@@ -10682,6 +10771,54 @@ func (r GetOhlcvResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetOhlcvResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetSolPriceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *InternalAdaptersPrimaryHttpHandlerSolPriceResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSolPriceResponse) GetJSON200() *InternalAdaptersPrimaryHttpHandlerSolPriceResponse {
+	return r.JSON200
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetSolPriceResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSolPriceResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSolPriceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSolPriceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSolPriceResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13462,6 +13599,21 @@ func (c *ClientWithResponses) GetOhlcvWithResponse(ctx context.Context, params *
 	return ParseGetOhlcvResponse(rsp)
 }
 
+// GetSolPriceWithResponse Get the SOL/USD reference rate
+//
+// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/sol-price (the `GetSolPrice` operationId).
+func (c *ClientWithResponses) GetSolPriceWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSolPriceResponse, error) {
+	rsp, err := c.GetSolPrice(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSolPriceResponse(rsp)
+}
+
 // GetStrategiesWithResponse List Strategies
 //
 // Returns a wrapper object for the known response body format(s).
@@ -14297,6 +14449,13 @@ func ParsePostBacktestsPickTokensResponse(rsp *http.Response) (*PostBacktestsPic
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	}
 
@@ -15227,6 +15386,39 @@ func ParseGetOhlcvResponse(rsp *http.Response) (*GetOhlcvResponse, error) {
 			return nil, err
 		}
 		response.JSON402 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSolPriceResponse parses an HTTP response from a GetSolPriceWithResponse call
+func ParseGetSolPriceResponse(rsp *http.Response) (*GetSolPriceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSolPriceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest InternalAdaptersPrimaryHttpHandlerSolPriceResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
