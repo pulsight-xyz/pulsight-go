@@ -187,33 +187,6 @@ func (e PulsightInternalCoreDomainCreditReason) Valid() bool {
 	}
 }
 
-// Defines values for PulsightInternalCoreDomainStrategyComparisonOp.
-const (
-	ComparisonEq  PulsightInternalCoreDomainStrategyComparisonOp = "eq"
-	ComparisonGt  PulsightInternalCoreDomainStrategyComparisonOp = "gt"
-	ComparisonGte PulsightInternalCoreDomainStrategyComparisonOp = "gte"
-	ComparisonLt  PulsightInternalCoreDomainStrategyComparisonOp = "lt"
-	ComparisonLte PulsightInternalCoreDomainStrategyComparisonOp = "lte"
-)
-
-// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainStrategyComparisonOp enum.
-func (e PulsightInternalCoreDomainStrategyComparisonOp) Valid() bool {
-	switch e {
-	case ComparisonEq:
-		return true
-	case ComparisonGt:
-		return true
-	case ComparisonGte:
-		return true
-	case ComparisonLt:
-		return true
-	case ComparisonLte:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for PulsightInternalCoreDomainStrategyEdgePort.
 const (
 	EdgePortCond    PulsightInternalCoreDomainStrategyEdgePort = "cond"
@@ -232,33 +205,6 @@ func (e PulsightInternalCoreDomainStrategyEdgePort) Valid() bool {
 	case EdgePortElse:
 		return true
 	case EdgePortThen:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for PulsightInternalCoreDomainStrategyEventKind.
-const (
-	EventDevSold         PulsightInternalCoreDomainStrategyEventKind = "dev_sold"
-	EventFreezeRenounced PulsightInternalCoreDomainStrategyEventKind = "freeze_renounced"
-	EventHoneypot        PulsightInternalCoreDomainStrategyEventKind = "honeypot"
-	EventLpBurned        PulsightInternalCoreDomainStrategyEventKind = "lp_burned"
-	EventMintRenounced   PulsightInternalCoreDomainStrategyEventKind = "mint_renounced"
-)
-
-// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainStrategyEventKind enum.
-func (e PulsightInternalCoreDomainStrategyEventKind) Valid() bool {
-	switch e {
-	case EventDevSold:
-		return true
-	case EventFreezeRenounced:
-		return true
-	case EventHoneypot:
-		return true
-	case EventLpBurned:
-		return true
-	case EventMintRenounced:
 		return true
 	default:
 		return false
@@ -373,57 +319,6 @@ func (e PulsightInternalCoreUsecasesBacktestBacktestStatus) Valid() bool {
 	case BacktestStatusPending:
 		return true
 	case BacktestStatusRunning:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for PulsightInternalCoreUsecasesBacktestSelectionMetric.
-const (
-	SelMetricLiquiditySol   PulsightInternalCoreUsecasesBacktestSelectionMetric = "liquidity_sol"
-	SelMetricPriceChangePct PulsightInternalCoreUsecasesBacktestSelectionMetric = "price_change_pct"
-	SelMetricSwapCount      PulsightInternalCoreUsecasesBacktestSelectionMetric = "swap_count"
-	SelMetricVolumeSol      PulsightInternalCoreUsecasesBacktestSelectionMetric = "volume_sol"
-)
-
-// Valid indicates whether the value is a known member of the PulsightInternalCoreUsecasesBacktestSelectionMetric enum.
-func (e PulsightInternalCoreUsecasesBacktestSelectionMetric) Valid() bool {
-	switch e {
-	case SelMetricLiquiditySol:
-		return true
-	case SelMetricPriceChangePct:
-		return true
-	case SelMetricSwapCount:
-		return true
-	case SelMetricVolumeSol:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for PulsightInternalCoreUsecasesBacktestSelectionMetricWindow.
-const (
-	SelWindow12h PulsightInternalCoreUsecasesBacktestSelectionMetricWindow = "12h"
-	SelWindow1h  PulsightInternalCoreUsecasesBacktestSelectionMetricWindow = "1h"
-	SelWindow30m PulsightInternalCoreUsecasesBacktestSelectionMetricWindow = "30m"
-	SelWindow5m  PulsightInternalCoreUsecasesBacktestSelectionMetricWindow = "5m"
-	SelWindow6h  PulsightInternalCoreUsecasesBacktestSelectionMetricWindow = "6h"
-)
-
-// Valid indicates whether the value is a known member of the PulsightInternalCoreUsecasesBacktestSelectionMetricWindow enum.
-func (e PulsightInternalCoreUsecasesBacktestSelectionMetricWindow) Valid() bool {
-	switch e {
-	case SelWindow12h:
-		return true
-	case SelWindow1h:
-		return true
-	case SelWindow30m:
-		return true
-	case SelWindow5m:
-		return true
-	case SelWindow6h:
 		return true
 	default:
 		return false
@@ -632,10 +527,9 @@ type InternalAdaptersPrimaryHttpHandlerErrorResponse struct {
 
 // InternalAdaptersPrimaryHttpHandlerPickTokensRequest defines model for internal_adapters_primary_http_handler.pickTokensRequest.
 type InternalAdaptersPrimaryHttpHandlerPickTokensRequest struct {
-	Def        *PulsightInternalCoreDomainStrategyStrategyDef  `json:"def,omitempty"`
-	Scope      *PulsightInternalCoreUsecasesBacktestTokenScope `json:"scope,omitempty"`
-	StrategyId *string                                         `json:"strategy_id,omitempty"`
-	TimeRange  *PulsightInternalCoreUsecasesBacktestTimeRange  `json:"time_range,omitempty"`
+	Def        *PulsightInternalCoreDomainStrategyStrategyDef `json:"def,omitempty"`
+	StrategyId *string                                        `json:"strategy_id,omitempty"`
+	TimeRange  *PulsightInternalCoreUsecasesBacktestTimeRange `json:"time_range,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerPickTokensResponse defines model for internal_adapters_primary_http_handler.pickTokensResponse.
@@ -1494,9 +1388,6 @@ type PulsightInternalCoreDomainCreditTransaction struct {
 	UserId    *string                                 `json:"user_id,omitempty"`
 }
 
-// PulsightInternalCoreDomainStrategyComparisonOp defines model for pulsight_internal_core_domain_strategy.ComparisonOp.
-type PulsightInternalCoreDomainStrategyComparisonOp string
-
 // PulsightInternalCoreDomainStrategyEdge defines model for pulsight_internal_core_domain_strategy.Edge.
 type PulsightInternalCoreDomainStrategyEdge struct {
 	From *string                                     `json:"from,omitempty"`
@@ -1506,9 +1397,6 @@ type PulsightInternalCoreDomainStrategyEdge struct {
 
 // PulsightInternalCoreDomainStrategyEdgePort defines model for pulsight_internal_core_domain_strategy.EdgePort.
 type PulsightInternalCoreDomainStrategyEdgePort string
-
-// PulsightInternalCoreDomainStrategyEventKind defines model for pulsight_internal_core_domain_strategy.EventKind.
-type PulsightInternalCoreDomainStrategyEventKind string
 
 // PulsightInternalCoreDomainStrategyGlobalConstraints defines model for pulsight_internal_core_domain_strategy.GlobalConstraints.
 type PulsightInternalCoreDomainStrategyGlobalConstraints struct {
@@ -2079,23 +1967,6 @@ type PulsightInternalCoreUsecasesBacktestBacktestTrade struct {
 	Ts                   *string  `json:"ts,omitempty"`
 }
 
-// PulsightInternalCoreUsecasesBacktestEventPredicate defines model for pulsight_internal_core_usecases_backtest.EventPredicate.
-type PulsightInternalCoreUsecasesBacktestEventPredicate struct {
-	Event  *PulsightInternalCoreDomainStrategyEventKind `json:"event,omitempty"`
-	Negate *bool                                        `json:"negate,omitempty"`
-}
-
-// PulsightInternalCoreUsecasesBacktestMetricPredicate defines model for pulsight_internal_core_usecases_backtest.MetricPredicate.
-type PulsightInternalCoreUsecasesBacktestMetricPredicate struct {
-	Metric *PulsightInternalCoreUsecasesBacktestSelectionMetric `json:"metric,omitempty"`
-	Op     *PulsightInternalCoreDomainStrategyComparisonOp      `json:"op,omitempty"`
-	Value  *float32                                             `json:"value,omitempty"`
-
-	// Window Window — optional trailing window ending at the selection `to`. Ignored
-	// for liquidity_sol (always the latest reserve).
-	Window *PulsightInternalCoreUsecasesBacktestSelectionMetricWindow `json:"window,omitempty"`
-}
-
 // PulsightInternalCoreUsecasesBacktestPreviewMarker defines model for pulsight_internal_core_usecases_backtest.PreviewMarker.
 type PulsightInternalCoreUsecasesBacktestPreviewMarker struct {
 	PoolSolAtTrigger *float32 `json:"pool_sol_at_trigger,omitempty"`
@@ -2128,18 +1999,6 @@ type PulsightInternalCoreUsecasesBacktestPreviewResponse struct {
 	SimulationAssumptions *[]string                                            `json:"simulation_assumptions,omitempty"`
 }
 
-// PulsightInternalCoreUsecasesBacktestSelectionFilter defines model for pulsight_internal_core_usecases_backtest.SelectionFilter.
-type PulsightInternalCoreUsecasesBacktestSelectionFilter struct {
-	Events  *[]PulsightInternalCoreUsecasesBacktestEventPredicate  `json:"events,omitempty"`
-	Metrics *[]PulsightInternalCoreUsecasesBacktestMetricPredicate `json:"metrics,omitempty"`
-}
-
-// PulsightInternalCoreUsecasesBacktestSelectionMetric defines model for pulsight_internal_core_usecases_backtest.SelectionMetric.
-type PulsightInternalCoreUsecasesBacktestSelectionMetric string
-
-// PulsightInternalCoreUsecasesBacktestSelectionMetricWindow defines model for pulsight_internal_core_usecases_backtest.SelectionMetricWindow.
-type PulsightInternalCoreUsecasesBacktestSelectionMetricWindow string
-
 // PulsightInternalCoreUsecasesBacktestSide defines model for pulsight_internal_core_usecases_backtest.Side.
 type PulsightInternalCoreUsecasesBacktestSide string
 
@@ -2151,14 +2010,15 @@ type PulsightInternalCoreUsecasesBacktestTimeRange struct {
 
 // PulsightInternalCoreUsecasesBacktestTokenScope defines model for pulsight_internal_core_usecases_backtest.TokenScope.
 type PulsightInternalCoreUsecasesBacktestTokenScope struct {
-	Exclude *PulsightInternalCoreUsecasesBacktestSelectionFilter `json:"exclude,omitempty"`
-	Include *PulsightInternalCoreUsecasesBacktestSelectionFilter `json:"include,omitempty"`
-	Kind    *PulsightInternalCoreUsecasesBacktestTokenScopeKind  `json:"kind,omitempty"`
+	Kind *PulsightInternalCoreUsecasesBacktestTokenScopeKind `json:"kind,omitempty"`
 
 	// MaxMints MaxMints — on a Strategy scope this is STAMPED BY THE RUNNER at submit
 	// (from the def's Universe node / mirror default) so the tick-budget and
 	// credit math have a mint bound; requests don't set it. Legacy kinds
-	// carried it on the wire.
+	// carried it on the wire. (The other legacy payload fields — trader,
+	// window, include/exclude filters — were dropped 2026-07-28 with the
+	// standalone resolution path; unknown keys on old persisted rows are
+	// ignored on decode, so tolerant reads are unaffected.)
 	MaxMints *int `json:"max_mints,omitempty"`
 
 	// Mint SingleMint
@@ -2175,13 +2035,6 @@ type PulsightInternalCoreUsecasesBacktestTokenScope struct {
 	// PreviewRequest.Pool so a pinned run replays the same market the builder
 	// previewed.
 	Pool *string `json:"pool,omitempty"`
-
-	// Trader Legacy TraderTraded only.
-	Trader *string `json:"trader,omitempty"`
-
-	// Window Legacy Standalone only — kept so old rows round-trip and the
-	// pick-tokens legacy form parses.
-	Window *PulsightInternalCoreUsecasesBacktestTimeRange `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesBacktestTokenScopeKind defines model for pulsight_internal_core_usecases_backtest.TokenScopeKind.
