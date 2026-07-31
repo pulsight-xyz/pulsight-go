@@ -651,23 +651,38 @@ type InternalAdaptersPrimaryHttpHandlerSwapEventRow struct {
 
 // InternalAdaptersPrimaryHttpHandlerTokensRow defines model for internal_adapters_primary_http_handler.tokensRow.
 type InternalAdaptersPrimaryHttpHandlerTokensRow struct {
-	BuyTxCount         *int     `json:"buy_tx_count,omitempty"`
-	CostBasisLamports  *string  `json:"cost_basis_lamports,omitempty"`
-	FirstBuyTs         *string  `json:"first_buy_ts,omitempty"`
-	HoldingPnlLamports *float32 `json:"holding_pnl_lamports,omitempty"`
-	LastActiveTs       *string  `json:"last_active_ts,omitempty"`
-	Mint               *string  `json:"mint,omitempty"`
-	MintDecimals       *int     `json:"mint_decimals,omitempty"`
-	MintLogoUri        *string  `json:"mint_logo_uri,omitempty"`
-	MintName           *string  `json:"mint_name,omitempty"`
-	MintSymbol         *string  `json:"mint_symbol,omitempty"`
-	RealizedProfit     *float32 `json:"realized_profit,omitempty"`
-	SellTxCount        *int     `json:"sell_tx_count,omitempty"`
-	TokenBalance       *string  `json:"token_balance,omitempty"`
-	TotalFees          *float32 `json:"total_fees,omitempty"`
-	TotalInvested      *float32 `json:"total_invested,omitempty"`
-	Trader             *string  `json:"trader,omitempty"`
-	UpdatedAt          *string  `json:"updated_at,omitempty"`
+	// ArbTxCount Distinct is_arb transactions on this (trader, mint). Shown alongside
+	// buy/sell, never subtracted from them -- an arb still emits a buy row,
+	// a sell row or both. It exists because those counts otherwise read as
+	// broken on arbitrage wallets: a multi-hop arb bridging through a
+	// non-quote token has its target buy leg quoted in that token, which is
+	// not a registry quote, so only the quote-anchored sell reaches `swaps`.
+	// 0 on the legacy Pnl path, which has no arb data -- the frontend hides
+	// the segment at 0.
+	ArbTxCount        *int    `json:"arb_tx_count,omitempty"`
+	BuyTxCount        *int    `json:"buy_tx_count,omitempty"`
+	CostBasisLamports *string `json:"cost_basis_lamports,omitempty"`
+
+	// DirectionalBuyTxCount Disjoint from ArbTxCount: these EXCLUDE arbitrage rows, so the UI shows
+	// directional buys / directional sells / arb txs without the three
+	// overlapping. 0 on the legacy Pnl path.
+	DirectionalBuyTxCount  *int     `json:"directional_buy_tx_count,omitempty"`
+	DirectionalSellTxCount *int     `json:"directional_sell_tx_count,omitempty"`
+	FirstBuyTs             *string  `json:"first_buy_ts,omitempty"`
+	HoldingPnlLamports     *float32 `json:"holding_pnl_lamports,omitempty"`
+	LastActiveTs           *string  `json:"last_active_ts,omitempty"`
+	Mint                   *string  `json:"mint,omitempty"`
+	MintDecimals           *int     `json:"mint_decimals,omitempty"`
+	MintLogoUri            *string  `json:"mint_logo_uri,omitempty"`
+	MintName               *string  `json:"mint_name,omitempty"`
+	MintSymbol             *string  `json:"mint_symbol,omitempty"`
+	RealizedProfit         *float32 `json:"realized_profit,omitempty"`
+	SellTxCount            *int     `json:"sell_tx_count,omitempty"`
+	TokenBalance           *string  `json:"token_balance,omitempty"`
+	TotalFees              *float32 `json:"total_fees,omitempty"`
+	TotalInvested          *float32 `json:"total_invested,omitempty"`
+	Trader                 *string  `json:"trader,omitempty"`
+	UpdatedAt              *string  `json:"updated_at,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerTraderTipStatsResponse defines model for internal_adapters_primary_http_handler.traderTipStatsResponse.
@@ -1111,13 +1126,30 @@ type PulsightInternalCoreDomainAggregatorMintStatsByWindow struct {
 
 // PulsightInternalCoreDomainAggregatorMintTraderRow defines model for pulsight_internal_core_domain_aggregator.MintTraderRow.
 type PulsightInternalCoreDomainAggregatorMintTraderRow struct {
-	BuyTxCount         *int    `json:"buy_tx_count,omitempty"`
-	CostBasisLamports  *string `json:"cost_basis_lamports,omitempty"`
-	FirstBuyTs         *string `json:"first_buy_ts,omitempty"`
-	HoldingPnlLamports *int    `json:"holding_pnl_lamports,omitempty"`
-	IsBundler          *bool   `json:"is_bundler,omitempty"`
-	IsInsider          *bool   `json:"is_insider,omitempty"`
-	IsSniper           *bool   `json:"is_sniper,omitempty"`
+	// ArbTxCount Distinct is_arb transactions for this (trader, mint). Same rationale
+	// as TraderTokenPosition.ArbTxCount: shown alongside buy/sell, never
+	// subtracted, so lopsided counts on arbitrage wallets are legible.
+	ArbTxCount        *int    `json:"arb_tx_count,omitempty"`
+	BuyTxCount        *int    `json:"buy_tx_count,omitempty"`
+	CostBasisLamports *string `json:"cost_basis_lamports,omitempty"`
+
+	// DirectionalBuyTxCount Directional counts EXCLUDE arbitrage rows, so the three numbers the UI
+	// shows are disjoint: directional buys / directional sells / arb txs.
+	// Overlapping them is what made an arb wallet read "11 buys / 2 sells /
+	// 11 arb" -- every one of those buys WAS one of the arbs. A pure
+	// arbitrageur now reads 0 / 0 / N, which is the truth: it never took a
+	// directional position in the token.
+	//
+	// buy_tx_count / sell_tx_count keep their original meaning (all rows,
+	// matching the trader_token_stats rollup that the leaderboard and its
+	// `f=` filters read) so nothing downstream shifts under them.
+	DirectionalBuyTxCount  *int    `json:"directional_buy_tx_count,omitempty"`
+	DirectionalSellTxCount *int    `json:"directional_sell_tx_count,omitempty"`
+	FirstBuyTs             *string `json:"first_buy_ts,omitempty"`
+	HoldingPnlLamports     *int    `json:"holding_pnl_lamports,omitempty"`
+	IsBundler              *bool   `json:"is_bundler,omitempty"`
+	IsInsider              *bool   `json:"is_insider,omitempty"`
+	IsSniper               *bool   `json:"is_sniper,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/...) from the
 	// admin-managed registry; empty when unknown.
@@ -2394,7 +2426,7 @@ type GetSwapsParams struct {
 	// Trader Trader pubkey; repeatable or comma-separated (optional; combinable with mint)
 	Trader *string `form:"trader,omitempty" json:"trader,omitempty"`
 
-	// Pool Market (pool pubkey) to scope swaps to (optional)
+	// Pool Market (pool pubkey) to scope swaps to; repeatable or comma-separated, OR-combined (optional)
 	Pool *string `form:"pool,omitempty" json:"pool,omitempty"`
 
 	// From Start of window (RFC3339)
@@ -3014,7 +3046,7 @@ type ClientInterface interface {
 
 	// GetSwaps List Swaps
 	//
-	// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+	// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 	//
 	// Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 	GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4037,7 +4069,7 @@ func (c *Client) GetSubscriptionsMe(ctx context.Context, reqEditors ...RequestEd
 
 // GetSwaps List Swaps
 //
-// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 //
 // Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 func (c *Client) GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -8844,7 +8876,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetSwapsWithResponse List Swaps
 	//
-	// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+	// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -13653,7 +13685,7 @@ func (c *ClientWithResponses) GetSubscriptionsMeWithResponse(ctx context.Context
 
 // GetSwapsWithResponse List Swaps
 //
-// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 //
 // Returns a wrapper object for the known response body format(s).
 //
