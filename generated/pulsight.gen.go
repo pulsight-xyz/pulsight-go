@@ -676,13 +676,21 @@ type InternalAdaptersPrimaryHttpHandlerTokensRow struct {
 	MintLogoUri            *string  `json:"mint_logo_uri,omitempty"`
 	MintName               *string  `json:"mint_name,omitempty"`
 	MintSymbol             *string  `json:"mint_symbol,omitempty"`
-	RealizedProfit         *float32 `json:"realized_profit,omitempty"`
-	SellTxCount            *int     `json:"sell_tx_count,omitempty"`
-	TokenBalance           *string  `json:"token_balance,omitempty"`
-	TotalFees              *float32 `json:"total_fees,omitempty"`
-	TotalInvested          *float32 `json:"total_invested,omitempty"`
-	Trader                 *string  `json:"trader,omitempty"`
-	UpdatedAt              *string  `json:"updated_at,omitempty"`
+	PoolLiquidity          *string  `json:"pool_liquidity,omitempty"`
+
+	// PoolQuoteReserves Rug-aware effective quote reserves of the mint's pool (lamports) and the
+	// exitability tier derived from them server-side. Together they let the row
+	// explain WHY a bag marks at ~0. null / "" mean unknown -- which is what
+	// the legacy Pnl fallback path below always reports, since it has no pool
+	// data; the frontend renders no badge rather than a false rug.
+	PoolQuoteReserves *float32 `json:"pool_quote_reserves,omitempty"`
+	RealizedProfit    *float32 `json:"realized_profit,omitempty"`
+	SellTxCount       *int     `json:"sell_tx_count,omitempty"`
+	TokenBalance      *string  `json:"token_balance,omitempty"`
+	TotalFees         *float32 `json:"total_fees,omitempty"`
+	TotalInvested     *float32 `json:"total_invested,omitempty"`
+	Trader            *string  `json:"trader,omitempty"`
+	UpdatedAt         *string  `json:"updated_at,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerTraderTipStatsResponse defines model for internal_adapters_primary_http_handler.traderTipStatsResponse.
@@ -1441,6 +1449,25 @@ type PulsightInternalCoreDomainStrategyGlobalConstraints struct {
 	MaxBuysPerOpenPosition   *int `json:"max_buys_per_open_position,omitempty"`
 	MaxBuysPerTokenPerHour   *int `json:"max_buys_per_token_per_hour,omitempty"`
 	MaxBuysPerTokenPerMinute *int `json:"max_buys_per_token_per_minute,omitempty"`
+
+	// MaxConcurrentTokens MaxConcurrentTokens caps how many tokens the strategy may hold at
+	// once, OVERRIDING the Token Selection root's MaxMints when set. Three
+	// states, because "not set" and "unlimited" are different answers:
+	//
+	//   nil       ⇒ inherit — the Token Selection cap, or
+	//               DefaultUniverseMaxMints for a def with no selection
+	//               plane. Every def written before this field existed reads
+	//               this way, so adding it changed no existing strategy.
+	//   &0        ⇒ unlimited.
+	//   &n        ⇒ n, whatever the Token Selection root says.
+	//
+	// Resolve it through StrategyDef.ConcurrencyCap — inheritance needs the
+	// selection plane, so the constraint alone cannot answer.
+	//
+	// It is a POINTER on purpose: `uint32` + omitempty serializes an explicit
+	// 0 as absent, which would silently turn "unlimited" back into "inherit"
+	// (the tightest cap) on every round-trip through the JSONB column.
+	MaxConcurrentTokens *int `json:"max_concurrent_tokens,omitempty"`
 
 	// MaxPositionExposureSol MaxPositionExposureSol caps the cumulative cost basis (SOL spent) of a
 	// single open position. 0 ⇒ unlimited. An add that would push the open
@@ -12663,8 +12690,6 @@ type GetTradersByWalletAddressTokensResponse struct {
 	JSON200 *[]InternalAdaptersPrimaryHttpHandlerTokensRow
 	// JSON401 the response for an HTTP 401 `application/json` response
 	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON404 the response for an HTTP 404 `application/json` response
-	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -12675,11 +12700,6 @@ func (r GetTradersByWalletAddressTokensResponse) GetJSON200() *[]InternalAdapter
 // GetJSON401 returns the response for an HTTP 401 `application/json` response
 func (r GetTradersByWalletAddressTokensResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON401
-}
-
-// GetJSON404 returns the response for an HTTP 404 `application/json` response
-func (r GetTradersByWalletAddressTokensResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON404
 }
 
 // GetBody returns the raw response body bytes
@@ -16780,13 +16800,6 @@ func ParseGetTradersByWalletAddressTokensResponse(rsp *http.Response) (*GetTrade
 			return nil, err
 		}
 		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
 
 	}
 
