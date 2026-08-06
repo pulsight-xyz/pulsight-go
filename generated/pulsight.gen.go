@@ -509,7 +509,8 @@ type InternalAdaptersPrimaryHttpHandlerApiKeyRenameRequest struct {
 
 // InternalAdaptersPrimaryHttpHandlerBacktestSettingsResponse defines model for internal_adapters_primary_http_handler.backtestSettingsResponse.
 type InternalAdaptersPrimaryHttpHandlerBacktestSettingsResponse struct {
-	MaxTickBudget *int `json:"max_tick_budget,omitempty"`
+	MaxTickBudget *int            `json:"max_tick_budget,omitempty"`
+	MaxWindowSecs *map[string]int `json:"max_window_secs,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerBestRunRef defines model for internal_adapters_primary_http_handler.bestRunRef.
@@ -1970,8 +1971,21 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// pool data). Additive JSONB fields — pre-existing rows decode as 0.
 	OurAvgPriceImpactPct    *float32 `json:"our_avg_price_impact_pct,omitempty"`
 	OurMedianPriceImpactPct *float32 `json:"our_median_price_impact_pct,omitempty"`
-	RealizedPnlSol          *float32 `json:"realized_pnl_sol,omitempty"`
-	RoiPct                  *float32 `json:"roi_pct,omitempty"`
+
+	// PerPool PerPool records whether the run simulated each market as an INDEPENDENT
+	// instrument (req.PerPool). It is persisted because it is the LEDGER
+	// BOUNDARY, and a reader cannot recover it from the trades: per-pool
+	// fidelity stamps every fill with the pool it priced against in EVERY mode,
+	// so a token that graduates mid-window (bonding curve → PumpSwap) carries
+	// two pools on ONE merged ledger and looks exactly like two independent
+	// instruments. The result page's per-token rollup used to guess from that
+	// stamp and split a graduating token in two — the buys on a row reading
+	// 0.000, the realizing sells and all of the profit on another. Additive
+	// JSONB field; pre-existing rows decode as false, which is what all but an
+	// opt-in run was.
+	PerPool        *bool    `json:"per_pool,omitempty"`
+	RealizedPnlSol *float32 `json:"realized_pnl_sol,omitempty"`
+	RoiPct         *float32 `json:"roi_pct,omitempty"`
 
 	// SimulationAssumptions SimulationAssumptions is free-text notes about which real-world
 	// cost components the simulator did NOT model (route hops, MEV,
@@ -2780,7 +2794,7 @@ type ClientInterface interface {
 
 	// GetBacktestsLimits Get Backtest Limits
 	//
-	// Returns the per-run backtest cost ceiling (max credits per run) so clients can show and pre-check it.
+	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
 	//
 	// Corresponds with GET /api/backtests/limits (the `GetBacktestsLimits` operationId).
 	GetBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3373,7 +3387,7 @@ func (c *Client) PostBacktests(ctx context.Context, params *PostBacktestsParams,
 
 // GetBacktestsLimits Get Backtest Limits
 //
-// Returns the per-run backtest cost ceiling (max credits per run) so clients can show and pre-check it.
+// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
 //
 // Corresponds with GET /api/backtests/limits (the `GetBacktestsLimits` operationId).
 func (c *Client) GetBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -8552,7 +8566,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetBacktestsLimitsWithResponse Get Backtest Limits
 	//
-	// Returns the per-run backtest cost ceiling (max credits per run) so clients can show and pre-check it.
+	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -13096,7 +13110,7 @@ func (c *ClientWithResponses) PostBacktestsWithResponse(ctx context.Context, par
 
 // GetBacktestsLimitsWithResponse Get Backtest Limits
 //
-// Returns the per-run backtest cost ceiling (max credits per run) so clients can show and pre-check it.
+// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
 //
 // Returns a wrapper object for the known response body format(s).
 //
