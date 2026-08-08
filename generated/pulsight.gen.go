@@ -526,6 +526,46 @@ type InternalAdaptersPrimaryHttpHandlerErrorResponse struct {
 	Error *string `json:"error,omitempty"`
 }
 
+// InternalAdaptersPrimaryHttpHandlerNeighborRowResponse defines model for internal_adapters_primary_http_handler.neighborRowResponse.
+type InternalAdaptersPrimaryHttpHandlerNeighborRowResponse struct {
+	FollowRate      *float32 `json:"follow_rate,omitempty"`
+	Hits            *int     `json:"hits,omitempty"`
+	MedSlotDelta    *int     `json:"med_slot_delta,omitempty"`
+	MutualRate      *float32 `json:"mutual_rate,omitempty"`
+	NeighborEntries *int     `json:"neighbor_entries,omitempty"`
+
+	// Stats Stats is the neighbour's own 30d record. Omitted entirely when unknown
+	// — a wallet with no activity in the window, or a failed stats read. The
+	// client renders that as "—", never as zeroes.
+	Stats  *InternalAdaptersPrimaryHttpHandlerNeighborStatsResponse `json:"stats,omitempty"`
+	Wallet *string                                                  `json:"wallet,omitempty"`
+}
+
+// InternalAdaptersPrimaryHttpHandlerNeighborStatsResponse defines model for internal_adapters_primary_http_handler.neighborStatsResponse.
+type InternalAdaptersPrimaryHttpHandlerNeighborStatsResponse struct {
+	// RealizedPnlLamports LAMPORTS — named for the unit, unlike the TraderStats field it comes from.
+	RealizedPnlLamports *float32 `json:"realized_pnl_lamports,omitempty"`
+	RealizedRoiPct      *float32 `json:"realized_roi_pct,omitempty"`
+	Winrate             *float32 `json:"winrate,omitempty"`
+}
+
+// InternalAdaptersPrimaryHttpHandlerOhlcvRow defines model for internal_adapters_primary_http_handler.ohlcvRow.
+type InternalAdaptersPrimaryHttpHandlerOhlcvRow struct {
+	BuyVolumeSol  *float32 `json:"buy_volume_sol,omitempty"`
+	Close         *float32 `json:"close,omitempty"`
+	High          *float32 `json:"high,omitempty"`
+	Low           *float32 `json:"low,omitempty"`
+	Open          *float32 `json:"open,omitempty"`
+	PoolSol       *float32 `json:"pool_sol,omitempty"`
+	SellVolumeSol *float32 `json:"sell_volume_sol,omitempty"`
+	SwapCount     *int     `json:"swap_count,omitempty"`
+	Time          *int     `json:"time,omitempty"`
+	TokenVolume   *float32 `json:"token_volume,omitempty"`
+
+	// VolumeSol buy + sell
+	VolumeSol *float32 `json:"volume_sol,omitempty"`
+}
+
 // InternalAdaptersPrimaryHttpHandlerPickTokensRequest defines model for internal_adapters_primary_http_handler.pickTokensRequest.
 type InternalAdaptersPrimaryHttpHandlerPickTokensRequest struct {
 	Def        *PulsightInternalCoreDomainStrategyStrategyDef `json:"def,omitempty"`
@@ -692,6 +732,17 @@ type InternalAdaptersPrimaryHttpHandlerTokensRow struct {
 	TotalInvested     *float32 `json:"total_invested,omitempty"`
 	Trader            *string  `json:"trader,omitempty"`
 	UpdatedAt         *string  `json:"updated_at,omitempty"`
+}
+
+// InternalAdaptersPrimaryHttpHandlerTraderNeighborsResponse defines model for internal_adapters_primary_http_handler.traderNeighborsResponse.
+type InternalAdaptersPrimaryHttpHandlerTraderNeighborsResponse struct {
+	Neighbors      *[]InternalAdaptersPrimaryHttpHandlerNeighborRowResponse `json:"neighbors,omitempty"`
+	Plane          *string                                                  `json:"plane,omitempty"`
+	Relation       *string                                                  `json:"relation,omitempty"`
+	Source         *string                                                  `json:"source,omitempty"`
+	SubjectEntries *int                                                     `json:"subject_entries,omitempty"`
+	Trader         *string                                                  `json:"trader,omitempty"`
+	WindowDays     *int                                                     `json:"window_days,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerTraderTipStatsResponse defines model for internal_adapters_primary_http_handler.traderTipStatsResponse.
@@ -1209,21 +1260,6 @@ type PulsightInternalCoreDomainAggregatorMintWindowStatsBundle struct {
 	AsOf  *string                                                `json:"as_of,omitempty"`
 	Mint  *string                                                `json:"mint,omitempty"`
 	Stats *PulsightInternalCoreDomainAggregatorMintStatsByWindow `json:"stats,omitempty"`
-}
-
-// PulsightInternalCoreDomainAggregatorOHLCVCandle defines model for pulsight_internal_core_domain_aggregator.OHLCVCandle.
-type PulsightInternalCoreDomainAggregatorOHLCVCandle struct {
-	Bucket        *string  `json:"bucket,omitempty"`
-	BuyVolumeSol  *float32 `json:"buy_volume_sol,omitempty"`
-	C             *float32 `json:"c,omitempty"`
-	H             *float32 `json:"h,omitempty"`
-	L             *float32 `json:"l,omitempty"`
-	Mint          *string  `json:"mint,omitempty"`
-	O             *float32 `json:"o,omitempty"`
-	PoolSol       *float32 `json:"pool_sol,omitempty"`
-	SellVolumeSol *float32 `json:"sell_volume_sol,omitempty"`
-	SwapCount     *int     `json:"swap_count,omitempty"`
-	TokenVolume   *float32 `json:"token_volume,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorRiskCohort defines model for pulsight_internal_core_domain_aggregator.RiskCohort.
@@ -1983,9 +2019,32 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// 0.000, the realizing sells and all of the profit on another. Additive
 	// JSONB field; pre-existing rows decode as false, which is what all but an
 	// opt-in run was.
-	PerPool        *bool    `json:"per_pool,omitempty"`
-	RealizedPnlSol *float32 `json:"realized_pnl_sol,omitempty"`
-	RoiPct         *float32 `json:"roi_pct,omitempty"`
+	PerPool *bool `json:"per_pool,omitempty"`
+
+	// PositionsOpenedUnmarked PositionsOpenedUnmarked counts positions the run opened while it had NO
+	// price to mark them with — so for as long as that lasted, every
+	// price-based exit rule (take-profit, stop, trailing stop, max-drawdown)
+	// evaluated as undefined and could not fire.
+	//
+	// It happens because a copy fills at the price the TARGET left behind, on
+	// the pool THEY traded, while the position is marked against the run's own
+	// candle stream. Normally those are the same market. They are not when the
+	// fill lands somewhere the stream does not cover — a parallel venue, or a
+	// market whose candles simply have not started yet.
+	//
+	// Like CopiesSkippedUnpriced this is a COVERAGE number, not a result: an
+	// exit rule that could not be evaluated did not decline to fire, it never
+	// ran, and the position rode on until something else closed it. A non-zero
+	// value means the run UNDER-represents its own exit rules — read the ROI
+	// with that in mind.
+	//
+	// Mid-window graduations used to dominate this and no longer do: the
+	// candle stream now merges a token's whole migration lineage, so a
+	// bonding-curve entry is marked from the moment it opens. Additive JSONB
+	// field — old rows decode as 0.
+	PositionsOpenedUnmarked *int     `json:"positions_opened_unmarked,omitempty"`
+	RealizedPnlSol          *float32 `json:"realized_pnl_sol,omitempty"`
+	RoiPct                  *float32 `json:"roi_pct,omitempty"`
 
 	// SimulationAssumptions SimulationAssumptions is free-text notes about which real-world
 	// cost components the simulator did NOT model (route hops, MEV,
@@ -2624,6 +2683,21 @@ type GetTradersByWalletAddressCreatedTokensParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// GetTradersByWalletAddressNeighboursParams defines parameters for GetTradersByWalletAddressNeighbours.
+type GetTradersByWalletAddressNeighboursParams struct {
+	// Rel before|same_slot|after
+	Rel *string `form:"rel,omitempty" json:"rel,omitempty"`
+
+	// Plane buy|sell
+	Plane *string `form:"plane,omitempty" json:"plane,omitempty"`
+
+	// Window Lookback in days (1-14)
+	Window *int `form:"window,omitempty" json:"window,omitempty"`
+
+	// Limit Max rows (1-50)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // GetTradersByWalletAddressPnlSeriesParams defines parameters for GetTradersByWalletAddressPnlSeries.
 type GetTradersByWalletAddressPnlSeriesParams struct {
 	// Window Time window
@@ -3255,6 +3329,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/created-tokens (the `GetTradersByWalletAddressCreatedTokens` operationId).
 	GetTradersByWalletAddressCreatedTokens(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTradersByWalletAddressNeighbours Wallets seen trading just before / after a trader
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/neighbours (the `GetTradersByWalletAddressNeighbours` operationId).
+	GetTradersByWalletAddressNeighbours(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressNeighboursParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTradersByWalletAddressPnlSeries Get Trader Daily PnL Series
 	//
@@ -4519,6 +4598,21 @@ func (c *Client) GetTradersByTraderIDPnls(ctx context.Context, traderID string, 
 // Corresponds with GET /api/traders/{walletAddress}/created-tokens (the `GetTradersByWalletAddressCreatedTokens` operationId).
 func (c *Client) GetTradersByWalletAddressCreatedTokens(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTradersByWalletAddressCreatedTokensRequest(c.Server, walletAddress, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTradersByWalletAddressNeighbours Wallets seen trading just before / after a trader
+//
+// Corresponds with GET /api/traders/{walletAddress}/neighbours (the `GetTradersByWalletAddressNeighbours` operationId).
+func (c *Client) GetTradersByWalletAddressNeighbours(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressNeighboursParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressNeighboursRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -8037,6 +8131,103 @@ func NewGetTradersByWalletAddressCreatedTokensRequest(server string, walletAddre
 	return req, nil
 }
 
+// NewGetTradersByWalletAddressNeighboursRequest constructs an http.Request for the GetTradersByWalletAddressNeighbours method
+func NewGetTradersByWalletAddressNeighboursRequest(server string, walletAddress string, params *GetTradersByWalletAddressNeighboursParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "walletAddress", walletAddress, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/traders/%s/neighbours", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Rel != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "rel", *params.Rel, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Plane != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "plane", *params.Plane, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetTradersByWalletAddressPnlSeriesRequest constructs an http.Request for the GetTradersByWalletAddressPnlSeries method
 func NewGetTradersByWalletAddressPnlSeriesRequest(server string, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams) (*http.Request, error) {
 	var err error
@@ -9123,6 +9314,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/created-tokens (the `GetTradersByWalletAddressCreatedTokens` operationId).
 	GetTradersByWalletAddressCreatedTokensWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCreatedTokensResponse, error)
+
+	// GetTradersByWalletAddressNeighboursWithResponse Wallets seen trading just before / after a trader
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/neighbours (the `GetTradersByWalletAddressNeighbours` operationId).
+	GetTradersByWalletAddressNeighboursWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressNeighboursParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressNeighboursResponse, error)
 
 	// GetTradersByWalletAddressPnlSeriesWithResponse Get Trader Daily PnL Series
 	//
@@ -10645,7 +10843,7 @@ type GetOhlcvResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]PulsightInternalCoreDomainAggregatorOHLCVCandle
+	JSON200 *[]InternalAdaptersPrimaryHttpHandlerOhlcvRow
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON402 the response for an HTTP 402 `application/json` response
@@ -10655,7 +10853,7 @@ type GetOhlcvResponse struct {
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetOhlcvResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorOHLCVCandle {
+func (r GetOhlcvResponse) GetJSON200() *[]InternalAdaptersPrimaryHttpHandlerOhlcvRow {
 	return r.JSON200
 }
 
@@ -12511,6 +12709,47 @@ func (r GetTradersByWalletAddressCreatedTokensResponse) ContentType() string {
 	return ""
 }
 
+type GetTradersByWalletAddressNeighboursResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *InternalAdaptersPrimaryHttpHandlerTraderNeighborsResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTradersByWalletAddressNeighboursResponse) GetJSON200() *InternalAdaptersPrimaryHttpHandlerTraderNeighborsResponse {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTradersByWalletAddressNeighboursResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTradersByWalletAddressNeighboursResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTradersByWalletAddressNeighboursResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTradersByWalletAddressNeighboursResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetTradersByWalletAddressPnlSeriesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -14076,6 +14315,19 @@ func (c *ClientWithResponses) GetTradersByWalletAddressCreatedTokensWithResponse
 	return ParseGetTradersByWalletAddressCreatedTokensResponse(rsp)
 }
 
+// GetTradersByWalletAddressNeighboursWithResponse Wallets seen trading just before / after a trader
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/traders/{walletAddress}/neighbours (the `GetTradersByWalletAddressNeighbours` operationId).
+func (c *ClientWithResponses) GetTradersByWalletAddressNeighboursWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressNeighboursParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressNeighboursResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressNeighbours(ctx, walletAddress, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTradersByWalletAddressNeighboursResponse(rsp)
+}
+
 // GetTradersByWalletAddressPnlSeriesWithResponse Get Trader Daily PnL Series
 //
 // Returns daily realised PnL points (oldest first) for a trader, sourced from the aggregator's `trader_daily_pnl_series` SQL function.
@@ -15286,7 +15538,7 @@ func ParseGetOhlcvResponse(rsp *http.Response) (*GetOhlcvResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []PulsightInternalCoreDomainAggregatorOHLCVCandle
+		var dest []InternalAdaptersPrimaryHttpHandlerOhlcvRow
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -16640,6 +16892,32 @@ func ParseGetTradersByWalletAddressCreatedTokensResponse(rsp *http.Response) (*G
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTradersByWalletAddressNeighboursResponse parses an HTTP response from a GetTradersByWalletAddressNeighboursWithResponse call
+func ParseGetTradersByWalletAddressNeighboursResponse(rsp *http.Response) (*GetTradersByWalletAddressNeighboursResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTradersByWalletAddressNeighboursResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest InternalAdaptersPrimaryHttpHandlerTraderNeighborsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 
