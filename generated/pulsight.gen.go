@@ -1398,39 +1398,30 @@ type PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint struct {
 
 // PulsightInternalCoreDomainAggregatorTraderBehavioralStats defines model for pulsight_internal_core_domain_aggregator.TraderBehavioralStats.
 type PulsightInternalCoreDomainAggregatorTraderBehavioralStats struct {
-	ActiveHoursCount    *int     `json:"active_hours_count,omitempty"`
-	AvgBuyCountPerToken *float32 `json:"avg_buy_count_per_token,omitempty"`
-	AvgHoldingTimeSecs  *float32 `json:"avg_holding_time_secs,omitempty"`
-
-	// AvgPriceImpactBps Mean price impact of the wallet's own fills, in basis points.
-	AvgPriceImpactBps    *float32 `json:"avg_price_impact_bps,omitempty"`
+	ActiveHoursCount     *int     `json:"active_hours_count,omitempty"`
+	AvgBuyCountPerToken  *float32 `json:"avg_buy_count_per_token,omitempty"`
+	AvgHoldingTimeSecs   *float32 `json:"avg_holding_time_secs,omitempty"`
 	AvgReactivitySecs    *float32 `json:"avg_reactivity_secs,omitempty"`
 	AvgSellCountPerToken *float32 `json:"avg_sell_count_per_token,omitempty"`
 
 	// AvgTradeSizeLamports AvgTradeSizeLamports is TotalVolumeLamports over the window's swap
 	// count — the wallet's typical clip. It is what makes the price-impact
-	// figures below legible: impact is size against pool depth, so the two
-	// are read together.
-	AvgTradeSizeLamports   *float32 `json:"avg_trade_size_lamports,omitempty"`
-	MedianBuyCountPerToken *float32 `json:"median_buy_count_per_token,omitempty"`
-	MedianHoldingTimeSecs  *float32 `json:"median_holding_time_secs,omitempty"`
-
-	// MedianPriceImpactBps Median price impact of the wallet's own fills, in basis points.
-	MedianPriceImpactBps    *float32 `json:"median_price_impact_bps,omitempty"`
+	// figures legible: impact is size against pool depth, so the two are
+	// read together.
+	AvgTradeSizeLamports    *float32 `json:"avg_trade_size_lamports,omitempty"`
+	MedianBuyCountPerToken  *float32 `json:"median_buy_count_per_token,omitempty"`
+	MedianHoldingTimeSecs   *float32 `json:"median_holding_time_secs,omitempty"`
 	MedianReactivitySecs    *float32 `json:"median_reactivity_secs,omitempty"`
 	MedianSellCountPerToken *float32 `json:"median_sell_count_per_token,omitempty"`
 	OldestTradeAt           *string  `json:"oldest_trade_at,omitempty"`
+	ProfitPerTradeLamports  *float32 `json:"profit_per_trade_lamports,omitempty"`
+	Pubkey                  *string  `json:"pubkey,omitempty"`
+	RebalancingRatio        *float32 `json:"rebalancing_ratio,omitempty"`
 
-	// PriceImpactSwaps Swap legs the two impact figures were measured over. 0 = not measured.
-	PriceImpactSwaps       *int     `json:"price_impact_swaps,omitempty"`
-	ProfitPerTradeLamports *float32 `json:"profit_per_trade_lamports,omitempty"`
-	Pubkey                 *string  `json:"pubkey,omitempty"`
-	RebalancingRatio       *float32 `json:"rebalancing_ratio,omitempty"`
-
-	// TotalVolumeLamports TotalVolumeLamports is the window's traded value in lamports, both
-	// sides. It reads the QUOTE side of each row (with non-WSOL quotes
-	// projected through `swaps.quote_lamports`) — see the adapter's
-	// swapQuoteLamportsExpr for why a plain `sum(amount_in)` is not that.
+	// TotalVolumeLamports TotalVolumeLamports is the window's traded value, both sides, read as
+	// the QUOTE side of each row — see the adapter's swapQuoteSideExpr for
+	// why a plain `sum(amount_in)` is not that, and for the one case it is
+	// still approximate (non-WSOL quotes count in their own units).
 	TotalVolumeLamports *int                                        `json:"total_volume_lamports,omitempty"`
 	Window              *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
@@ -1468,6 +1459,27 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	WinSells    *int     `json:"win_sells,omitempty"`
 	WindowLabel *string  `json:"window_label,omitempty"`
 	Winrate     *float32 `json:"winrate,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTraderPriceImpactStats defines model for pulsight_internal_core_domain_aggregator.TraderPriceImpactStats.
+type PulsightInternalCoreDomainAggregatorTraderPriceImpactStats struct {
+	// AvgPriceImpactBps AvgBps is the mean and MedianBps the p50 over the window's measurable
+	// legs. Both are reported because the population is heavy-tailed — a
+	// handful of large fills into thin curves dominate the mean while the
+	// median describes the wallet's ordinary fill.
+	//
+	// POINTERS, because 0 bps is a REAL answer (a wallet trading tiny size
+	// into deep pools) and "we could not measure it" must not read as it.
+	// Nil when Swaps is 0 — most often a wallet trading only concentrated
+	// liquidity, whose vault balances are not a curve.
+	AvgPriceImpactBps    *float32 `json:"avg_price_impact_bps,omitempty"`
+	MedianPriceImpactBps *float32 `json:"median_price_impact_bps,omitempty"`
+
+	// PriceImpactSwaps Swaps is how many legs were measurable, and is what tells "measured 0"
+	// apart from "not measured" on the wire.
+	PriceImpactSwaps *int                                        `json:"price_impact_swaps,omitempty"`
+	Pubkey           *string                                     `json:"pubkey,omitempty"`
+	Window           *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorWindow defines model for pulsight_internal_core_domain_aggregator.Window.
@@ -2868,6 +2880,12 @@ type GetTradersByWalletAddressPnlSeriesParams struct {
 // GetTradersByWalletAddressPnlSeriesParamsWindow defines parameters for GetTradersByWalletAddressPnlSeries.
 type GetTradersByWalletAddressPnlSeriesParamsWindow string
 
+// GetTradersByWalletAddressPriceImpactParams defines parameters for GetTradersByWalletAddressPriceImpact.
+type GetTradersByWalletAddressPriceImpactParams struct {
+	// Window 1d|7d|30d|all (default 7d)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+}
+
 // GetTradersByWalletAddressTipsParams defines parameters for GetTradersByWalletAddressTips.
 type GetTradersByWalletAddressTipsParams struct {
 	// Window Window (1d|7d|30d|all)
@@ -3523,6 +3541,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/pnl-series (the `GetTradersByWalletAddressPnlSeries` operationId).
 	GetTradersByWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTradersByWalletAddressPriceImpact Price impact of a wallet's own fills
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/price-impact (the `GetTradersByWalletAddressPriceImpact` operationId).
+	GetTradersByWalletAddressPriceImpact(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTradersByWalletAddressTips Get Trader Tip Stats
 	//
@@ -4850,6 +4873,21 @@ func (c *Client) GetTradersByWalletAddressNeighbours(ctx context.Context, wallet
 // Corresponds with GET /api/traders/{walletAddress}/pnl-series (the `GetTradersByWalletAddressPnlSeries` operationId).
 func (c *Client) GetTradersByWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTradersByWalletAddressPnlSeriesRequest(c.Server, walletAddress, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTradersByWalletAddressPriceImpact Price impact of a wallet's own fills
+//
+// Corresponds with GET /api/traders/{walletAddress}/price-impact (the `GetTradersByWalletAddressPriceImpact` operationId).
+func (c *Client) GetTradersByWalletAddressPriceImpact(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressPriceImpactRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -8549,6 +8587,67 @@ func NewGetTradersByWalletAddressPnlSeriesRequest(server string, walletAddress s
 	return req, nil
 }
 
+// NewGetTradersByWalletAddressPriceImpactRequest constructs an http.Request for the GetTradersByWalletAddressPriceImpact method
+func NewGetTradersByWalletAddressPriceImpactRequest(server string, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "walletAddress", walletAddress, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/traders/%s/price-impact", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetTradersByWalletAddressTipsRequest constructs an http.Request for the GetTradersByWalletAddressTips method
 func NewGetTradersByWalletAddressTipsRequest(server string, walletAddress string, params *GetTradersByWalletAddressTipsParams) (*http.Request, error) {
 	var err error
@@ -9608,6 +9707,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/pnl-series (the `GetTradersByWalletAddressPnlSeries` operationId).
 	GetTradersByWalletAddressPnlSeriesWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressPnlSeriesResponse, error)
+
+	// GetTradersByWalletAddressPriceImpactWithResponse Price impact of a wallet's own fills
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/price-impact (the `GetTradersByWalletAddressPriceImpact` operationId).
+	GetTradersByWalletAddressPriceImpactWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressPriceImpactResponse, error)
 
 	// GetTradersByWalletAddressTipsWithResponse Get Trader Tip Stats
 	//
@@ -13138,6 +13244,54 @@ func (r GetTradersByWalletAddressPnlSeriesResponse) ContentType() string {
 	return ""
 }
 
+type GetTradersByWalletAddressPriceImpactResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorTraderPriceImpactStats
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTradersByWalletAddressPriceImpactResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorTraderPriceImpactStats {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetTradersByWalletAddressPriceImpactResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTradersByWalletAddressPriceImpactResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTradersByWalletAddressPriceImpactResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTradersByWalletAddressPriceImpactResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTradersByWalletAddressPriceImpactResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetTradersByWalletAddressTipsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -14697,6 +14851,19 @@ func (c *ClientWithResponses) GetTradersByWalletAddressPnlSeriesWithResponse(ctx
 		return nil, err
 	}
 	return ParseGetTradersByWalletAddressPnlSeriesResponse(rsp)
+}
+
+// GetTradersByWalletAddressPriceImpactWithResponse Price impact of a wallet's own fills
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/traders/{walletAddress}/price-impact (the `GetTradersByWalletAddressPriceImpact` operationId).
+func (c *ClientWithResponses) GetTradersByWalletAddressPriceImpactWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressPriceImpactResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressPriceImpact(ctx, walletAddress, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTradersByWalletAddressPriceImpactResponse(rsp)
 }
 
 // GetTradersByWalletAddressTipsWithResponse Get Trader Tip Stats
@@ -17354,6 +17521,39 @@ func ParseGetTradersByWalletAddressPnlSeriesResponse(rsp *http.Response) (*GetTr
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTradersByWalletAddressPriceImpactResponse parses an HTTP response from a GetTradersByWalletAddressPriceImpactWithResponse call
+func ParseGetTradersByWalletAddressPriceImpactResponse(rsp *http.Response) (*GetTradersByWalletAddressPriceImpactResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTradersByWalletAddressPriceImpactResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorTraderPriceImpactStats
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	}
 
