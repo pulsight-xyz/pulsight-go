@@ -1098,16 +1098,20 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	MintAuthority *string `json:"mint_authority,omitempty"`
 	Name          *string `json:"name,omitempty"`
 
-	// PriceSparkline PriceSparkline is the mint's last-24h price shape: WSOL-quoted closes
-	// bucketed at priceSparklineBucketMin, oldest→newest, at most
-	// priceSparklineMaxPoints values. It rides the SAME scan as PriceUsd, so
-	// it carries the same denomination caveat: WSOL-quoted only, which is why
-	// a USDC-only mint has none rather than a series in another unit (mixing
+	// PriceSparkline PriceSparkline is the mint's last-24h price shape: WSOL-quoted per-minute
+	// closes, oldest→newest, at most priceSparklineMaxPoints values. A mint
+	// that traded through the whole window is sampled evenly down to that cap
+	// (so the series still spans 24h, just coarser); one that traded for an
+	// hour carries all of it. It rides the SAME scan as PriceUsd, so it
+	// carries the same denomination caveat: WSOL-quoted only, which is why a
+	// USDC-only mint has none rather than a series in another unit (mixing
 	// quotes would draw a step that never happened). Values are raw SOL per
-	// whole token — the client normalises to its own min/max, so the unit only
-	// has to be CONSISTENT within the series. Omitted below 2 points: one
-	// point is not a line, and a listing-wide 24h span is what makes the shape
-	// comparable row to row (a mint minutes old legitimately has none yet).
+	// whole token, rounded to 6 significant digits — the client normalises to
+	// its own min/max, so the unit only has to be CONSISTENT within the
+	// series, and this is a SHAPE, not a price read (use PriceUsd for that).
+	// Only minutes that actually traded appear, so the x axis is trade
+	// sequence, not wall clock. Omitted below 2 points: one point is not a
+	// line (a mint minutes old legitimately has none yet).
 	PriceSparkline *[]float32 `json:"price_sparkline,omitempty"`
 
 	// PriceUsd PriceUsd is the latest price per WHOLE token in USD, derived from the
