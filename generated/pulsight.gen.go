@@ -1154,6 +1154,18 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	MintAuthority *string `json:"mint_authority,omitempty"`
 	Name          *string `json:"name,omitempty"`
 
+	// PriceSparkline PriceSparkline is the mint's last-24h price shape: WSOL-quoted closes
+	// bucketed at priceSparklineBucketMin, oldest→newest, at most
+	// priceSparklineMaxPoints values. It rides the SAME scan as PriceUsd, so
+	// it carries the same denomination caveat: WSOL-quoted only, which is why
+	// a USDC-only mint has none rather than a series in another unit (mixing
+	// quotes would draw a step that never happened). Values are raw SOL per
+	// whole token — the client normalises to its own min/max, so the unit only
+	// has to be CONSISTENT within the series. Omitted below 2 points: one
+	// point is not a line, and a listing-wide 24h span is what makes the shape
+	// comparable row to row (a mint minutes old legitimately has none yet).
+	PriceSparkline *[]float32 `json:"price_sparkline,omitempty"`
+
 	// PriceUsd PriceUsd is the latest price per WHOLE token in USD, derived from the
 	// dominant WSOL-quoted OHLCV close × the SOL/USD reference rate. nil
 	// when there's no WSOL pool, decimals are unknown, or no SOL/USD ref.
@@ -2022,8 +2034,13 @@ type PulsightInternalCorePortsInputPlanLimitsRead struct {
 	CanUseTagEventFilters *bool `json:"can_use_tag_event_filters,omitempty"`
 	CanViewFullData       *bool `json:"can_view_full_data,omitempty"`
 	MaxFilters            *int  `json:"max_filters,omitempty"`
-	MaxWebhooks           *int  `json:"max_webhooks,omitempty"`
-	McpAccess             *bool `json:"mcp_access,omitempty"`
+
+	// MaxStrategies MaxStrategies is the strategy cap, 0 meaning UNLIMITED (see
+	// subscription.PlanLimits.MaxStrategies). It carries the admin's
+	// `tier_plan_limits` override, not the compiled-in default.
+	MaxStrategies *int  `json:"max_strategies,omitempty"`
+	MaxWebhooks   *int  `json:"max_webhooks,omitempty"`
+	McpAccess     *bool `json:"mcp_access,omitempty"`
 }
 
 // PulsightInternalCorePortsInputStrategyValidation defines model for pulsight_internal_core_ports_input.StrategyValidation.
@@ -11403,6 +11420,8 @@ type PostStrategiesResponse struct {
 	JSON201 *PulsightInternalCoreDomainStrategyRecord
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON201 returns the response for an HTTP 201 `application/json` response
@@ -11413,6 +11432,11 @@ func (r PostStrategiesResponse) GetJSON201() *PulsightInternalCoreDomainStrategy
 // GetJSON400 returns the response for an HTTP 400 `application/json` response
 func (r PostStrategiesResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PostStrategiesResponse) GetJSON403() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON403
 }
 
 // GetBody returns the raw response body bytes
@@ -16201,6 +16225,13 @@ func ParsePostStrategiesResponse(rsp *http.Response) (*PostStrategiesResponse, e
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	}
 
