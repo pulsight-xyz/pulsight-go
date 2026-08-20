@@ -894,20 +894,6 @@ type PulsightInternalCoreDomainAggregatorHolderEntry struct {
 	PctOfSupply *float32 `json:"pct_of_supply,omitempty"`
 }
 
-// PulsightInternalCoreDomainAggregatorJitoEfficiencyRow defines model for pulsight_internal_core_domain_aggregator.JitoEfficiencyRow.
-type PulsightInternalCoreDomainAggregatorJitoEfficiencyRow struct {
-	EfficiencyScore *float32 `json:"efficiency_score,omitempty"`
-
-	// Label Label/LabelType identify a known wallet (CEX/fee/KOL/...) from the
-	// known_addresses registry; empty when the trader isn't labelled.
-	Label         *string `json:"label,omitempty"`
-	LabelType     *string `json:"label_type,omitempty"`
-	TipSwaps      *int    `json:"tip_swaps,omitempty"`
-	TotalTipSum   *int    `json:"total_tip_sum,omitempty"`
-	TotalVolumeIn *int    `json:"total_volume_in,omitempty"`
-	Trader        *string `json:"trader,omitempty"`
-}
-
 // PulsightInternalCoreDomainAggregatorLpEvent defines model for pulsight_internal_core_domain_aggregator.LpEvent.
 type PulsightInternalCoreDomainAggregatorLpEvent struct {
 	BaseAmount *string `json:"base_amount,omitempty"`
@@ -1963,6 +1949,10 @@ type PulsightInternalCorePortsInputStrategyValidation struct {
 
 // PulsightInternalCorePortsInputSubscriptionInfo defines model for pulsight_internal_core_ports_input.SubscriptionInfo.
 type PulsightInternalCorePortsInputSubscriptionInfo struct {
+	// CancelAt CancelAt is set while the provider-linked subscription is scheduled to
+	// cancel at the end of the paid period (status stays "active"; the user
+	// can resume). Absent when renewing normally or already canceled.
+	CancelAt  *string `json:"cancel_at,omitempty"`
 	ExpiresAt *string `json:"expires_at,omitempty"`
 	Interval  *string `json:"interval,omitempty"`
 	IsActive  *bool   `json:"is_active,omitempty"`
@@ -2673,15 +2663,6 @@ type GetTipsHeatmapParams struct {
 	HorizonHours *int `form:"horizon_hours,omitempty" json:"horizon_hours,omitempty"`
 }
 
-// GetTipsLeaderboardJitoEfficiencyParams defines parameters for GetTipsLeaderboardJitoEfficiency.
-type GetTipsLeaderboardJitoEfficiencyParams struct {
-	// Window Window (30m|1h|12h|1d|7d|30d|all)
-	Window *string `form:"window,omitempty" json:"window,omitempty"`
-
-	// Limit Row cap (1..200, default 50)
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-}
-
 // GetTipsMatParams defines parameters for GetTipsMat.
 type GetTipsMatParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
@@ -3238,11 +3219,6 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/tips/heatmap (the `GetTipsHeatmap` operationId).
 	GetTipsHeatmap(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetTipsLeaderboardJitoEfficiency Jito-efficiency leaderboard
-	//
-	// Corresponds with GET /api/tips/leaderboard/jito-efficiency (the `GetTipsLeaderboardJitoEfficiency` operationId).
-	GetTipsLeaderboardJitoEfficiency(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTipsMat Tip moving-average series
 	//
@@ -4200,21 +4176,6 @@ func (c *Client) GetTipsGlobal(ctx context.Context, params *GetTipsGlobalParams,
 // Corresponds with GET /api/tips/heatmap (the `GetTipsHeatmap` operationId).
 func (c *Client) GetTipsHeatmap(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTipsHeatmapRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GetTipsLeaderboardJitoEfficiency Jito-efficiency leaderboard
-//
-// Corresponds with GET /api/tips/leaderboard/jito-efficiency (the `GetTipsLeaderboardJitoEfficiency` operationId).
-func (c *Client) GetTipsLeaderboardJitoEfficiency(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTipsLeaderboardJitoEfficiencyRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6895,72 +6856,6 @@ func NewGetTipsHeatmapRequest(server string, params *GetTipsHeatmapParams) (*htt
 	return req, nil
 }
 
-// NewGetTipsLeaderboardJitoEfficiencyRequest constructs an http.Request for the GetTipsLeaderboardJitoEfficiency method
-func NewGetTipsLeaderboardJitoEfficiencyRequest(server string, params *GetTipsLeaderboardJitoEfficiencyParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/tips/leaderboard/jito-efficiency")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Window != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Limit != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewGetTipsMatRequest constructs an http.Request for the GetTipsMat method
 func NewGetTipsMatRequest(server string, params *GetTipsMatParams) (*http.Request, error) {
 	var err error
@@ -9056,13 +8951,6 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/tips/heatmap (the `GetTipsHeatmap` operationId).
 	GetTipsHeatmapWithResponse(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*GetTipsHeatmapResponse, error)
-
-	// GetTipsLeaderboardJitoEfficiencyWithResponse Jito-efficiency leaderboard
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/tips/leaderboard/jito-efficiency (the `GetTipsLeaderboardJitoEfficiency` operationId).
-	GetTipsLeaderboardJitoEfficiencyWithResponse(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*GetTipsLeaderboardJitoEfficiencyResponse, error)
 
 	// GetTipsMatWithResponse Tip moving-average series
 	//
@@ -11300,54 +11188,6 @@ func (r GetTipsHeatmapResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetTipsHeatmapResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetTipsLeaderboardJitoEfficiencyResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]PulsightInternalCoreDomainAggregatorJitoEfficiencyRow
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTipsLeaderboardJitoEfficiencyResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorJitoEfficiencyRow {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTipsLeaderboardJitoEfficiencyResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetBody returns the raw response body bytes
-func (r GetTipsLeaderboardJitoEfficiencyResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTipsLeaderboardJitoEfficiencyResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTipsLeaderboardJitoEfficiencyResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTipsLeaderboardJitoEfficiencyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13715,19 +13555,6 @@ func (c *ClientWithResponses) GetTipsHeatmapWithResponse(ctx context.Context, pa
 	return ParseGetTipsHeatmapResponse(rsp)
 }
 
-// GetTipsLeaderboardJitoEfficiencyWithResponse Jito-efficiency leaderboard
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/tips/leaderboard/jito-efficiency (the `GetTipsLeaderboardJitoEfficiency` operationId).
-func (c *ClientWithResponses) GetTipsLeaderboardJitoEfficiencyWithResponse(ctx context.Context, params *GetTipsLeaderboardJitoEfficiencyParams, reqEditors ...RequestEditorFn) (*GetTipsLeaderboardJitoEfficiencyResponse, error) {
-	rsp, err := c.GetTipsLeaderboardJitoEfficiency(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTipsLeaderboardJitoEfficiencyResponse(rsp)
-}
-
 // GetTipsMatWithResponse Tip moving-average series
 //
 // Returns a wrapper object for the known response body format(s).
@@ -15607,39 +15434,6 @@ func ParseGetTipsHeatmapResponse(rsp *http.Response) (*GetTipsHeatmapResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest PulsightInternalCoreDomainAggregatorHeatmapResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTipsLeaderboardJitoEfficiencyResponse parses an HTTP response from a GetTipsLeaderboardJitoEfficiencyWithResponse call
-func ParseGetTipsLeaderboardJitoEfficiencyResponse(rsp *http.Response) (*GetTipsLeaderboardJitoEfficiencyResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTipsLeaderboardJitoEfficiencyResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []PulsightInternalCoreDomainAggregatorJitoEfficiencyRow
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
