@@ -2581,7 +2581,7 @@ type GetOhlcvParams struct {
 	// Pool Market (pool pubkey) to chart; defaults to the mint's default market (lifetime-dominant pool, preferring the currently-active one on a genuine market rotation) — so tokens idle past 24h still chart. The default pool carries is_default on /api/mints/{pubkey}/markets
 	Pool *string `form:"pool,omitempty" json:"pool,omitempty"`
 
-	// Market Scope of an unpinned chart (lineage|pool; default lineage). lineage merges a graduated token's bonding curve with the pool it migrated to so it charts as one continuous market; pool reads the single dominant pool. Ignored when `pool` is set.
+	// Market Market scope (lineage|pool). Unpinned: defaults to lineage, which merges a graduated token's bonding curve with the pool it migrated to so it charts as one continuous market; pool reads the single dominant pool. With `pool` set: defaults to pool (that pool verbatim); pass lineage to expand the pinned pool to its own migration lineage — the market a specific fill happened in.
 	Market *string `form:"market,omitempty" json:"market,omitempty"`
 
 	// Quote Price denomination (native|sol|usd; default native)
