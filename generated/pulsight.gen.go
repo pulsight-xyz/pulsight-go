@@ -1392,9 +1392,19 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	// sells: countIf(sold_without_buy) and countIf(sold_more_than_bought)
 	// over `swaps`. Replaces the retired phantom proceeds split (CA
 	// migration 000018_remove_phantom_tracking).
-	DidntBuySells      *int `json:"didnt_buy_sells,omitempty"`
+	DidntBuySells *int `json:"didnt_buy_sells,omitempty"`
+
+	// FailedCostLamports FailedCostLamports — fees burned on failed venue-mentioning txs plus
+	// the fees+tips of landed no-CPI arb probes, from the failed-tx rollups
+	// (CA 000094). 0 when the ledger isn't populated for the window.
+	FailedCostLamports *int `json:"failed_cost_lamports,omitempty"`
 	LossProfit         *int `json:"loss_profit,omitempty"`
 	LossSells          *int `json:"loss_sells,omitempty"`
+
+	// NetRealizedProfit NetRealizedProfit = RealizedProfit − TotalFees − TotalTips −
+	// FailedCostLamports: what the wallet actually kept. This is the
+	// HEADLINE PnL; RealizedProfit stays as the flat/gross component.
+	NetRealizedProfit  *int `json:"net_realized_profit,omitempty"`
 	RealizedProfit     *int `json:"realized_profit,omitempty"`
 	SellAmountLamports *int `json:"sell_amount_lamports,omitempty"`
 	SoldGtBoughtSells  *int `json:"sold_gt_bought_sells,omitempty"`
@@ -1405,9 +1415,19 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	// toInt64() in SQL, and clickhouse-go scans an Int64 column only into
 	// *int64 (it rejects *int with code-typed "try using *int64"). JSON
 	// serialisation is identical either way.
-	TotalBuys   *int     `json:"total_buys,omitempty"`
-	TotalFees   *int     `json:"total_fees,omitempty"`
-	TotalSells  *int     `json:"total_sells,omitempty"`
+	TotalBuys *int `json:"total_buys,omitempty"`
+
+	// TotalFees TotalFees is the window's tx fees (base + priority) counted ONCE PER
+	// TRANSACTION: sum(priority_fee_lamports) + 5000 × uniq(signature).
+	// `swaps.fee` itself is stamped on every trade row of a tx, so the old
+	// sumIf(fee) double-counted multi-trade (arb) txs; priority/tips are
+	// first-row-only stamped, so their plain sums are exact and only the
+	// 5000-lamport base rides the (near-exact) uniq count.
+	TotalFees  *int `json:"total_fees,omitempty"`
+	TotalSells *int `json:"total_sells,omitempty"`
+
+	// TotalTips TotalTips — builder/MEV tips paid on the window's successful txs.
+	TotalTips   *int     `json:"total_tips,omitempty"`
 	Trader      *string  `json:"trader,omitempty"`
 	WinProfit   *int     `json:"win_profit,omitempty"`
 	WinSells    *int     `json:"win_sells,omitempty"`
@@ -1434,6 +1454,36 @@ type PulsightInternalCoreDomainAggregatorTraderPriceImpactStats struct {
 	PriceImpactSwaps *int                                        `json:"price_impact_swaps,omitempty"`
 	Pubkey           *string                                     `json:"pubkey,omitempty"`
 	Window           *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTraderReliabilityStats defines model for pulsight_internal_core_domain_aggregator.TraderReliabilityStats.
+type PulsightInternalCoreDomainAggregatorTraderReliabilityStats struct {
+	FailedArbs *int `json:"failed_arbs,omitempty"`
+
+	// FailedFeeLamports Lamports burned on failed txs (base + priority fee) vs on landed
+	// no-CPI probes, plus tips the probes paid.
+	FailedFeeLamports *int `json:"failed_fee_lamports,omitempty"`
+	FailedOther       *int `json:"failed_other,omitempty"`
+	FailedSwaps       *int `json:"failed_swaps,omitempty"`
+
+	// FailedTxs = FailedSwaps + FailedArbs + FailedOther
+	FailedTxs *int `json:"failed_txs,omitempty"`
+
+	// LandedTxs LandedTxs is uniqExact(signature) over the wallet's `swaps` rows in
+	// the window — successful swap TRANSACTIONS, not legs or trades.
+	LandedTxs        *int     `json:"landed_txs,omitempty"`
+	NoCpiFeeLamports *int     `json:"no_cpi_fee_lamports,omitempty"`
+	NoCpiTipLamports *int     `json:"no_cpi_tip_lamports,omitempty"`
+	NoCpiTxs         *int     `json:"no_cpi_txs,omitempty"`
+	Pubkey           *string  `json:"pubkey,omitempty"`
+	SpamRate         *float32 `json:"spam_rate,omitempty"`
+
+	// SuccessRate SuccessRate = LandedTxs / (LandedTxs + FailedTxs); SpamRate =
+	// (FailedTxs + NoCpiTxs) / (LandedTxs + FailedTxs + NoCpiTxs).
+	// POINTERS: nil when the denominator is 0 — a wallet with no activity
+	// has no rate, and that must not read as 0%.
+	SuccessRate *float32                                    `json:"success_rate,omitempty"`
+	Window      *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorWindow defines model for pulsight_internal_core_domain_aggregator.Window.
@@ -1757,9 +1807,6 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	// AvgHoldingTime Holding time (seconds)
 	AvgHoldingTime       *float32 `json:"avg_holding_time,omitempty"`
 	AvgRealizedProfit30d *float32 `json:"avg_realized_profit_30d,omitempty"`
-
-	// AvgRealizedProfit7d Realized profit per-mint averages / medians. UNIT: lamports
-	// (frontend FormattedSol divides by 1e9 on display).
 	AvgRealizedProfit7d  *float32 `json:"avg_realized_profit_7d,omitempty"`
 	AvgSellCountPerToken *float32 `json:"avg_sell_count_per_token,omitempty"`
 	Buy30d               *int     `json:"buy_30d,omitempty"`
@@ -1781,13 +1828,17 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	// observed bought balance.
 	DidntBuySells7d *int     `json:"didnt_buy_sells_7d,omitempty"`
 	DustTxRatio     *float32 `json:"dust_tx_ratio,omitempty"`
+	FailedTxs30d    *int     `json:"failed_txs_30d,omitempty"`
+	FailedTxs7d     *int     `json:"failed_txs_7d,omitempty"`
 	Id              *string  `json:"id,omitempty"`
 	IsFavorite      *bool    `json:"is_favorite,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/KOL/...) from the
 	// known_addresses registry; empty when the wallet isn't labelled.
-	Label     *string `json:"label,omitempty"`
-	LabelType *string `json:"label_type,omitempty"`
+	Label        *string `json:"label,omitempty"`
+	LabelType    *string `json:"label_type,omitempty"`
+	LandedTxs30d *int    `json:"landed_txs_30d,omitempty"`
+	LandedTxs7d  *int    `json:"landed_txs_7d,omitempty"`
 
 	// LastActiveTimestamp Activity
 	LastActiveTimestamp      *int     `json:"last_active_timestamp,omitempty"`
@@ -1800,9 +1851,20 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	MmScore                  *int     `json:"mm_score,omitempty"`
 
 	// Name Identifiers / social
-	Name          *string `json:"name,omitempty"`
-	OldestTradeAt *int    `json:"oldest_trade_at,omitempty"`
-	Pnl0x2xNum30d *int    `json:"pnl_0x2x_num_30d,omitempty"`
+	Name         *string  `json:"name,omitempty"`
+	NetProfit30d *float32 `json:"net_profit_30d,omitempty"`
+
+	// NetProfit7d Realized profit per-mint averages / medians. UNIT: lamports
+	// (frontend FormattedSol divides by 1e9 on display).
+	// Net-of-costs windowed figures (CA migration 000095). NetProfit is
+	// realized PnL minus tips, per-transaction fees and the fees burned on
+	// failed / no-CPI transactions — what the wallet actually kept. The
+	// gross figure stays on RealizedProfit*d so both are readable.
+	// SuccessRate / SpamRate are nil when the window observed no
+	// transactions at all (0 would read as "never lands").
+	NetProfit7d   *float32 `json:"net_profit_7d,omitempty"`
+	OldestTradeAt *int     `json:"oldest_trade_at,omitempty"`
+	Pnl0x2xNum30d *int     `json:"pnl_0x2x_num_30d,omitempty"`
 
 	// Pnl0x2xNum7d 0x to 2x
 	Pnl0x2xNum7d  *int `json:"pnl_0x2x_num_7d,omitempty"`
@@ -1850,11 +1912,17 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	SolBalance           *float32 `json:"sol_balance,omitempty"`
 	SoldGtBoughtSells30d *int     `json:"sold_gt_bought_sells_30d,omitempty"`
 	SoldGtBoughtSells7d  *int     `json:"sold_gt_bought_sells_7d,omitempty"`
+	SpamRate30d          *float32 `json:"spam_rate_30d,omitempty"`
+	SpamRate7d           *float32 `json:"spam_rate_7d,omitempty"`
+	SuccessRate30d       *float32 `json:"success_rate_30d,omitempty"`
+	SuccessRate7d        *float32 `json:"success_rate_7d,omitempty"`
 
 	// Tags Relations (loaded on demand)
-	Tags        *[]PulsightInternalCoreDomainTraderTag `json:"tags,omitempty"`
-	TokenNum30d *int                                   `json:"token_num_30d,omitempty"`
-	TokenNum7d  *int                                   `json:"token_num_7d,omitempty"`
+	Tags          *[]PulsightInternalCoreDomainTraderTag `json:"tags,omitempty"`
+	TokenNum30d   *int                                   `json:"token_num_30d,omitempty"`
+	TokenNum7d    *int                                   `json:"token_num_7d,omitempty"`
+	TotalCosts30d *float32                               `json:"total_costs_30d,omitempty"`
+	TotalCosts7d  *float32                               `json:"total_costs_7d,omitempty"`
 
 	// TotalProfit Profit stats (all-time). UNIT: lamports (see SolBalance note).
 	TotalProfit       *float32 `json:"total_profit,omitempty"`
@@ -2308,8 +2376,16 @@ type PulsightInternalCoreUsecasesTraderDailyProfitsResult struct {
 
 // PulsightInternalCoreUsecasesTraderPnlSeriesPoint defines model for pulsight_internal_core_usecases_trader.PnlSeriesPoint.
 type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
-	Day    *string `json:"day,omitempty"`
-	Profit *int    `json:"profit,omitempty"`
+	Day        *string `json:"day,omitempty"`
+	FailedCost *int    `json:"failed_cost,omitempty"`
+
+	// Fees Costs of the day (lamports): per-tx fees, tips, and failed-tx burn,
+	// with `net = profit - fees - tips - failed_cost`. The charts plot NET
+	// as the headline series; `profit` stays as the flat/gross component.
+	Fees   *int `json:"fees,omitempty"`
+	Net    *int `json:"net,omitempty"`
+	Profit *int `json:"profit,omitempty"`
+	Tips   *int `json:"tips,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesTraderPnlSeriesResult defines model for pulsight_internal_core_usecases_trader.PnlSeriesResult.
@@ -2352,6 +2428,8 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// balance, scoped to the window.
 	DidntBuySells7d *int     `json:"didnt_buy_sells_7d,omitempty"`
 	DustTxRatio     *float32 `json:"dust_tx_ratio,omitempty"`
+	FailedTxs30d    *int     `json:"failed_txs_30d,omitempty"`
+	FailedTxs7d     *int     `json:"failed_txs_7d,omitempty"`
 	HasAvatar       *bool    `json:"has_avatar,omitempty"`
 
 	// HoldingPnlLamports HoldingPnlLamports is the wallet's current unrealised PnL across
@@ -2365,6 +2443,8 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// known_addresses registry; empty when the wallet isn't labelled.
 	Label                    *string  `json:"label,omitempty"`
 	LabelType                *string  `json:"label_type,omitempty"`
+	LandedTxs30d             *int     `json:"landed_txs_30d,omitempty"`
+	LandedTxs7d              *int     `json:"landed_txs_7d,omitempty"`
 	LastActiveTimestamp      *int     `json:"last_active_timestamp,omitempty"`
 	MedianBuyCountPerToken   *float32 `json:"median_buy_count_per_token,omitempty"`
 	MedianFirstBuyReactivity *float32 `json:"median_first_buy_reactivity,omitempty"`
@@ -2374,7 +2454,11 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	MedianSellCountPerToken  *float32 `json:"median_sell_count_per_token,omitempty"`
 	MmScore                  *int     `json:"mm_score,omitempty"`
 	Name                     *string  `json:"name,omitempty"`
-	OldestTradeAt            *int     `json:"oldest_trade_at,omitempty"`
+	NetProfit30d             *float32 `json:"net_profit_30d,omitempty"`
+
+	// NetProfit7d Net-of-costs figures — see trader.Trader for the definitions.
+	NetProfit7d   *float32 `json:"net_profit_7d,omitempty"`
+	OldestTradeAt *int     `json:"oldest_trade_at,omitempty"`
 
 	// Periods Periods is one row per canonical UTC-aligned window (1d, 7d, 30d,
 	// all) from CA's `trader_period_stats_for`. Drives the
@@ -2415,6 +2499,10 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	SolBalance           *float32   `json:"sol_balance,omitempty"`
 	SoldGtBoughtSells30d *int       `json:"sold_gt_bought_sells_30d,omitempty"`
 	SoldGtBoughtSells7d  *int       `json:"sold_gt_bought_sells_7d,omitempty"`
+	SpamRate30d          *float32   `json:"spam_rate_30d,omitempty"`
+	SpamRate7d           *float32   `json:"spam_rate_7d,omitempty"`
+	SuccessRate30d       *float32   `json:"success_rate_30d,omitempty"`
+	SuccessRate7d        *float32   `json:"success_rate_7d,omitempty"`
 	Tags                 *[]string  `json:"tags,omitempty"`
 	TokenNum30d          *int       `json:"token_num_30d,omitempty"`
 	TokenNum7d           *int       `json:"token_num_7d,omitempty"`
@@ -2425,6 +2513,8 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// wasn't inlined. Mirror the creator_tokens_* leaderboard filters.
 	TokensCreated          *int     `json:"tokens_created,omitempty"`
 	TokensGraduated        *int     `json:"tokens_graduated,omitempty"`
+	TotalCosts30d          *float32 `json:"total_costs_30d,omitempty"`
+	TotalCosts7d           *float32 `json:"total_costs_7d,omitempty"`
 	TotalProfit            *float32 `json:"total_profit,omitempty"`
 	TotalProfit30d         *float32 `json:"total_profit_30d,omitempty"`
 	TotalProfit7d          *float32 `json:"total_profit_7d,omitempty"`
@@ -2800,6 +2890,12 @@ type GetTradersByWalletAddressPnlSeriesParamsWindow string
 
 // GetTradersByWalletAddressPriceImpactParams defines parameters for GetTradersByWalletAddressPriceImpact.
 type GetTradersByWalletAddressPriceImpactParams struct {
+	// Window 1d|7d|30d|all (default 7d)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetTradersByWalletAddressReliabilityParams defines parameters for GetTradersByWalletAddressReliability.
+type GetTradersByWalletAddressReliabilityParams struct {
 	// Window 1d|7d|30d|all (default 7d)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
@@ -3403,6 +3499,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/price-impact (the `GetTradersByWalletAddressPriceImpact` operationId).
 	GetTradersByWalletAddressPriceImpact(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTradersByWalletAddressReliability Landed-vs-failed reliability of a wallet's transactions
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/reliability (the `GetTradersByWalletAddressReliability` operationId).
+	GetTradersByWalletAddressReliability(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressReliabilityParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTradersByWalletAddressTips Get Trader Tip Stats
 	//
@@ -4620,6 +4721,21 @@ func (c *Client) GetTradersByWalletAddressPnlSeries(ctx context.Context, walletA
 // Corresponds with GET /api/traders/{walletAddress}/price-impact (the `GetTradersByWalletAddressPriceImpact` operationId).
 func (c *Client) GetTradersByWalletAddressPriceImpact(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTradersByWalletAddressPriceImpactRequest(c.Server, walletAddress, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTradersByWalletAddressReliability Landed-vs-failed reliability of a wallet's transactions
+//
+// Corresponds with GET /api/traders/{walletAddress}/reliability (the `GetTradersByWalletAddressReliability` operationId).
+func (c *Client) GetTradersByWalletAddressReliability(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressReliabilityParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressReliabilityRequest(c.Server, walletAddress, params)
 	if err != nil {
 		return nil, err
 	}
@@ -8166,6 +8282,67 @@ func NewGetTradersByWalletAddressPriceImpactRequest(server string, walletAddress
 	return req, nil
 }
 
+// NewGetTradersByWalletAddressReliabilityRequest constructs an http.Request for the GetTradersByWalletAddressReliability method
+func NewGetTradersByWalletAddressReliabilityRequest(server string, walletAddress string, params *GetTradersByWalletAddressReliabilityParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "walletAddress", walletAddress, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/traders/%s/reliability", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetTradersByWalletAddressTipsRequest constructs an http.Request for the GetTradersByWalletAddressTips method
 func NewGetTradersByWalletAddressTipsRequest(server string, walletAddress string, params *GetTradersByWalletAddressTipsParams) (*http.Request, error) {
 	var err error
@@ -9171,6 +9348,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/price-impact (the `GetTradersByWalletAddressPriceImpact` operationId).
 	GetTradersByWalletAddressPriceImpactWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPriceImpactParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressPriceImpactResponse, error)
+
+	// GetTradersByWalletAddressReliabilityWithResponse Landed-vs-failed reliability of a wallet's transactions
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/reliability (the `GetTradersByWalletAddressReliability` operationId).
+	GetTradersByWalletAddressReliabilityWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressReliabilityParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressReliabilityResponse, error)
 
 	// GetTradersByWalletAddressTipsWithResponse Get Trader Tip Stats
 	//
@@ -12460,6 +12644,54 @@ func (r GetTradersByWalletAddressPriceImpactResponse) ContentType() string {
 	return ""
 }
 
+type GetTradersByWalletAddressReliabilityResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorTraderReliabilityStats
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTradersByWalletAddressReliabilityResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorTraderReliabilityStats {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetTradersByWalletAddressReliabilityResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTradersByWalletAddressReliabilityResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTradersByWalletAddressReliabilityResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTradersByWalletAddressReliabilityResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTradersByWalletAddressReliabilityResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetTradersByWalletAddressTipsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13929,6 +14161,19 @@ func (c *ClientWithResponses) GetTradersByWalletAddressPriceImpactWithResponse(c
 		return nil, err
 	}
 	return ParseGetTradersByWalletAddressPriceImpactResponse(rsp)
+}
+
+// GetTradersByWalletAddressReliabilityWithResponse Landed-vs-failed reliability of a wallet's transactions
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/traders/{walletAddress}/reliability (the `GetTradersByWalletAddressReliability` operationId).
+func (c *ClientWithResponses) GetTradersByWalletAddressReliabilityWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressReliabilityParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressReliabilityResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressReliability(ctx, walletAddress, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTradersByWalletAddressReliabilityResponse(rsp)
 }
 
 // GetTradersByWalletAddressTipsWithResponse Get Trader Tip Stats
@@ -16388,6 +16633,39 @@ func ParseGetTradersByWalletAddressPriceImpactResponse(rsp *http.Response) (*Get
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest PulsightInternalCoreDomainAggregatorTraderPriceImpactStats
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTradersByWalletAddressReliabilityResponse parses an HTTP response from a GetTradersByWalletAddressReliabilityWithResponse call
+func ParseGetTradersByWalletAddressReliabilityResponse(rsp *http.Response) (*GetTradersByWalletAddressReliabilityResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTradersByWalletAddressReliabilityResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorTraderReliabilityStats
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
