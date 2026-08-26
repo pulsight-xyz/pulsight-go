@@ -1042,6 +1042,28 @@ type PulsightInternalCoreDomainAggregatorMevTipSharePoint struct {
 	TotalVolumeLamports  *int     `json:"total_volume_lamports,omitempty"`
 }
 
+// PulsightInternalCoreDomainAggregatorMintActivityBase defines model for pulsight_internal_core_domain_aggregator.MintActivityBase.
+type PulsightInternalCoreDomainAggregatorMintActivityBase struct {
+	FeesLamports *int `json:"fees_lamports,omitempty"`
+	Swaps        *int `json:"swaps,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorMintActivityPoint defines model for pulsight_internal_core_domain_aggregator.MintActivityPoint.
+type PulsightInternalCoreDomainAggregatorMintActivityPoint struct {
+	FeesLamports *int `json:"fees_lamports,omitempty"`
+	Swaps        *int `json:"swaps,omitempty"`
+	Ts           *int `json:"ts,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorMintActivitySeed defines model for pulsight_internal_core_domain_aggregator.MintActivitySeed.
+type PulsightInternalCoreDomainAggregatorMintActivitySeed struct {
+	Base   *PulsightInternalCoreDomainAggregatorMintActivityBase    `json:"base,omitempty"`
+	From   *int                                                     `json:"from,omitempty"`
+	Mint   *string                                                  `json:"mint,omitempty"`
+	Points *[]PulsightInternalCoreDomainAggregatorMintActivityPoint `json:"points,omitempty"`
+	To     *int                                                     `json:"to,omitempty"`
+}
+
 // PulsightInternalCoreDomainAggregatorMintBundled defines model for pulsight_internal_core_domain_aggregator.MintBundled.
 type PulsightInternalCoreDomainAggregatorMintBundled struct {
 	InitialPct *float32 `json:"initial_pct,omitempty"`
@@ -1203,8 +1225,10 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	Name          *string `json:"name,omitempty"`
 
 	// PriceSparkline PriceSparkline is the mint's last-24h price shape: WSOL-quoted per-minute
-	// closes, oldest→newest, at most priceSparklineMaxPoints values. A mint
-	// that traded through the whole window is sampled evenly down to that cap
+	// closes of the mint's DOMINANT pool (highest 24h quote volume — one pool,
+	// never a merge, so a dust side-market's prints can't flatten the line),
+	// oldest→newest, at most priceSparklineMaxPoints values. A mint that
+	// traded through the whole window is sampled evenly down to that cap
 	// (so the series still spans 24h, just coarser); one that traded for an
 	// hour carries all of it. It rides the SAME scan as PriceUsd, so it
 	// carries the same denomination caveat: WSOL-quoted only, which is why a
@@ -1214,8 +1238,9 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// its own min/max, so the unit only has to be CONSISTENT within the
 	// series, and this is a SHAPE, not a price read (use PriceUsd for that).
 	// Only minutes that actually traded appear, so the x axis is trade
-	// sequence, not wall clock. Omitted below 2 points: one point is not a
-	// line (a mint minutes old legitimately has none yet).
+	// sequence, not wall clock. Omitted below 2 points — but a mint younger
+	// than ~10 minutes gets its points from 1-SECOND candles instead, so a
+	// fresh row draws a line as soon as it has two seconds of trading.
 	PriceSparkline *[]float32 `json:"price_sparkline,omitempty"`
 
 	// PriceUsd PriceUsd is the latest price per WHOLE token in USD, derived from the
@@ -1225,11 +1250,12 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 
 	// RiskScore RiskScore/RiskVerdict are a fast at-a-glance risk score (0..100 +
 	// low|caution|high|critical) computed from the signals already on this row
-	// (authorities, honeypot/copycat/sell-trap, dev %, bundle) via the same
+	// (authorities, honeypot/copycat/sell-trap, dev %, bundle, top-10
+	// concentration, lifetime fees per tx, trader quality) via the same
 	// domain ScoreRisk as the per-mint risk card. The listing omits the inputs
-	// that need per-mint queries (top-10 concentration, snipers, insider %,
-	// liquidity), so this is a LOWER BOUND of the card's full score — the token
-	// page is authoritative. nil only if scoring was skipped.
+	// that need per-mint queries (snipers, insider %, liquidity), so this is a
+	// LOWER BOUND of the card's full score — the token page is authoritative.
+	// nil only if scoring was skipped.
 	RiskScore   *int    `json:"risk_score,omitempty"`
 	RiskVerdict *string `json:"risk_verdict,omitempty"`
 	SellCount   *int    `json:"sell_count,omitempty"`
@@ -1291,11 +1317,19 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// hours-window-bound. nil until the migration is applied or when the
 	// page decoration read fails.
 	TotalFeesSol *int `json:"total_fees_sol,omitempty"`
+
+	// TotalTxCount TotalTxCount — LIFETIME swap count for the mint, from the same
+	// mint_activity_totals seek as TotalFeesSol (and on its same sawtooth
+	// basis). It is the fee figure's denominator: the bot-fee-pattern risk
+	// rule scores fees PER transaction, so the two must share a basis —
+	// the hours-window SwapCount would not. nil whenever TotalFeesSol is.
+	TotalTxCount *int `json:"total_tx_count,omitempty"`
 	TraderCount  *int `json:"trader_count,omitempty"`
 
 	// TraderQuality TraderQuality is the per-mint wallet-class fold (CA 000131) behind the
-	// sybil badge and sort=organic. Best-effort list decoration; nil before
-	// the migration or when the batch read fails.
+	// ORGANIC distribution slot, the low_organic_activity risk rule and
+	// sort=organic. Best-effort list decoration; nil before the migration or
+	// when the batch read fails.
 	TraderQuality *PulsightInternalCoreDomainAggregatorMintTraderQuality `json:"trader_quality,omitempty"`
 
 	// UniqueTraders UniqueTraders is the number of distinct wallets that have EVER traded
@@ -1612,6 +1646,12 @@ type PulsightInternalCoreDomainAggregatorRiskReport struct {
 
 	// Top10 % of circulating
 	Top10 *float32 `json:"top10,omitempty"`
+
+	// TraderQuality TraderQuality echoes the wallet-class fold the low-organic rule
+	// scored (same shape as the listing's trader_quality decoration) so the
+	// risk card can render an organic-share tile even when no rule fired.
+	// nil when the plane is absent.
+	TraderQuality *PulsightInternalCoreDomainAggregatorMintTraderQuality `json:"trader_quality,omitempty"`
 
 	// Verdict low|caution|high|critical
 	Verdict *string `json:"verdict,omitempty"`
@@ -3087,6 +3127,15 @@ type GetMintsParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// GetMintsByPubkeyActivityParams defines parameters for GetMintsByPubkeyActivity.
+type GetMintsByPubkeyActivityParams struct {
+	// From Range start, unix seconds (inclusive)
+	From int `form:"from" json:"from"`
+
+	// To Range end, unix seconds (exclusive)
+	To int `form:"to" json:"to"`
+}
+
 // GetMintsByPubkeyLpEventsParams defines parameters for GetMintsByPubkeyLpEvents.
 type GetMintsByPubkeyLpEventsParams struct {
 	// Op Filter by op (add|remove|burn)
@@ -3721,6 +3770,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/mints/{pubkey} (the `GetMintsByPubkey` operationId).
 	GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMintsByPubkeyActivity Mint Activity Seed
+	//
+	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+	//
+	// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
+	GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyLpEvents List Mint LP Events
 	//
@@ -4482,6 +4538,23 @@ func (c *Client) GetMints(ctx context.Context, params *GetMintsParams, reqEditor
 // Corresponds with GET /api/mints/{pubkey} (the `GetMintsByPubkey` operationId).
 func (c *Client) GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetMintsByPubkeyRequest(c.Server, pubkey)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMintsByPubkeyActivity Mint Activity Seed
+//
+// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+//
+// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
+func (c *Client) GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyActivityRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6502,6 +6575,71 @@ func NewGetMintsByPubkeyRequest(server string, pubkey string) (*http.Request, er
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMintsByPubkeyActivityRequest constructs an http.Request for the GetMintsByPubkeyActivity method
+func NewGetMintsByPubkeyActivityRequest(server string, pubkey string, params *GetMintsByPubkeyActivityParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pubkey", pubkey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/mints/%s/activity", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -10476,6 +10614,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/mints/{pubkey} (the `GetMintsByPubkey` operationId).
 	GetMintsByPubkeyWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyResponse, error)
 
+	// GetMintsByPubkeyActivityWithResponse Mint Activity Seed
+	//
+	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
+	GetMintsByPubkeyActivityWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyActivityResponse, error)
+
 	// GetMintsByPubkeyLpEventsWithResponse List Mint LP Events
 	//
 	// Recent liquidity-pool add/remove/burn events for a mint (newest first), from `lp_events`. Sparse where upstream doesn't yet extract LP for a DEX; returns an empty array then.
@@ -11825,6 +11972,68 @@ func (r GetMintsByPubkeyResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetMintsByPubkeyResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMintsByPubkeyActivityResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorMintActivitySeed
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMintsByPubkeyActivityResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorMintActivitySeed {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetMintsByPubkeyActivityResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetMintsByPubkeyActivityResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetMintsByPubkeyActivityResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMintsByPubkeyActivityResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMintsByPubkeyActivityResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMintsByPubkeyActivityResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMintsByPubkeyActivityResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -15522,6 +15731,21 @@ func (c *ClientWithResponses) GetMintsByPubkeyWithResponse(ctx context.Context, 
 	return ParseGetMintsByPubkeyResponse(rsp)
 }
 
+// GetMintsByPubkeyActivityWithResponse Mint Activity Seed
+//
+// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
+func (c *ClientWithResponses) GetMintsByPubkeyActivityWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyActivityResponse, error) {
+	rsp, err := c.GetMintsByPubkeyActivity(ctx, pubkey, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMintsByPubkeyActivityResponse(rsp)
+}
+
 // GetMintsByPubkeyLpEventsWithResponse List Mint LP Events
 //
 // Recent liquidity-pool add/remove/burn events for a mint (newest first), from `lp_events`. Sparse where upstream doesn't yet extract LP for a DEX; returns an empty array then.
@@ -17060,6 +17284,53 @@ func ParseGetMintsByPubkeyResponse(rsp *http.Response) (*GetMintsByPubkeyRespons
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMintsByPubkeyActivityResponse parses an HTTP response from a GetMintsByPubkeyActivityWithResponse call
+func ParseGetMintsByPubkeyActivityResponse(rsp *http.Response) (*GetMintsByPubkeyActivityResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMintsByPubkeyActivityResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorMintActivitySeed
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
