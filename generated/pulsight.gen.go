@@ -74,6 +74,7 @@ func (e PulsightInternalCoreDomainAggregatorTimeframe) Valid() bool {
 const (
 	Window1d  PulsightInternalCoreDomainAggregatorWindow = "1d"
 	Window30d PulsightInternalCoreDomainAggregatorWindow = "30d"
+	Window3m  PulsightInternalCoreDomainAggregatorWindow = "3m"
 	Window7d  PulsightInternalCoreDomainAggregatorWindow = "7d"
 	WindowAll PulsightInternalCoreDomainAggregatorWindow = "all"
 )
@@ -84,6 +85,8 @@ func (e PulsightInternalCoreDomainAggregatorWindow) Valid() bool {
 	case Window1d:
 		return true
 	case Window30d:
+		return true
+	case Window3m:
 		return true
 	case Window7d:
 		return true
@@ -648,6 +651,7 @@ type InternalAdaptersPrimaryHttpHandlerSwapEventRow struct {
 	Mint                *string  `json:"mint,omitempty"`
 	Pool                *string  `json:"pool,omitempty"`
 	PriorityFeeLamports *int     `json:"priority_fee_lamports,omitempty"`
+	QuoteLamports       *int     `json:"quote_lamports,omitempty"`
 	QuoteMint           *string  `json:"quote_mint,omitempty"`
 	RealizedProfit      *int     `json:"realized_profit,omitempty"`
 	Signature           *string  `json:"signature,omitempty"`
@@ -798,6 +802,99 @@ type PulsightInternalCoreDomainAggregatorBundlerStat struct {
 	TotalInitialPct *float32                                            `json:"total_initial_pct,omitempty"`
 	TotalPct        *float32                                            `json:"total_pct,omitempty"`
 	Wallets         *[]PulsightInternalCoreDomainAggregatorBundlerEntry `json:"wallets,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorCashbackBoardPage defines model for pulsight_internal_core_domain_aggregator.CashbackBoardPage.
+type PulsightInternalCoreDomainAggregatorCashbackBoardPage struct {
+	Items  *[]PulsightInternalCoreDomainAggregatorCashbackBoardRow `json:"items,omitempty"`
+	Limit  *int                                                    `json:"limit,omitempty"`
+	Offset *int                                                    `json:"offset,omitempty"`
+	Total  *int                                                    `json:"total,omitempty"`
+	Window *PulsightInternalCoreDomainAggregatorWindow             `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorCashbackBoardRow defines model for pulsight_internal_core_domain_aggregator.CashbackBoardRow.
+type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
+	// CashbackVolumeLamports CashbackVolumeLamports over TotalVolumeLamports is VolumeShare — nil
+	// when the window moved no volume (no share, which is not a 0% share).
+	CashbackVolumeLamports *int  `json:"cashback_volume_lamports,omitempty"`
+	Censored               *bool `json:"censored,omitempty"`
+	ClaimCount             *int  `json:"claim_count,omitempty"`
+
+	// ClaimedLamports ClaimedLamports / ClaimCount are nil only before CA 000106 exists. On
+	// the lifetime window they are RETENTION-BOUNDED (the raw claim ledger
+	// carries a 75-day TTL) — they undercount once rows age out rather than
+	// inventing, the trader panel's lifetime_claimed precedent.
+	ClaimedLamports *int `json:"claimed_lamports,omitempty"`
+
+	// EarnedLamports EarnedLamports — cashback accrued in the window TO THIS WALLET'S OWN
+	// accumulator (since classifier 0cb3f9c, executor-routed fills whose
+	// accumulator belongs to the filler are excluded); the board's primary
+	// measure (claiming is sporadic, earning is the smooth signal).
+	EarnedLamports *int    `json:"earned_lamports,omitempty"`
+	FirstSeenMs    *int    `json:"first_seen_ms,omitempty"`
+	LastActiveMs   *int    `json:"last_active_ms,omitempty"`
+	PumpImage      *string `json:"pump_image,omitempty"`
+
+	// PumpUsername Pump.fun profile enrichment (server-side, cached): the wallet's pump
+	// username and avatar when it has a profile. Always nil on a censored
+	// row — enrichment runs only on rows whose identity ships.
+	PumpUsername *string `json:"pump_username,omitempty"`
+
+	// Rank Rank is 1-based within the requested window + filters (offset-aware).
+	Rank                *int `json:"rank,omitempty"`
+	TotalVolumeLamports *int `json:"total_volume_lamports,omitempty"`
+
+	// Trader Trader is empty on a censored landing row (Censored true): the figures
+	// stay real, the identity is withheld server-side.
+	Trader      *string  `json:"trader,omitempty"`
+	VolumeShare *float32 `json:"volume_share,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorCashbackBoardSummary defines model for pulsight_internal_core_domain_aggregator.CashbackBoardSummary.
+type PulsightInternalCoreDomainAggregatorCashbackBoardSummary struct {
+	ClaimCount *int `json:"claim_count,omitempty"`
+
+	// ClaimedLamports ClaimedLamports / ClaimCount: on the lifetime window these are
+	// RETENTION-BOUNDED sums over the 75-day claim ledger (undercount, never
+	// invented).
+	ClaimedLamports *int `json:"claimed_lamports,omitempty"`
+	EarnedLamports  *int `json:"earned_lamports,omitempty"`
+
+	// Earners Earners / EarnedLamports — wallets with any earned cashback in the
+	// window, and their summed earnings (the "% of pool" denominator).
+	Earners *int `json:"earners,omitempty"`
+
+	// MedianEarnedLamports Population marks.
+	MedianEarnedLamports *int                                        `json:"median_earned_lamports,omitempty"`
+	Rank1EarnedLamports  *int                                        `json:"rank1_earned_lamports,omitempty"`
+	Window               *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorCashbackClaimRow defines model for pulsight_internal_core_domain_aggregator.CashbackClaimRow.
+type PulsightInternalCoreDomainAggregatorCashbackClaimRow struct {
+	AmountLamports *int    `json:"amount_lamports,omitempty"`
+	Program        *string `json:"program,omitempty"`
+	QuoteMint      *string `json:"quote_mint,omitempty"`
+	Signature      *string `json:"signature,omitempty"`
+	Timestamp      *string `json:"timestamp,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorCashbackClaimsPage defines model for pulsight_internal_core_domain_aggregator.CashbackClaimsPage.
+type PulsightInternalCoreDomainAggregatorCashbackClaimsPage struct {
+	Items  *[]PulsightInternalCoreDomainAggregatorCashbackClaimRow `json:"items,omitempty"`
+	Limit  *int                                                    `json:"limit,omitempty"`
+	Offset *int                                                    `json:"offset,omitempty"`
+	Pubkey *string                                                 `json:"pubkey,omitempty"`
+	Total  *int                                                    `json:"total,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorCashbackProgramTotals defines model for pulsight_internal_core_domain_aggregator.CashbackProgramTotals.
+type PulsightInternalCoreDomainAggregatorCashbackProgramTotals struct {
+	// Program "pumpfun" | "pumpswap"
+	Program              *string `json:"program,omitempty"`
+	TotalClaimedLamports *int    `json:"total_claimed_lamports,omitempty"`
+	TotalEarnedLamports  *int    `json:"total_earned_lamports,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorCohortStat defines model for pulsight_internal_core_domain_aggregator.CohortStat.
@@ -960,7 +1057,14 @@ type PulsightInternalCoreDomainAggregatorMintHoneypot struct {
 	Buyers   *int `json:"buyers,omitempty"`
 
 	// DuplicateCount DuplicateCount backs "copycat": how many mints share this (symbol, name).
-	DuplicateCount *int `json:"duplicate_count,omitempty"`
+	DuplicateCount  *int     `json:"duplicate_count,omitempty"`
+	FeeSellBuyRatio *float32 `json:"fee_sell_buy_ratio,omitempty"`
+
+	// FeeTrapBuckets FeeTrapBuckets/FeeSellBuyRatio back "fee_trap" (confiscatory sell
+	// tax, CA 000133/r59): distinct 15-minute buckets in the last 7 days
+	// whose sells executed below half that bucket's buy VWAP, and the
+	// window's overall sell/buy exec-price ratio (display only).
+	FeeTrapBuckets *int `json:"fee_trap_buckets,omitempty"`
 
 	// FreezeCount FreezeCount/ThawCount back the "freezes_holders" reason.
 	FreezeCount *int      `json:"freeze_count,omitempty"`
@@ -968,6 +1072,11 @@ type PulsightInternalCoreDomainAggregatorMintHoneypot struct {
 	SellCount   *int      `json:"sell_count,omitempty"`
 	Sellers     *int      `json:"sellers,omitempty"`
 	ThawCount   *int      `json:"thaw_count,omitempty"`
+
+	// TransferFeeBps TransferFeeBps backs "transfer_fee" (Token-2022, CA 000134/r61): the
+	// on-chain transfer fee in basis points (max of the current and
+	// scheduled fee).
+	TransferFeeBps *int `json:"transfer_fee_bps,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintInsiders defines model for pulsight_internal_core_domain_aggregator.MintInsiders.
@@ -1055,6 +1164,8 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// absent when no reason fires. Step 1 populates the "freezes_holders"
 	// reason from mint_safety_events (froze many holder accounts, thawed
 	// few). Future Token-2022 reasons (transfer_fee/hook/…) accrete here.
+	// The "impersonating" reason (verified ticker reused by a different
+	// mint) also rides here — badge-only, no filter arm.
 	Honeypot *PulsightInternalCoreDomainAggregatorMintHoneypot `json:"honeypot,omitempty"`
 	Insiders *PulsightInternalCoreDomainAggregatorMintInsiders `json:"insiders,omitempty"`
 
@@ -1064,6 +1175,13 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	IsMayhemMode *bool   `json:"is_mayhem_mode,omitempty"`
 	LastTradeTs  *string `json:"last_trade_ts,omitempty"`
 	LogoUri      *string `json:"logo_uri,omitempty"`
+
+	// LpBurned LpBurned reports whether ANY LP burn is on file for the mint — the same
+	// `lp_events(op='burn')` set the `lp_burned=1` listing filter uses, so the
+	// audit glyph and the filter can never disagree. Page-scoped, so it is a
+	// definite true/false for every returned row (never nil on the list path);
+	// nil on the detail path, where the batch does not run.
+	LpBurned *bool `json:"lp_burned,omitempty"`
 
 	// MarketCapUsd MarketCapUsd is PriceUsd × circulating supply. Equivalently
 	// close_sol × supply_raw × sol_usd / 1e6 (token decimals cancel), so
@@ -1147,9 +1265,38 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// returned has at least one). SwapCount, TraderCount and MarketsCount
 	// default to 0 if the LATERAL came up empty; the frontend's `formatNum`
 	// renders 0 cleanly.
-	SwapCount   *int    `json:"swap_count,omitempty"`
-	Symbol      *string `json:"symbol,omitempty"`
-	TraderCount *int    `json:"trader_count,omitempty"`
+	SwapCount *int    `json:"swap_count,omitempty"`
+	Symbol    *string `json:"symbol,omitempty"`
+
+	// Top10Pct Top10Pct is the top-10 holder concentration as a PERCENT of circulating
+	// supply (0..100). Already read per page by top10ConcentrationBatch to
+	// score the row — emitting it costs nothing extra and is what the listing's
+	// Distribution column leads with. nil when the accumulator has no row for
+	// the mint (fresh token, or holder balances not yet folded).
+	Top10Pct *float32 `json:"top10_pct,omitempty"`
+
+	// TopDex TopDex is the venue slug of the mint's DOMINANT pool over the activity
+	// window — the pool with the most quote volume, i.e. the venue the token
+	// actually trades on. Same vocabulary as `?dex=` and `swaps.dex`; look up
+	// the display label via DEX_LABEL. Rides fillMarketsCount's existing scan
+	// (same GROUP BY, one more aggregate), so it is free. nil when the mint had
+	// no dex_swaps row in the window.
+	TopDex *string `json:"top_dex,omitempty"`
+
+	// TotalFeesSol TotalFeesSol — LIFETIME network fees paid trading the mint, in
+	// lamports: tx fees (base + priority) plus MEV tips summed over its
+	// swaps (CA 000137 on mint_activity_totals; the 000064 sawtooth basis —
+	// lifetime between stats rebuilds, re-synced to the swaps 3-month
+	// retention at each healer finalize). Unlike the counts above it is NOT
+	// hours-window-bound. nil until the migration is applied or when the
+	// page decoration read fails.
+	TotalFeesSol *int `json:"total_fees_sol,omitempty"`
+	TraderCount  *int `json:"trader_count,omitempty"`
+
+	// TraderQuality TraderQuality is the per-mint wallet-class fold (CA 000131) behind the
+	// sybil badge and sort=organic. Best-effort list decoration; nil before
+	// the migration or when the batch read fails.
+	TraderQuality *PulsightInternalCoreDomainAggregatorMintTraderQuality `json:"trader_quality,omitempty"`
 
 	// UniqueTraders UniqueTraders is the number of distinct wallets that have EVER traded
 	// this mint (all-time count() over trader_token_stats, the same
@@ -1160,6 +1307,13 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// Populated on BOTH paths, best-effort: nil when the trader_token_stats
 	// read is unavailable.
 	UniqueTraders *int `json:"unique_traders,omitempty"`
+
+	// Verified Verified marks a mint on the curated verified token list (Jupiter's,
+	// refreshed hourly by the jupverified registry). Also the copycat
+	// CANONICAL exemption: a verified member of a name-dupe farm keeps its
+	// listing spot and loses the copycat badge while the clones stay
+	// flagged. Omitted when false or when no registry is wired.
+	Verified *bool `json:"verified,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintStatsByWindow defines model for pulsight_internal_core_domain_aggregator.MintStatsByWindow.
@@ -1168,6 +1322,15 @@ type PulsightInternalCoreDomainAggregatorMintStatsByWindow struct {
 	N1m  *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"1m,omitempty"`
 	N24h *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"24h,omitempty"`
 	N5m  *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"5m,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorMintTraderQuality defines model for pulsight_internal_core_domain_aggregator.MintTraderQuality.
+type PulsightInternalCoreDomainAggregatorMintTraderQuality struct {
+	Classified *int `json:"classified,omitempty"`
+	Fresh      *int `json:"fresh,omitempty"`
+	Organic    *int `json:"organic,omitempty"`
+	Ruggy      *int `json:"ruggy,omitempty"`
+	Traders    *int `json:"traders,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintTraderRow defines model for pulsight_internal_core_domain_aggregator.MintTraderRow.
@@ -1237,6 +1400,12 @@ type PulsightInternalCoreDomainAggregatorMintWindowStats struct {
 	SellVolumeSol *int `json:"sell_volume_sol,omitempty"`
 	SwapCount     *int `json:"swap_count,omitempty"`
 
+	// TotalFeesSol Total network fees paid trading the mint in the window, in lamports:
+	// tx fees (base + priority) plus MEV tips, summed over its swaps.
+	// Populated by the per-mint stats endpoint only; the listing endpoint
+	// (/api/mints) leaves it nil (the OHLCV planes carry no fee data).
+	TotalFeesSol *int `json:"total_fees_sol,omitempty"`
+
 	// VolumeSol Total SOL traded (buy + sell), in lamports.
 	VolumeSol *int `json:"volume_sol,omitempty"`
 }
@@ -1246,6 +1415,158 @@ type PulsightInternalCoreDomainAggregatorMintWindowStatsBundle struct {
 	AsOf  *string                                                `json:"as_of,omitempty"`
 	Mint  *string                                                `json:"mint,omitempty"`
 	Stats *PulsightInternalCoreDomainAggregatorMintStatsByWindow `json:"stats,omitempty"`
+
+	// TotalFeesLifetimeSol TotalFeesLifetimeSol — LIFETIME network fees paid trading the mint,
+	// in lamports (same basis and plane as MintRow.TotalFeesSol on the
+	// listing: CA 000137's `fees` on mint_activity_totals, NOT bound to any
+	// window). Feeds the token detail page's header bar. nil until the
+	// migration is applied or when the best-effort read fails.
+	TotalFeesLifetimeSol *int `json:"total_fees_lifetime_sol,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramBoardCounts defines model for pulsight_internal_core_domain_aggregator.ProgramBoardCounts.
+type PulsightInternalCoreDomainAggregatorProgramBoardCounts struct {
+	All       *int `json:"all,omitempty"`
+	Amm       *int `json:"amm,omitempty"`
+	Arbitrage *int `json:"arbitrage,omitempty"`
+	Router    *int `json:"router,omitempty"`
+	Unknown   *int `json:"unknown,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramBoardPage defines model for pulsight_internal_core_domain_aggregator.ProgramBoardPage.
+type PulsightInternalCoreDomainAggregatorProgramBoardPage struct {
+	Board      *string                                                `json:"board,omitempty"`
+	Categories *[]string                                              `json:"categories,omitempty"`
+	Items      *[]PulsightInternalCoreDomainAggregatorProgramBoardRow `json:"items,omitempty"`
+	Limit      *int                                                   `json:"limit,omitempty"`
+	Offset     *int                                                   `json:"offset,omitempty"`
+	Total      *int                                                   `json:"total,omitempty"`
+	Window     *PulsightInternalCoreDomainAggregatorWindow            `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramBoardRow defines model for pulsight_internal_core_domain_aggregator.ProgramBoardRow.
+type PulsightInternalCoreDomainAggregatorProgramBoardRow struct {
+	ArbTxs *int `json:"arb_txs,omitempty"`
+
+	// Category Category is the RESOLVED category: admin identity > embedded
+	// program seed > 7d auto-arb rule > "unknown".
+	Category    *string `json:"category,omitempty"`
+	Censored    *bool   `json:"censored,omitempty"`
+	FailedTxs   *int    `json:"failed_txs,omitempty"`
+	FirstSeenMs *int    `json:"first_seen_ms,omitempty"`
+
+	// Hidden Hidden mirrors the admin identity's hide flag. Hidden rows never
+	// reach the public board (dropped before ranking) — only the admin
+	// listing serves them.
+	Hidden     *bool `json:"hidden,omitempty"`
+	LastSeenMs *int  `json:"last_seen_ms,omitempty"`
+
+	// LogoUri LogoURI is the admin-assigned identity logo, falling back to the
+	// embedded seed's self-hosted mirror path (/program-logos/…); empty
+	// when the program has none.
+	LogoUri *string `json:"logo_uri,omitempty"`
+
+	// Name Name is the admin-assigned identity name, falling back to the
+	// embedded seed name; empty when unnamed.
+	Name        *string  `json:"name,omitempty"`
+	NonSwapRate *float32 `json:"non_swap_rate,omitempty"`
+	ProgramId   *string  `json:"program_id,omitempty"`
+	Rank        *int     `json:"rank,omitempty"`
+
+	// RevenueLamports RevenueLamports is category-gated (ProgramRevenueLamports): net arb
+	// extraction for arbitrage programs (can be negative — an unprofitable
+	// bot), decoded venue fees for amm/dex programs, and 0 ("not measured")
+	// for routers, unknowns and every other category.
+	RevenueLamports *int     `json:"revenue_lamports,omitempty"`
+	SpamRate        *float32 `json:"spam_rate,omitempty"`
+
+	// Spark Spark is the program's daily volume over the trailing 7 days
+	// (lamports, oldest first; role-matched like VolumeLamports). Only
+	// populated on the rows a page actually returns.
+	Spark       *[]int   `json:"spark,omitempty"`
+	SuccessRate *float32 `json:"success_rate,omitempty"`
+
+	// Txs Txs is the landed tx count (incl. no-CPI probes).
+	Txs         *int `json:"txs,omitempty"`
+	UniqueUsers *int `json:"unique_users,omitempty"`
+
+	// VolumeLamports VolumeLamports is venue-executed volume for amm/dex-category
+	// programs (true venue volume incl. routed flow) and tx-level primary
+	// volume for everything else. WSOL-projected lamports; unpriced
+	// quote flow is excluded, never guessed.
+	VolumeLamports *int `json:"volume_lamports,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramBoardSummary defines model for pulsight_internal_core_domain_aggregator.ProgramBoardSummary.
+type PulsightInternalCoreDomainAggregatorProgramBoardSummary struct {
+	Board         *string                                                           `json:"board,omitempty"`
+	Counts        *PulsightInternalCoreDomainAggregatorProgramBoardCounts           `json:"counts,omitempty"`
+	Earners       *int                                                              `json:"earners,omitempty"`
+	FailedTotal   *int                                                              `json:"failed_total,omitempty"`
+	Filters       *map[string]PulsightInternalCoreDomainAggregatorProgramMetricHist `json:"filters,omitempty"`
+	NegativeRev   *int                                                              `json:"negative_rev,omitempty"`
+	NewToday      *int                                                              `json:"new_today,omitempty"`
+	ProgramsTotal *int                                                              `json:"programs_total,omitempty"`
+
+	// Rank2VolumeLamports Rank2 volume anchors the table's magnitude-bar axis — the bar scale
+	// breaks at #2 when #1 is an outlier. Zero below 2 programs.
+	Rank2VolumeLamports  *int                                        `json:"rank2_volume_lamports,omitempty"`
+	RevenueTotalLamports *int                                        `json:"revenue_total_lamports,omitempty"`
+	TxsTotal             *int                                        `json:"txs_total,omitempty"`
+	VolumeTotalLamports  *int                                        `json:"volume_total_lamports,omitempty"`
+	Window               *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramDailySeries defines model for pulsight_internal_core_domain_aggregator.ProgramDailySeries.
+type PulsightInternalCoreDomainAggregatorProgramDailySeries struct {
+	Days       *[]PulsightInternalCoreDomainAggregatorProgramDayStat                `json:"days,omitempty"`
+	ProgramId  *string                                                              `json:"program_id,omitempty"`
+	WindowDays *int                                                                 `json:"window_days,omitempty"`
+	Windows    *map[string]PulsightInternalCoreDomainAggregatorProgramWindowFigures `json:"windows,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramDayStat defines model for pulsight_internal_core_domain_aggregator.ProgramDayStat.
+type PulsightInternalCoreDomainAggregatorProgramDayStat struct {
+	ArbNoCpiTxs        *int `json:"arb_no_cpi_txs,omitempty"`
+	ArbRevenueLamports *int `json:"arb_revenue_lamports,omitempty"`
+	ArbTxs             *int `json:"arb_txs,omitempty"`
+
+	// Day "2026-08-23" (UTC)
+	Day                   *string `json:"day,omitempty"`
+	FailedArbTxs          *int    `json:"failed_arb_txs,omitempty"`
+	FailedFeeLamports     *int    `json:"failed_fee_lamports,omitempty"`
+	FailedOtherTxs        *int    `json:"failed_other_txs,omitempty"`
+	FailedSwapTxs         *int    `json:"failed_swap_txs,omitempty"`
+	FeeRevenueLamports    *int    `json:"fee_revenue_lamports,omitempty"`
+	OtherTxs              *int    `json:"other_txs,omitempty"`
+	PrimaryVolumeLamports *int    `json:"primary_volume_lamports,omitempty"`
+	SwapTxs               *int    `json:"swap_txs,omitempty"`
+	Txs                   *int    `json:"txs,omitempty"`
+	Users                 *int    `json:"users,omitempty"`
+	VenueVolumeLamports   *int    `json:"venue_volume_lamports,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramMetricHist defines model for pulsight_internal_core_domain_aggregator.ProgramMetricHist.
+type PulsightInternalCoreDomainAggregatorProgramMetricHist struct {
+	Bins *[]int   `json:"bins,omitempty"`
+	Hi   *float32 `json:"hi,omitempty"`
+	Lo   *float32 `json:"lo,omitempty"`
+	Log  *bool    `json:"log,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorProgramWindowFigures defines model for pulsight_internal_core_domain_aggregator.ProgramWindowFigures.
+type PulsightInternalCoreDomainAggregatorProgramWindowFigures struct {
+	FailedTxs             *int     `json:"failed_txs,omitempty"`
+	NonSwapRate           *float32 `json:"non_swap_rate,omitempty"`
+	PrimaryVolumeLamports *int     `json:"primary_volume_lamports,omitempty"`
+	RevenueLamports       *int     `json:"revenue_lamports,omitempty"`
+	SpamRate              *float32 `json:"spam_rate,omitempty"`
+	SuccessRate           *float32 `json:"success_rate,omitempty"`
+
+	// Txs Txs is the landed tx count (incl. no-CPI probes).
+	Txs                 *int `json:"txs,omitempty"`
+	UniqueUsers         *int `json:"unique_users,omitempty"`
+	VenueVolumeLamports *int `json:"venue_volume_lamports,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorRiskCohort defines model for pulsight_internal_core_domain_aggregator.RiskCohort.
@@ -1380,6 +1701,73 @@ type PulsightInternalCoreDomainAggregatorTraderBehavioralStats struct {
 	Window              *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
 
+// PulsightInternalCoreDomainAggregatorTraderCashbackStats defines model for pulsight_internal_core_domain_aggregator.TraderCashbackStats.
+type PulsightInternalCoreDomainAggregatorTraderCashbackStats struct {
+	AvgCashbackBps *float32 `json:"avg_cashback_bps,omitempty"`
+
+	// CashbackVolumeLamports CashbackVolumeLamports — the window's quote-side volume on
+	// cashback-enabled coins; TotalVolumeLamports the window's whole
+	// quote-side volume (buy in + sell out). VolumeShare divides the two
+	// (nil when no volume); AvgCashbackBps = earned / cashback volume in
+	// basis points (nil when no cashback volume) — the effective rebate
+	// rate, which is per-coin on-chain (30 and 90 bps both live).
+	CashbackVolumeLamports *int `json:"cashback_volume_lamports,omitempty"`
+
+	// ClaimCount Claim cadence, lifetime, all quote denominations.
+	ClaimCount *int `json:"claim_count,omitempty"`
+
+	// ClaimableLamports ClaimableLamports is the unclaimed balance sitting in the wallet's
+	// accumulators: cashback accrued SINCE its last claim. A claim sweeps
+	// the accumulator in full, so the balance at that moment is 0 and
+	// everything after it is unclaimed — which makes this immune both to
+	// the claim ledger's TTL and to history that predates our ingest, since
+	// only a timestamp comes from the claim side. Wallets that never claimed
+	// report everything we have observed them earn. Reads LOW, never high
+	// (see cashbackAccruedSince for the two bounded undercounts).
+	ClaimableLamports *int `json:"claimable_lamports,omitempty"`
+
+	// ClaimedLamports ClaimedLamports — WSOL cashback swept by claim_cashback in the window.
+	// This is the cash-basis component net PnL ADDS (page, series, board —
+	// all three fold the same claimed numbers, #c22).
+	ClaimedLamports *int `json:"claimed_lamports,omitempty"`
+
+	// EarnedLamports EarnedLamports — cashback ACCRUED by the window's swaps (the exact
+	// per-swap amounts from the pump trade events, WSOL-quoted markets
+	// only). Informational: the net-PnL formulas fold CLAIMED, not this.
+	EarnedLamports          *int    `json:"earned_lamports,omitempty"`
+	LastClaimAt             *string `json:"last_claim_at,omitempty"`
+	LifetimeClaimedLamports *int    `json:"lifetime_claimed_lamports,omitempty"`
+
+	// LifetimeEarnedLamports LifetimeEarnedLamports is exact: it comes from `trader_stats.cashback`,
+	// which is untimed, WSOL-only by construction and rebuildable from
+	// `swaps`. LifetimeClaimedLamports is bounded by the raw claim ledger's
+	// 75-day retention (CA 000098) — the same compromise reliability's "all"
+	// window makes, undercounting rather than inventing. ProgramTotals below
+	// carries the program's own all-time figures beside it.
+	LifetimeEarnedLamports *int `json:"lifetime_earned_lamports,omitempty"`
+
+	// ProgramTotals ProgramTotals — the lifetime running totals the pump program itself
+	// stamped on the wallet's LATEST claim event, one row per program
+	// (pumpfun = bonding curve, pumpswap = AMM), read from
+	// `cashback_claim_anchors` so they outlive the raw ledger's TTL. They
+	// cover history from before our ingest and are surfaced verbatim as
+	// "program-reported" — DISPLAY ONLY. Never fold them into a lamport
+	// figure: the on-chain counter is one u64 per accumulator and cashback
+	// is not SOL-only (~7% of sampled claims carried a USDC quote), so
+	// whether it mixes denominations is not observable from the event.
+	// Empty array when the wallet never claimed.
+	ProgramTotals *[]PulsightInternalCoreDomainAggregatorCashbackProgramTotals `json:"program_totals,omitempty"`
+	Pubkey        *string                                                      `json:"pubkey,omitempty"`
+
+	// RecentClaims RecentClaims — the wallet's latest claims, newest first (≤10).
+	// AmountLamports is in the claim's quote-mint base units — lamports for
+	// WSOL rows, which is nearly all of them.
+	RecentClaims        *[]PulsightInternalCoreDomainAggregatorCashbackClaimRow `json:"recent_claims,omitempty"`
+	TotalVolumeLamports *int                                                    `json:"total_volume_lamports,omitempty"`
+	VolumeShare         *float32                                                `json:"volume_share,omitempty"`
+	Window              *PulsightInternalCoreDomainAggregatorWindow             `json:"window,omitempty"`
+}
+
 // PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow defines model for pulsight_internal_core_domain_aggregator.TraderPeriodStatsRow.
 type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	// ArbTxRatio ArbTxRatio is the fraction (0..1) of the window's swaps that were
@@ -1387,6 +1775,10 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	ArbTxRatio        *float32 `json:"arb_tx_ratio,omitempty"`
 	BuyAmountLamports *int     `json:"buy_amount_lamports,omitempty"`
 	BuySellRatio      *float32 `json:"buy_sell_ratio,omitempty"`
+
+	// CashbackClaimedLamports CashbackClaimedLamports — WSOL pump cashback the wallet CLAIMED in the
+	// window (cash basis; CA 000097). The one POSITIVE cost-block component.
+	CashbackClaimedLamports *int `json:"cashback_claimed_lamports,omitempty"`
 
 	// DidntBuySells DidntBuySells / SoldGtBoughtSells count the window's uncovered
 	// sells: countIf(sold_without_buy) and countIf(sold_more_than_bought)
@@ -1402,8 +1794,9 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	LossSells          *int `json:"loss_sells,omitempty"`
 
 	// NetRealizedProfit NetRealizedProfit = RealizedProfit − TotalFees − TotalTips −
-	// FailedCostLamports: what the wallet actually kept. This is the
-	// HEADLINE PnL; RealizedProfit stays as the flat/gross component.
+	// FailedCostLamports + CashbackClaimedLamports: what the wallet actually
+	// kept. This is the HEADLINE PnL; RealizedProfit stays as the flat/gross
+	// component. Mirrors rollupWindowAgg.netPnl and boardWindowExpr (#c22).
 	NetRealizedProfit  *int `json:"net_realized_profit,omitempty"`
 	RealizedProfit     *int `json:"realized_profit,omitempty"`
 	SellAmountLamports *int `json:"sell_amount_lamports,omitempty"`
@@ -1471,17 +1864,27 @@ type PulsightInternalCoreDomainAggregatorTraderReliabilityStats struct {
 
 	// LandedTxs LandedTxs is uniqExact(signature) over the wallet's `swaps` rows in
 	// the window — successful swap TRANSACTIONS, not legs or trades.
-	LandedTxs        *int     `json:"landed_txs,omitempty"`
-	NoCpiFeeLamports *int     `json:"no_cpi_fee_lamports,omitempty"`
-	NoCpiTipLamports *int     `json:"no_cpi_tip_lamports,omitempty"`
-	NoCpiTxs         *int     `json:"no_cpi_txs,omitempty"`
-	Pubkey           *string  `json:"pubkey,omitempty"`
-	SpamRate         *float32 `json:"spam_rate,omitempty"`
+	LandedTxs        *int `json:"landed_txs,omitempty"`
+	NoCpiFeeLamports *int `json:"no_cpi_fee_lamports,omitempty"`
+	NoCpiTipLamports *int `json:"no_cpi_tip_lamports,omitempty"`
+	NoCpiTxs         *int `json:"no_cpi_txs,omitempty"`
 
-	// SuccessRate SuccessRate = LandedTxs / (LandedTxs + FailedTxs); SpamRate =
-	// (FailedTxs + NoCpiTxs) / (LandedTxs + FailedTxs + NoCpiTxs).
-	// POINTERS: nil when the denominator is 0 — a wallet with no activity
-	// has no rate, and that must not read as 0%.
+	// ObservedLandedTxs ObservedLandedTxs is LandedTxs narrowed to the hours the failed-tx
+	// stream was actually running. Failed transactions are only recorded for
+	// those hours — a historical backfill drops them at the fetch layer, and
+	// nothing observed them before the feature shipped — so this is the only
+	// landed count the rates below may divide by. It equals LandedTxs once a
+	// window is fully observed; the gap is how much of the window is
+	// un-scored.
+	ObservedLandedTxs *int     `json:"observed_landed_txs,omitempty"`
+	Pubkey            *string  `json:"pubkey,omitempty"`
+	SpamRate          *float32 `json:"spam_rate,omitempty"`
+
+	// SuccessRate SuccessRate = ObservedLandedTxs / (ObservedLandedTxs + FailedTxs);
+	// SpamRate = (FailedTxs + NoCpiTxs) / (ObservedLandedTxs + FailedTxs +
+	// NoCpiTxs). POINTERS: nil when the denominator is 0 — a wallet with no
+	// OBSERVED activity has no rate, and that must not read as 0% (or, worse,
+	// as a 100% success score for a window nobody watched).
 	SuccessRate *float32                                    `json:"success_rate,omitempty"`
 	Window      *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
@@ -1816,6 +2219,18 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	// BuySellRatio7d Computed ratios
 	BuySellRatio7d *float32 `json:"buy_sell_ratio_7d,omitempty"`
 	BuySizeCv      *float32 `json:"buy_size_cv,omitempty"`
+	Cashback30d    *float32 `json:"cashback_30d,omitempty"`
+
+	// Cashback7d Pump cashback, lamports. `Cashback*` is what ACCRUED in the window
+	// (the screening signal); `CashbackClaimed*` is what was swept, and is
+	// the component already folded into NetProfit* — do not add it again.
+	Cashback7d            *float32 `json:"cashback_7d,omitempty"`
+	CashbackClaimCount30d *int     `json:"cashback_claim_count_30d,omitempty"`
+	CashbackClaimCount7d  *int     `json:"cashback_claim_count_7d,omitempty"`
+	CashbackClaimed30d    *float32 `json:"cashback_claimed_30d,omitempty"`
+	CashbackClaimed7d     *float32 `json:"cashback_claimed_7d,omitempty"`
+	CashbackShare30d      *float32 `json:"cashback_share_30d,omitempty"`
+	CashbackShare7d       *float32 `json:"cashback_share_7d,omitempty"`
 
 	// Chain "sol" | "eth"
 	Chain            *string                                        `json:"chain,omitempty"`
@@ -2378,14 +2793,23 @@ type PulsightInternalCoreUsecasesTraderDailyProfitsResult struct {
 type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
 	Day        *string `json:"day,omitempty"`
 	FailedCost *int    `json:"failed_cost,omitempty"`
+	FailedTxs  *int    `json:"failed_txs,omitempty"`
 
 	// Fees Costs of the day (lamports): per-tx fees, tips, and failed-tx burn,
 	// with `net = profit - fees - tips - failed_cost`. The charts plot NET
 	// as the headline series; `profit` stays as the flat/gross component.
-	Fees   *int `json:"fees,omitempty"`
-	Net    *int `json:"net,omitempty"`
-	Profit *int `json:"profit,omitempty"`
-	Tips   *int `json:"tips,omitempty"`
+	Fees        *int     `json:"fees,omitempty"`
+	Net         *int     `json:"net,omitempty"`
+	Profit      *int     `json:"profit,omitempty"`
+	SuccessRate *float32 `json:"success_rate,omitempty"`
+	Tips        *int     `json:"tips,omitempty"`
+
+	// Txs Txs is the day's landed transaction count; FailedTxs the failed-tx
+	// ledger's failed swaps+arbs+other. SuccessRate divides the OBSERVED
+	// landed count (failed-tx-watched hours only, CA 000096) by
+	// observed+failed — nil when no hour of the day was observed, so
+	// pre-ledger history reads "not measured" rather than a fake 100%.
+	Txs *int `json:"txs,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesTraderPnlSeriesResult defines model for pulsight_internal_core_usecases_trader.PnlSeriesResult.
@@ -2396,32 +2820,44 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesResult struct {
 
 // PulsightInternalCoreUsecasesTraderTraderListItem defines model for pulsight_internal_core_usecases_trader.TraderListItem.
 type PulsightInternalCoreUsecasesTraderTraderListItem struct {
-	ActiveHoursCount      *int                                                       `json:"active_hours_count,omitempty"`
-	ArbTxRatio30d         *float32                                                   `json:"arb_tx_ratio_30d,omitempty"`
-	ArbTxRatio7d          *float32                                                   `json:"arb_tx_ratio_7d,omitempty"`
-	AvgBuyCountPerToken   *float32                                                   `json:"avg_buy_count_per_token,omitempty"`
-	AvgFirstBuyReactivity *float32                                                   `json:"avg_first_buy_reactivity,omitempty"`
-	AvgHoldingTime        *float32                                                   `json:"avg_holding_time,omitempty"`
-	AvgRealizedProfit30d  *float32                                                   `json:"avg_realized_profit_30d,omitempty"`
-	AvgRealizedProfit7d   *float32                                                   `json:"avg_realized_profit_7d,omitempty"`
-	AvgSellCountPerToken  *float32                                                   `json:"avg_sell_count_per_token,omitempty"`
-	Behavioral30d         *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_30d,omitempty"`
+	ActiveHoursCount      *int     `json:"active_hours_count,omitempty"`
+	ArbTxRatio30d         *float32 `json:"arb_tx_ratio_30d,omitempty"`
+	ArbTxRatio7d          *float32 `json:"arb_tx_ratio_7d,omitempty"`
+	AvgBuyCountPerToken   *float32 `json:"avg_buy_count_per_token,omitempty"`
+	AvgFirstBuyReactivity *float32 `json:"avg_first_buy_reactivity,omitempty"`
+	AvgHoldingTime        *float32 `json:"avg_holding_time,omitempty"`
+	AvgRealizedProfit30d  *float32 `json:"avg_realized_profit_30d,omitempty"`
+	AvgRealizedProfit7d   *float32 `json:"avg_realized_profit_7d,omitempty"`
+	AvgSellCountPerToken  *float32 `json:"avg_sell_count_per_token,omitempty"`
 
-	// Behavioral7d Behavioral7d / Behavioral30d are the two rows the
-	// "Behavioural" panel toggles between (7d and 30d are the only
-	// supported windows). nil → panel renders its empty state for that
+	// Behavioral1d Behavioral1d/7d/30d/All are the rows the "Behavioural" panel
+	// toggles between. nil → panel renders its empty state for that
 	// window.
-	Behavioral7d     *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_7d,omitempty"`
-	Buy30d           *int                                                       `json:"buy_30d,omitempty"`
-	Buy7d            *int                                                       `json:"buy_7d,omitempty"`
-	BuySellRatio30d  *float32                                                   `json:"buy_sell_ratio_30d,omitempty"`
-	BuySellRatio7d   *float32                                                   `json:"buy_sell_ratio_7d,omitempty"`
-	BuySizeCv        *float32                                                   `json:"buy_size_cv,omitempty"`
-	Chain            *string                                                    `json:"chain,omitempty"`
-	CreatedAt        *string                                                    `json:"created_at,omitempty"`
-	DailyProfit30d   *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry      `json:"daily_profit_30d,omitempty"`
-	DailyProfit7d    *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry      `json:"daily_profit_7d,omitempty"`
-	DidntBuySells30d *int                                                       `json:"didnt_buy_sells_30d,omitempty"`
+	Behavioral1d    *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_1d,omitempty"`
+	Behavioral30d   *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_30d,omitempty"`
+	Behavioral7d    *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_7d,omitempty"`
+	BehavioralAll   *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_all,omitempty"`
+	Buy30d          *int                                                       `json:"buy_30d,omitempty"`
+	Buy7d           *int                                                       `json:"buy_7d,omitempty"`
+	BuySellRatio30d *float32                                                   `json:"buy_sell_ratio_30d,omitempty"`
+	BuySellRatio7d  *float32                                                   `json:"buy_sell_ratio_7d,omitempty"`
+	BuySizeCv       *float32                                                   `json:"buy_size_cv,omitempty"`
+	Cashback30d     *float32                                                   `json:"cashback_30d,omitempty"`
+
+	// Cashback7d Pump cashback: accrued in the window (the screening signal) and
+	// swept. Claimed is ALREADY inside NetProfit7d — never add it on top.
+	Cashback7d            *float32                                              `json:"cashback_7d,omitempty"`
+	CashbackClaimCount30d *int                                                  `json:"cashback_claim_count_30d,omitempty"`
+	CashbackClaimCount7d  *int                                                  `json:"cashback_claim_count_7d,omitempty"`
+	CashbackClaimed30d    *float32                                              `json:"cashback_claimed_30d,omitempty"`
+	CashbackClaimed7d     *float32                                              `json:"cashback_claimed_7d,omitempty"`
+	CashbackShare30d      *float32                                              `json:"cashback_share_30d,omitempty"`
+	CashbackShare7d       *float32                                              `json:"cashback_share_7d,omitempty"`
+	Chain                 *string                                               `json:"chain,omitempty"`
+	CreatedAt             *string                                               `json:"created_at,omitempty"`
+	DailyProfit30d        *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry `json:"daily_profit_30d,omitempty"`
+	DailyProfit7d         *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry `json:"daily_profit_7d,omitempty"`
+	DidntBuySells30d      *int                                                  `json:"didnt_buy_sells_30d,omitempty"`
 
 	// DidntBuySells7d Uncovered-sell counters (CA migration 000018): sells with no
 	// observed buy of the mint / sells exceeding the observed bought
@@ -2473,12 +2909,19 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// the request window: [<-50%, -50–0%, 0–2×, 2–5×, >5×]. Nil when
 	// the snapshot wasn't inlined.
 	PnlDistribution *[]int `json:"pnl_distribution,omitempty"`
-	PnlGt5xNum30d   *int   `json:"pnl_gt_5x_num_30d,omitempty"`
-	PnlGt5xNum7d    *int   `json:"pnl_gt_5x_num_7d,omitempty"`
-	PnlLtNd5Num30d  *int   `json:"pnl_lt_nd5_num_30d,omitempty"`
-	PnlLtNd5Num7d   *int   `json:"pnl_lt_nd5_num_7d,omitempty"`
-	PnlNd50xNum30d  *int   `json:"pnl_nd5_0x_num_30d,omitempty"`
-	PnlNd50xNum7d   *int   `json:"pnl_nd5_0x_num_7d,omitempty"`
+
+	// PnlDistributions PnlDistributions is one 5-bucket realised-PnL distribution row per
+	// canonical window (1d, 7d, 30d, all), windowed for real — unlike the
+	// list path's snapshot-folded PnlDistribution above, which is the
+	// leaderboard's all-time buckets. Drives the trader-detail "PnL
+	// distribution" chips and their window toggle.
+	PnlDistributions *[]PulsightInternalCoreUsecasesTraderTraderPnlDistributionRow `json:"pnl_distributions,omitempty"`
+	PnlGt5xNum30d    *int                                                          `json:"pnl_gt_5x_num_30d,omitempty"`
+	PnlGt5xNum7d     *int                                                          `json:"pnl_gt_5x_num_7d,omitempty"`
+	PnlLtNd5Num30d   *int                                                          `json:"pnl_lt_nd5_num_30d,omitempty"`
+	PnlLtNd5Num7d    *int                                                          `json:"pnl_lt_nd5_num_7d,omitempty"`
+	PnlNd50xNum30d   *int                                                          `json:"pnl_nd5_0x_num_30d,omitempty"`
+	PnlNd50xNum7d    *int                                                          `json:"pnl_nd5_0x_num_7d,omitempty"`
 
 	// PnlSparkline7d PnlSparkline7d is the 7-day realised-PnL series, oldest first,
 	// expressed in lamports per day on the wire (matches CA's BIGINT
@@ -2546,6 +2989,17 @@ type PulsightInternalCoreUsecasesTraderTraderListResult struct {
 	Total            *int                                                `json:"total,omitempty"`
 }
 
+// PulsightInternalCoreUsecasesTraderTraderPnlDistributionRow defines model for pulsight_internal_core_usecases_trader.TraderPnlDistributionRow.
+type PulsightInternalCoreUsecasesTraderTraderPnlDistributionRow struct {
+	Pnl0x2x     *int    `json:"pnl_0x_2x,omitempty"`
+	Pnl2x5x     *int    `json:"pnl_2x_5x,omitempty"`
+	PnlGt5x     *int    `json:"pnl_gt_5x,omitempty"`
+	PnlLtNd5    *int    `json:"pnl_lt_nd5,omitempty"`
+	PnlNd50x    *int    `json:"pnl_nd5_0x,omitempty"`
+	Trader      *string `json:"trader,omitempty"`
+	WindowLabel *string `json:"window_label,omitempty"`
+}
+
 // GetBacktestsParams defines parameters for GetBacktests.
 type GetBacktestsParams struct {
 	// StrategyId Strategy ID (when called via /api/backtests)
@@ -2567,6 +3021,33 @@ type GetBacktestsByIdTradesParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// GetCashbackLeaderboardParams defines parameters for GetCashbackLeaderboard.
+type GetCashbackLeaderboardParams struct {
+	// Window 1d|7d|30d|all (default 7d)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+
+	// SortBy cashback|cashback_claimed|cashback_share|cashback_claim_count|cashback_volume (default cashback)
+	SortBy *string `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+
+	// Direction asc|desc (default desc)
+	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
+
+	// Limit Page size (default 50, max 200)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// F Filter clause key|op|value, repeatable
+	F *[]string `form:"f,omitempty" json:"f,omitempty"`
+}
+
+// GetCashbackSummaryParams defines parameters for GetCashbackSummary.
+type GetCashbackSummaryParams struct {
+	// Window 1d|7d|30d|all (default 7d)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+}
+
 // GetMeCreditsLedgerParams defines parameters for GetMeCreditsLedger.
 type GetMeCreditsLedgerParams struct {
 	// Limit Max entries to return (default 50, max 200)
@@ -2581,7 +3062,7 @@ type GetMintsParams struct {
 	// Search Mint pubkey prefix or case-insensitive symbol/name substring (lifts the default liquidity floor)
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 
-	// Sort trades|traders|recent|volume|buys|sells|net_buy|price_change|liquidity_usdc|age (age = newest first_seen first)
+	// Sort trades|traders|recent|volume|buys|sells|net_buy|price_change|liquidity_usdc|age|organic (age = newest first_seen first, organic = organic-trader count)
 	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
 
 	// Dex Restrict to mints traded on any of these DEXes (repeatable)
@@ -2595,6 +3076,9 @@ type GetMintsParams struct {
 
 	// MinMarketCapUsd Min market cap in USD (price × circulating supply). Mints with no computable market cap are excluded. Omitted ⇒ no floor.
 	MinMarketCapUsd *float32 `form:"min_market_cap_usd,omitempty" json:"min_market_cap_usd,omitempty"`
+
+	// MinFeesSol Min LIFETIME total network fees paid trading the mint (tx fees + MEV tips), in lamports — the same basis as each row's total_fees_sol. Omitted ⇒ no floor.
+	MinFeesSol *float32 `form:"min_fees_sol,omitempty" json:"min_fees_sol,omitempty"`
 
 	// Limit Max rows (default 50, max 500)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
@@ -2688,6 +3172,81 @@ type GetOhlcvParams struct {
 
 	// RemoveOutliers Drop clear price-outlier candles at read time (cosmetic; never changes stored data). Default false.
 	RemoveOutliers *bool `form:"removeOutliers,omitempty" json:"removeOutliers,omitempty"`
+}
+
+// GetProgramsLeaderboardParams defines parameters for GetProgramsLeaderboard.
+type GetProgramsLeaderboardParams struct {
+	// Board arbitrage|amm|router|unknown|all (default arbitrage; router = router/aggregator programs; unknown = none of the other three)
+	Board *string `form:"board,omitempty" json:"board,omitempty"`
+
+	// Window 1d|7d|30d|3m (default 7d)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+
+	// Sort volume|users|txs|revenue|success_rate|spam_rate|non_swap_rate|first_seen|last_seen (default volume)
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Order asc|desc (default desc)
+	Order *string `form:"order,omitempty" json:"order,omitempty"`
+
+	// Limit Page size (default 50, max 200)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Search Substring match on program id or name
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// MinVolumeSol Volume floor, whole SOL
+	MinVolumeSol *float32 `form:"min_volume_sol,omitempty" json:"min_volume_sol,omitempty"`
+
+	// MaxVolumeSol Volume ceiling, whole SOL
+	MaxVolumeSol *float32 `form:"max_volume_sol,omitempty" json:"max_volume_sol,omitempty"`
+
+	// MinUsers Unique-user floor
+	MinUsers *int `form:"min_users,omitempty" json:"min_users,omitempty"`
+
+	// MaxUsers Unique-user ceiling
+	MaxUsers *int `form:"max_users,omitempty" json:"max_users,omitempty"`
+
+	// MinTxs Landed-tx floor
+	MinTxs *int `form:"min_txs,omitempty" json:"min_txs,omitempty"`
+
+	// MaxTxs Landed-tx ceiling
+	MaxTxs *int `form:"max_txs,omitempty" json:"max_txs,omitempty"`
+
+	// MinRevenueSol Revenue floor, whole SOL (may be negative)
+	MinRevenueSol *float32 `form:"min_revenue_sol,omitempty" json:"min_revenue_sol,omitempty"`
+
+	// MaxRevenueSol Revenue ceiling, whole SOL (may be negative)
+	MaxRevenueSol *float32 `form:"max_revenue_sol,omitempty" json:"max_revenue_sol,omitempty"`
+
+	// MinSuccessRate Success-rate floor, percent 0-100
+	MinSuccessRate *float32 `form:"min_success_rate,omitempty" json:"min_success_rate,omitempty"`
+
+	// MaxSuccessRate Success-rate ceiling, percent 0-100
+	MaxSuccessRate *float32 `form:"max_success_rate,omitempty" json:"max_success_rate,omitempty"`
+
+	// MinSpamRate Spam-rate floor, percent 0-100
+	MinSpamRate *float32 `form:"min_spam_rate,omitempty" json:"min_spam_rate,omitempty"`
+
+	// MaxSpamRate Spam-rate ceiling, percent 0-100
+	MaxSpamRate *float32 `form:"max_spam_rate,omitempty" json:"max_spam_rate,omitempty"`
+
+	// MinNonSwapRate Non-swap-rate floor, percent 0-100
+	MinNonSwapRate *float32 `form:"min_non_swap_rate,omitempty" json:"min_non_swap_rate,omitempty"`
+
+	// MaxNonSwapRate Non-swap-rate ceiling, percent 0-100
+	MaxNonSwapRate *float32 `form:"max_non_swap_rate,omitempty" json:"max_non_swap_rate,omitempty"`
+}
+
+// GetProgramsSummaryParams defines parameters for GetProgramsSummary.
+type GetProgramsSummaryParams struct {
+	// Board arbitrage|amm|router|unknown|all (default arbitrage)
+	Board *string `form:"board,omitempty" json:"board,omitempty"`
+
+	// Window 1d|7d|30d|3m (default 7d)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
 // GetStrategiesParams defines parameters for GetStrategies.
@@ -2853,6 +3412,21 @@ type GetTradersByTraderIDPnlsParams struct {
 
 	// Direction Sort Direction
 	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
+}
+
+// GetTradersByWalletAddressCashbackParams defines parameters for GetTradersByWalletAddressCashback.
+type GetTradersByWalletAddressCashbackParams struct {
+	// Window 1d|7d|30d|all (default 7d)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetTradersByWalletAddressCashbackClaimsParams defines parameters for GetTradersByWalletAddressCashbackClaims.
+type GetTradersByWalletAddressCashbackClaimsParams struct {
+	// Limit Page size (default 50, max 200)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // GetTradersByWalletAddressCreatedTokensParams defines parameters for GetTradersByWalletAddressCreatedTokens.
@@ -3092,12 +3666,33 @@ type ClientInterface interface {
 	// Corresponds with GET /api/backtests/{id}/trades (the `GetBacktestsByIdTrades` operationId).
 	GetBacktestsByIdTrades(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetCashbackLeaderboard Pump cashback leaderboard
+	//
+	// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+	//
+	// Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
+	GetCashbackLeaderboard(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetCashbackSummary Pump cashback board summary
+	//
+	// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+	//
+	// Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
+	GetCashbackSummary(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetHealth Get Health
 	//
 	// Evaluates the connectivity of backing services and returns a system status overview.
 	//
 	// Corresponds with GET /api/health (the `GetHealth` operationId).
 	GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetHealthLive Liveness
+	//
+	// Process-level liveness: 200 whenever the HTTP server responds. No dependency checks.
+	//
+	// Corresponds with GET /api/health/live (the `GetHealthLive` operationId).
+	GetHealthLive(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMeCredits Get My Credits
 	//
@@ -3115,7 +3710,7 @@ type ClientInterface interface {
 
 	// GetMints List Active Mints
 	//
-	// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by window-bound activity desc. By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+	// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
 	//
 	// Corresponds with GET /api/mints (the `GetMints` operationId).
 	GetMints(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -3203,6 +3798,32 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/ohlcv (the `GetOhlcv` operationId).
 	GetOhlcv(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetProgramLogosByProgramID Program logo image
+	//
+	// Corresponds with GET /api/program-logos/{programID} (the `GetProgramLogosByProgramID` operationId).
+	GetProgramLogosByProgramID(ctx context.Context, programID string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetProgramsLeaderboard Programs leaderboard
+	//
+	// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+	//
+	// Corresponds with GET /api/programs/leaderboard (the `GetProgramsLeaderboard` operationId).
+	GetProgramsLeaderboard(ctx context.Context, params *GetProgramsLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetProgramsSummary Programs board summary
+	//
+	// Board-level aggregates (volume routed, revert share, revenue extracted, programs indexed, new today, median, top-10 concentration) plus the log-binned volume distribution and per-metric filter histograms, computed over the same derived rows the leaderboard serves.
+	//
+	// Corresponds with GET /api/programs/summary (the `GetProgramsSummary` operationId).
+	GetProgramsSummary(ctx context.Context, params *GetProgramsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetProgramsByProgramIdDaily Program daily stats
+	//
+	// One program's per-day activity over the trailing 3 months: landed txs by kind (swap/arb/other), unique users, SOL-projected volume for both attribution roles, the raw arb + fee revenue components (the client folds them by the program's resolved category), and the failed side (failed swaps/arbs/other, landed no-CPI probes, fees burned). Days with no activity are absent. Also carries the derived per-window figures ("7d"/"30d"/"3m" — volume both roles, users, category-gated revenue, landed/failed txs, success/spam/non-swap rates), computed with the same formulas as the leaderboard rows.
+	//
+	// Corresponds with GET /api/programs/{program_id}/daily (the `GetProgramsByProgramIdDaily` operationId).
+	GetProgramsByProgramIdDaily(ctx context.Context, programId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSolPrice Get the SOL/USD reference rate
 	//
@@ -3476,6 +4097,18 @@ type ClientInterface interface {
 	// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
 	GetTradersByTraderIDPnls(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetTradersByWalletAddressCashback Pump cashback rewards of a wallet
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
+	GetTradersByWalletAddressCashback(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTradersByWalletAddressCashbackClaims Cashback claim history of a wallet
+	//
+	// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
+	GetTradersByWalletAddressCashbackClaims(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetTradersByWalletAddressCreatedTokens List Trader Created Tokens
 	//
 	// Mints created by this wallet (from `mint_creators`), newest first, each with a graduation flag. Empty array for non-creators.
@@ -3723,6 +4356,40 @@ func (c *Client) GetBacktestsByIdTrades(ctx context.Context, id string, params *
 	return c.Client.Do(req)
 }
 
+// GetCashbackLeaderboard Pump cashback leaderboard
+//
+// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+//
+// Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
+func (c *Client) GetCashbackLeaderboard(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCashbackLeaderboardRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetCashbackSummary Pump cashback board summary
+//
+// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+//
+// Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
+func (c *Client) GetCashbackSummary(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCashbackSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetHealth Get Health
 //
 // Evaluates the connectivity of backing services and returns a system status overview.
@@ -3730,6 +4397,23 @@ func (c *Client) GetBacktestsByIdTrades(ctx context.Context, id string, params *
 // Corresponds with GET /api/health (the `GetHealth` operationId).
 func (c *Client) GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetHealthRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetHealthLive Liveness
+//
+// Process-level liveness: 200 whenever the HTTP server responds. No dependency checks.
+//
+// Corresponds with GET /api/health/live (the `GetHealthLive` operationId).
+func (c *Client) GetHealthLive(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHealthLiveRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -3776,7 +4460,7 @@ func (c *Client) GetMeCreditsLedger(ctx context.Context, params *GetMeCreditsLed
 
 // GetMints List Active Mints
 //
-// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by window-bound activity desc. By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
 //
 // Corresponds with GET /api/mints (the `GetMints` operationId).
 func (c *Client) GetMints(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -3985,6 +4669,72 @@ func (c *Client) GetMintsByPubkeyTradersByTrader(ctx context.Context, pubkey str
 // Corresponds with GET /api/ohlcv (the `GetOhlcv` operationId).
 func (c *Client) GetOhlcv(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetOhlcvRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetProgramLogosByProgramID Program logo image
+//
+// Corresponds with GET /api/program-logos/{programID} (the `GetProgramLogosByProgramID` operationId).
+func (c *Client) GetProgramLogosByProgramID(ctx context.Context, programID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProgramLogosByProgramIDRequest(c.Server, programID)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetProgramsLeaderboard Programs leaderboard
+//
+// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+//
+// Corresponds with GET /api/programs/leaderboard (the `GetProgramsLeaderboard` operationId).
+func (c *Client) GetProgramsLeaderboard(ctx context.Context, params *GetProgramsLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProgramsLeaderboardRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetProgramsSummary Programs board summary
+//
+// Board-level aggregates (volume routed, revert share, revenue extracted, programs indexed, new today, median, top-10 concentration) plus the log-binned volume distribution and per-metric filter histograms, computed over the same derived rows the leaderboard serves.
+//
+// Corresponds with GET /api/programs/summary (the `GetProgramsSummary` operationId).
+func (c *Client) GetProgramsSummary(ctx context.Context, params *GetProgramsSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProgramsSummaryRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetProgramsByProgramIdDaily Program daily stats
+//
+// One program's per-day activity over the trailing 3 months: landed txs by kind (swap/arb/other), unique users, SOL-projected volume for both attribution roles, the raw arb + fee revenue components (the client folds them by the program's resolved category), and the failed side (failed swaps/arbs/other, landed no-CPI probes, fees burned). Days with no activity are absent. Also carries the derived per-window figures ("7d"/"30d"/"3m" — volume both roles, users, category-gated revenue, landed/failed txs, success/spam/non-swap rates), computed with the same formulas as the leaderboard rows.
+//
+// Corresponds with GET /api/programs/{program_id}/daily (the `GetProgramsByProgramIdDaily` operationId).
+func (c *Client) GetProgramsByProgramIdDaily(ctx context.Context, programId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetProgramsByProgramIdDailyRequest(c.Server, programId)
 	if err != nil {
 		return nil, err
 	}
@@ -4667,6 +5417,38 @@ func (c *Client) GetTradersByTraderIDPnls(ctx context.Context, traderID string, 
 	return c.Client.Do(req)
 }
 
+// GetTradersByWalletAddressCashback Pump cashback rewards of a wallet
+//
+// Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
+func (c *Client) GetTradersByWalletAddressCashback(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressCashbackRequest(c.Server, walletAddress, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTradersByWalletAddressCashbackClaims Cashback claim history of a wallet
+//
+// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+//
+// Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
+func (c *Client) GetTradersByWalletAddressCashbackClaims(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTradersByWalletAddressCashbackClaimsRequest(c.Server, walletAddress, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetTradersByWalletAddressCreatedTokens List Trader Created Tokens
 //
 // Mints created by this wallet (from `mint_creators`), newest first, each with a graduation flag. Empty array for non-creators.
@@ -5235,6 +6017,174 @@ func NewGetBacktestsByIdTradesRequest(server string, id string, params *GetBackt
 	return req, nil
 }
 
+// NewGetCashbackLeaderboardRequest constructs an http.Request for the GetCashbackLeaderboard method
+func NewGetCashbackLeaderboardRequest(server string, params *GetCashbackLeaderboardParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/cashback/leaderboard")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.SortBy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort_by", *params.SortBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Direction != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "direction", *params.Direction, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.F != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", false, "f", *params.F, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetCashbackSummaryRequest constructs an http.Request for the GetCashbackSummary method
+func NewGetCashbackSummaryRequest(server string, params *GetCashbackSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/cashback/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetHealthRequest constructs an http.Request for the GetHealth method
 func NewGetHealthRequest(server string) (*http.Request, error) {
 	var err error
@@ -5245,6 +6195,33 @@ func NewGetHealthRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/api/health")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetHealthLiveRequest constructs an http.Request for the GetHealthLive method
+func NewGetHealthLiveRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/health/live")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -5442,6 +6419,18 @@ func NewGetMintsRequest(server string, params *GetMintsParams) (*http.Request, e
 		if params.MinMarketCapUsd != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_market_cap_usd", *params.MinMarketCapUsd, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinFeesSol != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_fees_sol", *params.MinFeesSol, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -6244,6 +7233,434 @@ func NewGetOhlcvRequest(server string, params *GetOhlcvParams) (*http.Request, e
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
 		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetProgramLogosByProgramIDRequest constructs an http.Request for the GetProgramLogosByProgramID method
+func NewGetProgramLogosByProgramIDRequest(server string, programID string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "programID", programID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/program-logos/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetProgramsLeaderboardRequest constructs an http.Request for the GetProgramsLeaderboard method
+func NewGetProgramsLeaderboardRequest(server string, params *GetProgramsLeaderboardParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/programs/leaderboard")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Board != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "board", *params.Board, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Order != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "order", *params.Order, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Search != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "search", *params.Search, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinVolumeSol != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_volume_sol", *params.MinVolumeSol, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxVolumeSol != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_volume_sol", *params.MaxVolumeSol, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinUsers != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_users", *params.MinUsers, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxUsers != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_users", *params.MaxUsers, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinTxs != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_txs", *params.MinTxs, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxTxs != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_txs", *params.MaxTxs, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinRevenueSol != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_revenue_sol", *params.MinRevenueSol, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxRevenueSol != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_revenue_sol", *params.MaxRevenueSol, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinSuccessRate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_success_rate", *params.MinSuccessRate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxSuccessRate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_success_rate", *params.MaxSuccessRate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinSpamRate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_spam_rate", *params.MinSpamRate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxSpamRate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_spam_rate", *params.MaxSpamRate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinNonSwapRate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_non_swap_rate", *params.MinNonSwapRate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxNonSwapRate != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_non_swap_rate", *params.MaxNonSwapRate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetProgramsSummaryRequest constructs an http.Request for the GetProgramsSummary method
+func NewGetProgramsSummaryRequest(server string, params *GetProgramsSummaryParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/programs/summary")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Board != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "board", *params.Board, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetProgramsByProgramIdDailyRequest constructs an http.Request for the GetProgramsByProgramIdDaily method
+func NewGetProgramsByProgramIdDailyRequest(server string, programId string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "program_id", programId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/programs/%s/daily", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -7990,6 +9407,140 @@ func NewGetTradersByTraderIDPnlsRequest(server string, traderID string, params *
 	return req, nil
 }
 
+// NewGetTradersByWalletAddressCashbackRequest constructs an http.Request for the GetTradersByWalletAddressCashback method
+func NewGetTradersByWalletAddressCashbackRequest(server string, walletAddress string, params *GetTradersByWalletAddressCashbackParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "walletAddress", walletAddress, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/traders/%s/cashback", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetTradersByWalletAddressCashbackClaimsRequest constructs an http.Request for the GetTradersByWalletAddressCashbackClaims method
+func NewGetTradersByWalletAddressCashbackClaimsRequest(server string, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "walletAddress", walletAddress, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/traders/%s/cashback/claims", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetTradersByWalletAddressCreatedTokensRequest constructs an http.Request for the GetTradersByWalletAddressCreatedTokens method
 func NewGetTradersByWalletAddressCreatedTokensRequest(server string, walletAddress string, params *GetTradersByWalletAddressCreatedTokensParams) (*http.Request, error) {
 	var err error
@@ -8853,6 +10404,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/backtests/{id}/trades (the `GetBacktestsByIdTrades` operationId).
 	GetBacktestsByIdTradesWithResponse(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdTradesResponse, error)
 
+	// GetCashbackLeaderboardWithResponse Pump cashback leaderboard
+	//
+	// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
+	GetCashbackLeaderboardWithResponse(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*GetCashbackLeaderboardResponse, error)
+
+	// GetCashbackSummaryWithResponse Pump cashback board summary
+	//
+	// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
+	GetCashbackSummaryWithResponse(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*GetCashbackSummaryResponse, error)
+
 	// GetHealthWithResponse Get Health
 	//
 	// Evaluates the connectivity of backing services and returns a system status overview.
@@ -8861,6 +10430,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/health (the `GetHealth` operationId).
 	GetHealthWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthResponse, error)
+
+	// GetHealthLiveWithResponse Liveness
+	//
+	// Process-level liveness: 200 whenever the HTTP server responds. No dependency checks.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/health/live (the `GetHealthLive` operationId).
+	GetHealthLiveWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthLiveResponse, error)
 
 	// GetMeCreditsWithResponse Get My Credits
 	//
@@ -8882,7 +10460,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsWithResponse List Active Mints
 	//
-	// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by window-bound activity desc. By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+	// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -8996,6 +10574,40 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/ohlcv (the `GetOhlcv` operationId).
 	GetOhlcvWithResponse(ctx context.Context, params *GetOhlcvParams, reqEditors ...RequestEditorFn) (*GetOhlcvResponse, error)
+
+	// GetProgramLogosByProgramIDWithResponse Program logo image
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/program-logos/{programID} (the `GetProgramLogosByProgramID` operationId).
+	GetProgramLogosByProgramIDWithResponse(ctx context.Context, programID string, reqEditors ...RequestEditorFn) (*GetProgramLogosByProgramIDResponse, error)
+
+	// GetProgramsLeaderboardWithResponse Programs leaderboard
+	//
+	// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/programs/leaderboard (the `GetProgramsLeaderboard` operationId).
+	GetProgramsLeaderboardWithResponse(ctx context.Context, params *GetProgramsLeaderboardParams, reqEditors ...RequestEditorFn) (*GetProgramsLeaderboardResponse, error)
+
+	// GetProgramsSummaryWithResponse Programs board summary
+	//
+	// Board-level aggregates (volume routed, revert share, revenue extracted, programs indexed, new today, median, top-10 concentration) plus the log-binned volume distribution and per-metric filter histograms, computed over the same derived rows the leaderboard serves.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/programs/summary (the `GetProgramsSummary` operationId).
+	GetProgramsSummaryWithResponse(ctx context.Context, params *GetProgramsSummaryParams, reqEditors ...RequestEditorFn) (*GetProgramsSummaryResponse, error)
+
+	// GetProgramsByProgramIdDailyWithResponse Program daily stats
+	//
+	// One program's per-day activity over the trailing 3 months: landed txs by kind (swap/arb/other), unique users, SOL-projected volume for both attribution roles, the raw arb + fee revenue components (the client folds them by the program's resolved category), and the failed side (failed swaps/arbs/other, landed no-CPI probes, fees burned). Days with no activity are absent. Also carries the derived per-window figures ("7d"/"30d"/"3m" — volume both roles, users, category-gated revenue, landed/failed txs, success/spam/non-swap rates), computed with the same formulas as the leaderboard rows.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/programs/{program_id}/daily (the `GetProgramsByProgramIdDaily` operationId).
+	GetProgramsByProgramIdDailyWithResponse(ctx context.Context, programId string, reqEditors ...RequestEditorFn) (*GetProgramsByProgramIdDailyResponse, error)
 
 	// GetSolPriceWithResponse Get the SOL/USD reference rate
 	//
@@ -9316,6 +10928,22 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
 	GetTradersByTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDPnlsResponse, error)
+
+	// GetTradersByWalletAddressCashbackWithResponse Pump cashback rewards of a wallet
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
+	GetTradersByWalletAddressCashbackWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCashbackResponse, error)
+
+	// GetTradersByWalletAddressCashbackClaimsWithResponse Cashback claim history of a wallet
+	//
+	// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
+	GetTradersByWalletAddressCashbackClaimsWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCashbackClaimsResponse, error)
 
 	// GetTradersByWalletAddressCreatedTokensWithResponse List Trader Created Tokens
 	//
@@ -9777,6 +11405,102 @@ func (r GetBacktestsByIdTradesResponse) ContentType() string {
 	return ""
 }
 
+type GetCashbackLeaderboardResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorCashbackBoardPage
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetCashbackLeaderboardResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorCashbackBoardPage {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetCashbackLeaderboardResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetCashbackLeaderboardResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCashbackLeaderboardResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCashbackLeaderboardResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetCashbackLeaderboardResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetCashbackSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorCashbackBoardSummary
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetCashbackSummaryResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorCashbackBoardSummary {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetCashbackSummaryResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetCashbackSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCashbackSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCashbackSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetCashbackSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetHealthResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -9819,6 +11543,47 @@ func (r GetHealthResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetHealthResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetHealthLiveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *map[string]interface{}
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetHealthLiveResponse) GetJSON200() *map[string]interface{} {
+	return r.JSON200
+}
+
+// GetBody returns the raw response body bytes
+func (r GetHealthLiveResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetHealthLiveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetHealthLiveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetHealthLiveResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -9946,6 +11711,10 @@ type GetMintsResponse struct {
 	JSON402 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON500 the response for an HTTP 500 `application/json` response
 	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON504 the response for an HTTP 504 `application/json` response
+	JSON504 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -9966,6 +11735,16 @@ func (r GetMintsResponse) GetJSON402() *InternalAdaptersPrimaryHttpHandlerErrorR
 // GetJSON500 returns the response for an HTTP 500 `application/json` response
 func (r GetMintsResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetMintsResponse) GetJSON503() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON503
+}
+
+// GetJSON504 returns the response for an HTTP 504 `application/json` response
+func (r GetMintsResponse) GetJSON504() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON504
 }
 
 // GetBody returns the raw response body bytes
@@ -10672,6 +12451,184 @@ func (r GetOhlcvResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetOhlcvResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetProgramLogosByProgramIDResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProgramLogosByProgramIDResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProgramLogosByProgramIDResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProgramLogosByProgramIDResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProgramLogosByProgramIDResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetProgramsLeaderboardResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorProgramBoardPage
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProgramsLeaderboardResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorProgramBoardPage {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProgramsLeaderboardResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProgramsLeaderboardResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProgramsLeaderboardResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProgramsLeaderboardResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProgramsLeaderboardResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetProgramsSummaryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorProgramBoardSummary
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProgramsSummaryResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorProgramBoardSummary {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProgramsSummaryResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProgramsSummaryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProgramsSummaryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProgramsSummaryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProgramsSummaryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetProgramsByProgramIdDailyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorProgramDailySeries
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetProgramsByProgramIdDailyResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorProgramDailySeries {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetProgramsByProgramIdDailyResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetProgramsByProgramIdDailyResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetProgramsByProgramIdDailyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetProgramsByProgramIdDailyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetProgramsByProgramIdDailyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -11907,6 +13864,10 @@ type GetTradersResponse struct {
 	JSON402 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON500 the response for an HTTP 500 `application/json` response
 	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON504 the response for an HTTP 504 `application/json` response
+	JSON504 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -11932,6 +13893,16 @@ func (r GetTradersResponse) GetJSON402() *InternalAdaptersPrimaryHttpHandlerErro
 // GetJSON500 returns the response for an HTTP 500 `application/json` response
 func (r GetTradersResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetTradersResponse) GetJSON503() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON503
+}
+
+// GetJSON504 returns the response for an HTTP 504 `application/json` response
+func (r GetTradersResponse) GetJSON504() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON504
 }
 
 // GetBody returns the raw response body bytes
@@ -11976,6 +13947,10 @@ type GetTradersByIdByTraderIDResponse struct {
 	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON500 the response for an HTTP 500 `application/json` response
 	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON504 the response for an HTTP 504 `application/json` response
+	JSON504 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -12001,6 +13976,16 @@ func (r GetTradersByIdByTraderIDResponse) GetJSON404() *InternalAdaptersPrimaryH
 // GetJSON500 returns the response for an HTTP 500 `application/json` response
 func (r GetTradersByIdByTraderIDResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetTradersByIdByTraderIDResponse) GetJSON503() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON503
+}
+
+// GetJSON504 returns the response for an HTTP 504 `application/json` response
+func (r GetTradersByIdByTraderIDResponse) GetJSON504() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON504
 }
 
 // GetBody returns the raw response body bytes
@@ -12043,6 +14028,10 @@ type GetTradersByWalletByWalletAddressResponse struct {
 	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON500 the response for an HTTP 500 `application/json` response
 	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON504 the response for an HTTP 504 `application/json` response
+	JSON504 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -12063,6 +14052,16 @@ func (r GetTradersByWalletByWalletAddressResponse) GetJSON404() *InternalAdapter
 // GetJSON500 returns the response for an HTTP 500 `application/json` response
 func (r GetTradersByWalletByWalletAddressResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetTradersByWalletByWalletAddressResponse) GetJSON503() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON503
+}
+
+// GetJSON504 returns the response for an HTTP 504 `application/json` response
+func (r GetTradersByWalletByWalletAddressResponse) GetJSON504() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON504
 }
 
 // GetBody returns the raw response body bytes
@@ -12432,6 +14431,102 @@ func (r GetTradersByTraderIDPnlsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetTradersByTraderIDPnlsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTradersByWalletAddressCashbackResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorTraderCashbackStats
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTradersByWalletAddressCashbackResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorTraderCashbackStats {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetTradersByWalletAddressCashbackResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTradersByWalletAddressCashbackResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTradersByWalletAddressCashbackResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTradersByWalletAddressCashbackResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTradersByWalletAddressCashbackResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTradersByWalletAddressCashbackClaimsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorCashbackClaimsPage
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTradersByWalletAddressCashbackClaimsResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorCashbackClaimsPage {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetTradersByWalletAddressCashbackClaimsResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTradersByWalletAddressCashbackClaimsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTradersByWalletAddressCashbackClaimsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTradersByWalletAddressCashbackClaimsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTradersByWalletAddressCashbackClaimsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13307,6 +15402,36 @@ func (c *ClientWithResponses) GetBacktestsByIdTradesWithResponse(ctx context.Con
 	return ParseGetBacktestsByIdTradesResponse(rsp)
 }
 
+// GetCashbackLeaderboardWithResponse Pump cashback leaderboard
+//
+// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
+func (c *ClientWithResponses) GetCashbackLeaderboardWithResponse(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*GetCashbackLeaderboardResponse, error) {
+	rsp, err := c.GetCashbackLeaderboard(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCashbackLeaderboardResponse(rsp)
+}
+
+// GetCashbackSummaryWithResponse Pump cashback board summary
+//
+// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
+func (c *ClientWithResponses) GetCashbackSummaryWithResponse(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*GetCashbackSummaryResponse, error) {
+	rsp, err := c.GetCashbackSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCashbackSummaryResponse(rsp)
+}
+
 // GetHealthWithResponse Get Health
 //
 // Evaluates the connectivity of backing services and returns a system status overview.
@@ -13320,6 +15445,21 @@ func (c *ClientWithResponses) GetHealthWithResponse(ctx context.Context, reqEdit
 		return nil, err
 	}
 	return ParseGetHealthResponse(rsp)
+}
+
+// GetHealthLiveWithResponse Liveness
+//
+// Process-level liveness: 200 whenever the HTTP server responds. No dependency checks.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/health/live (the `GetHealthLive` operationId).
+func (c *ClientWithResponses) GetHealthLiveWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthLiveResponse, error) {
+	rsp, err := c.GetHealthLive(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetHealthLiveResponse(rsp)
 }
 
 // GetMeCreditsWithResponse Get My Credits
@@ -13354,7 +15494,7 @@ func (c *ClientWithResponses) GetMeCreditsLedgerWithResponse(ctx context.Context
 
 // GetMintsWithResponse List Active Mints
 //
-// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by window-bound activity desc. By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -13545,6 +15685,64 @@ func (c *ClientWithResponses) GetOhlcvWithResponse(ctx context.Context, params *
 		return nil, err
 	}
 	return ParseGetOhlcvResponse(rsp)
+}
+
+// GetProgramLogosByProgramIDWithResponse Program logo image
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/program-logos/{programID} (the `GetProgramLogosByProgramID` operationId).
+func (c *ClientWithResponses) GetProgramLogosByProgramIDWithResponse(ctx context.Context, programID string, reqEditors ...RequestEditorFn) (*GetProgramLogosByProgramIDResponse, error) {
+	rsp, err := c.GetProgramLogosByProgramID(ctx, programID, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProgramLogosByProgramIDResponse(rsp)
+}
+
+// GetProgramsLeaderboardWithResponse Programs leaderboard
+//
+// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/programs/leaderboard (the `GetProgramsLeaderboard` operationId).
+func (c *ClientWithResponses) GetProgramsLeaderboardWithResponse(ctx context.Context, params *GetProgramsLeaderboardParams, reqEditors ...RequestEditorFn) (*GetProgramsLeaderboardResponse, error) {
+	rsp, err := c.GetProgramsLeaderboard(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProgramsLeaderboardResponse(rsp)
+}
+
+// GetProgramsSummaryWithResponse Programs board summary
+//
+// Board-level aggregates (volume routed, revert share, revenue extracted, programs indexed, new today, median, top-10 concentration) plus the log-binned volume distribution and per-metric filter histograms, computed over the same derived rows the leaderboard serves.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/programs/summary (the `GetProgramsSummary` operationId).
+func (c *ClientWithResponses) GetProgramsSummaryWithResponse(ctx context.Context, params *GetProgramsSummaryParams, reqEditors ...RequestEditorFn) (*GetProgramsSummaryResponse, error) {
+	rsp, err := c.GetProgramsSummary(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProgramsSummaryResponse(rsp)
+}
+
+// GetProgramsByProgramIdDailyWithResponse Program daily stats
+//
+// One program's per-day activity over the trailing 3 months: landed txs by kind (swap/arb/other), unique users, SOL-projected volume for both attribution roles, the raw arb + fee revenue components (the client folds them by the program's resolved category), and the failed side (failed swaps/arbs/other, landed no-CPI probes, fees burned). Days with no activity are absent. Also carries the derived per-window figures ("7d"/"30d"/"3m" — volume both roles, users, category-gated revenue, landed/failed txs, success/spam/non-swap rates), computed with the same formulas as the leaderboard rows.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/programs/{program_id}/daily (the `GetProgramsByProgramIdDaily` operationId).
+func (c *ClientWithResponses) GetProgramsByProgramIdDailyWithResponse(ctx context.Context, programId string, reqEditors ...RequestEditorFn) (*GetProgramsByProgramIdDailyResponse, error) {
+	rsp, err := c.GetProgramsByProgramIdDaily(ctx, programId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetProgramsByProgramIdDailyResponse(rsp)
 }
 
 // GetSolPriceWithResponse Get the SOL/USD reference rate
@@ -14107,6 +16305,34 @@ func (c *ClientWithResponses) GetTradersByTraderIDPnlsWithResponse(ctx context.C
 	return ParseGetTradersByTraderIDPnlsResponse(rsp)
 }
 
+// GetTradersByWalletAddressCashbackWithResponse Pump cashback rewards of a wallet
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
+func (c *ClientWithResponses) GetTradersByWalletAddressCashbackWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCashbackResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressCashback(ctx, walletAddress, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTradersByWalletAddressCashbackResponse(rsp)
+}
+
+// GetTradersByWalletAddressCashbackClaimsWithResponse Cashback claim history of a wallet
+//
+// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
+func (c *ClientWithResponses) GetTradersByWalletAddressCashbackClaimsWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCashbackClaimsResponse, error) {
+	rsp, err := c.GetTradersByWalletAddressCashbackClaims(ctx, walletAddress, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTradersByWalletAddressCashbackClaimsResponse(rsp)
+}
+
 // GetTradersByWalletAddressCreatedTokensWithResponse List Trader Created Tokens
 //
 // Mints created by this wallet (from `mint_creators`), newest first, each with a graduation flag. Empty array for non-creators.
@@ -14548,6 +16774,72 @@ func ParseGetBacktestsByIdTradesResponse(rsp *http.Response) (*GetBacktestsByIdT
 	return response, nil
 }
 
+// ParseGetCashbackLeaderboardResponse parses an HTTP response from a GetCashbackLeaderboardWithResponse call
+func ParseGetCashbackLeaderboardResponse(rsp *http.Response) (*GetCashbackLeaderboardResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCashbackLeaderboardResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorCashbackBoardPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCashbackSummaryResponse parses an HTTP response from a GetCashbackSummaryWithResponse call
+func ParseGetCashbackSummaryResponse(rsp *http.Response) (*GetCashbackSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCashbackSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorCashbackBoardSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetHealthResponse parses an HTTP response from a GetHealthWithResponse call
 func ParseGetHealthResponse(rsp *http.Response) (*GetHealthResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -14575,6 +16867,32 @@ func ParseGetHealthResponse(rsp *http.Response) (*GetHealthResponse, error) {
 			return nil, err
 		}
 		response.JSON503 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetHealthLiveResponse parses an HTTP response from a GetHealthLiveWithResponse call
+func ParseGetHealthLiveResponse(rsp *http.Response) (*GetHealthLiveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetHealthLiveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	}
 
@@ -14702,6 +17020,20 @@ func ParseGetMintsResponse(rsp *http.Response) (*GetMintsResponse, error) {
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 504:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON504 = &dest
 
 	}
 
@@ -15203,6 +17535,121 @@ func ParseGetOhlcvResponse(rsp *http.Response) (*GetOhlcvResponse, error) {
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetProgramLogosByProgramIDResponse parses an HTTP response from a GetProgramLogosByProgramIDWithResponse call
+func ParseGetProgramLogosByProgramIDResponse(rsp *http.Response) (*GetProgramLogosByProgramIDResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProgramLogosByProgramIDResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetProgramsLeaderboardResponse parses an HTTP response from a GetProgramsLeaderboardWithResponse call
+func ParseGetProgramsLeaderboardResponse(rsp *http.Response) (*GetProgramsLeaderboardResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProgramsLeaderboardResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorProgramBoardPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetProgramsSummaryResponse parses an HTTP response from a GetProgramsSummaryWithResponse call
+func ParseGetProgramsSummaryResponse(rsp *http.Response) (*GetProgramsSummaryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProgramsSummaryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorProgramBoardSummary
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetProgramsByProgramIdDailyResponse parses an HTTP response from a GetProgramsByProgramIdDailyWithResponse call
+func ParseGetProgramsByProgramIdDailyResponse(rsp *http.Response) (*GetProgramsByProgramIdDailyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetProgramsByProgramIdDailyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorProgramDailySeries
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	}
 
@@ -16129,6 +18576,20 @@ func ParseGetTradersResponse(rsp *http.Response) (*GetTradersResponse, error) {
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 504:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON504 = &dest
+
 	}
 
 	return response, nil
@@ -16183,6 +18644,20 @@ func ParseGetTradersByIdByTraderIDResponse(rsp *http.Response) (*GetTradersByIdB
 		}
 		response.JSON500 = &dest
 
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 504:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON504 = &dest
+
 	}
 
 	return response, nil
@@ -16229,6 +18704,20 @@ func ParseGetTradersByWalletByWalletAddressResponse(rsp *http.Response) (*GetTra
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 504:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON504 = &dest
 
 	}
 
@@ -16498,6 +18987,72 @@ func ParseGetTradersByTraderIDPnlsResponse(rsp *http.Response) (*GetTradersByTra
 			return nil, err
 		}
 		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTradersByWalletAddressCashbackResponse parses an HTTP response from a GetTradersByWalletAddressCashbackWithResponse call
+func ParseGetTradersByWalletAddressCashbackResponse(rsp *http.Response) (*GetTradersByWalletAddressCashbackResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTradersByWalletAddressCashbackResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorTraderCashbackStats
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTradersByWalletAddressCashbackClaimsResponse parses an HTTP response from a GetTradersByWalletAddressCashbackClaimsWithResponse call
+func ParseGetTradersByWalletAddressCashbackClaimsResponse(rsp *http.Response) (*GetTradersByWalletAddressCashbackClaimsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTradersByWalletAddressCashbackClaimsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorCashbackClaimsPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	}
 
