@@ -1103,7 +1103,8 @@ type PulsightInternalCoreDomainAggregatorMintHoneypot struct {
 
 // PulsightInternalCoreDomainAggregatorMintInsiders defines model for pulsight_internal_core_domain_aggregator.MintInsiders.
 type PulsightInternalCoreDomainAggregatorMintInsiders struct {
-	Wallets *int `json:"wallets,omitempty"`
+	PctOfSupply *float32 `json:"pct_of_supply,omitempty"`
+	Wallets     *int     `json:"wallets,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintMarket defines model for pulsight_internal_core_domain_aggregator.MintMarket.
@@ -2053,6 +2054,17 @@ type PulsightInternalCoreDomainStrategyVenueID string
 
 // PulsightInternalCoreDomainSubscriptionSubscriptionTier defines model for pulsight_internal_core_domain_subscription.SubscriptionTier.
 type PulsightInternalCoreDomainSubscriptionSubscriptionTier string
+
+// PulsightInternalCoreDomainTokenviewFilter defines model for pulsight_internal_core_domain_tokenview.Filter.
+type PulsightInternalCoreDomainTokenviewFilter struct {
+	CreatedAt *string                 `json:"created_at,omitempty"`
+	Filters   *map[string]interface{} `json:"filters,omitempty"`
+	Id        *string                 `json:"id,omitempty"`
+	IsDefault *bool                   `json:"is_default,omitempty"`
+	Name      *string                 `json:"name,omitempty"`
+	UpdatedAt *string                 `json:"updated_at,omitempty"`
+	UserId    *string                 `json:"user_id,omitempty"`
+}
 
 // PulsightInternalCoreDomainTraderCopyBandPoint defines model for pulsight_internal_core_domain_trader.CopyBandPoint.
 type PulsightInternalCoreDomainTraderCopyBandPoint struct {
@@ -3120,6 +3132,12 @@ type GetMintsParams struct {
 	// MinFeesSol Min LIFETIME total network fees paid trading the mint (tx fees + MEV tips), in lamports — the same basis as each row's total_fees_sol. Omitted ⇒ no floor.
 	MinFeesSol *float32 `form:"min_fees_sol,omitempty" json:"min_fees_sol,omitempty"`
 
+	// MaxAgeSecs Only mints first seen within the last N seconds (launched < N ago). Mints with no observed first_seen are excluded.
+	MaxAgeSecs *int `form:"max_age_secs,omitempty" json:"max_age_secs,omitempty"`
+
+	// MinAgeSecs Only mints first seen at least N seconds ago (launched > N ago). Mints with no observed first_seen are excluded.
+	MinAgeSecs *int `form:"min_age_secs,omitempty" json:"min_age_secs,omitempty"`
+
 	// Limit Max rows (default 50, max 500)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -3568,6 +3586,12 @@ type PostStrategiesValidateJSONRequestBody = InternalAdaptersPrimaryHttpHandlerV
 // PutStrategiesByIdJSONRequestBody defines body for PutStrategiesById for application/json ContentType.
 type PutStrategiesByIdJSONRequestBody = InternalAdaptersPrimaryHttpHandlerStrategyUpdateRequest
 
+// PostTokenFiltersJSONRequestBody defines body for PostTokenFilters for application/json ContentType.
+type PostTokenFiltersJSONRequestBody = PulsightInternalCorePortsInputFilterCreateRequest
+
+// PutTokenFiltersByIdJSONRequestBody defines body for PutTokenFiltersById for application/json ContentType.
+type PutTokenFiltersByIdJSONRequestBody = PulsightInternalCorePortsInputFilterUpdateRequest
+
 // PostTraderFiltersJSONRequestBody defines body for PostTraderFilters for application/json ContentType.
 type PostTraderFiltersJSONRequestBody = PulsightInternalCorePortsInputFilterCreateRequest
 
@@ -4012,6 +4036,63 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/tips/services (the `GetTipsServices` operationId).
 	GetTipsServices(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTokenFilters List Token Filters
+	//
+	// Returns all saved Tokens-board filter presets belonging to the authenticated user.
+	//
+	// Corresponds with GET /api/token-filters/ (the `GetTokenFilters` operationId).
+	GetTokenFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTokenFiltersWithBody Create Token Filter
+	//
+	// Creates a new Tokens-board filter preset for the authenticated user.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+	PostTokenFiltersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostTokenFilters Create Token Filter
+	//
+	// Creates a new Tokens-board filter preset for the authenticated user.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+	PostTokenFilters(ctx context.Context, body PostTokenFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteTokenFiltersById Delete Token Filter
+	//
+	// Permanently removes a Tokens-board filter preset belonging to the authenticated user.
+	//
+	// Corresponds with DELETE /api/token-filters/{id} (the `DeleteTokenFiltersById` operationId).
+	DeleteTokenFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTokenFiltersById Get Token Filter
+	//
+	// Returns a specific Tokens-board filter preset by ID.
+	//
+	// Corresponds with GET /api/token-filters/{id} (the `GetTokenFiltersById` operationId).
+	GetTokenFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutTokenFiltersByIdWithBody Update Token Filter
+	//
+	// Replaces an existing Tokens-board filter preset for the authenticated user.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+	PutTokenFiltersByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutTokenFiltersById Update Token Filter
+	//
+	// Replaces an existing Tokens-board filter preset for the authenticated user.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+	PutTokenFiltersById(ctx context.Context, id string, body PutTokenFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTraderFilters List Trader Filters
 	//
@@ -5160,6 +5241,133 @@ func (c *Client) GetTipsPriorityRatio(ctx context.Context, params *GetTipsPriori
 // Corresponds with GET /api/tips/services (the `GetTipsServices` operationId).
 func (c *Client) GetTipsServices(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTipsServicesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTokenFilters List Token Filters
+//
+// Returns all saved Tokens-board filter presets belonging to the authenticated user.
+//
+// Corresponds with GET /api/token-filters/ (the `GetTokenFilters` operationId).
+func (c *Client) GetTokenFilters(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTokenFiltersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTokenFiltersWithBody Create Token Filter
+//
+// Creates a new Tokens-board filter preset for the authenticated user.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+func (c *Client) PostTokenFiltersWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTokenFiltersRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostTokenFilters Create Token Filter
+//
+// Creates a new Tokens-board filter preset for the authenticated user.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+func (c *Client) PostTokenFilters(ctx context.Context, body PostTokenFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostTokenFiltersRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteTokenFiltersById Delete Token Filter
+//
+// Permanently removes a Tokens-board filter preset belonging to the authenticated user.
+//
+// Corresponds with DELETE /api/token-filters/{id} (the `DeleteTokenFiltersById` operationId).
+func (c *Client) DeleteTokenFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteTokenFiltersByIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTokenFiltersById Get Token Filter
+//
+// Returns a specific Tokens-board filter preset by ID.
+//
+// Corresponds with GET /api/token-filters/{id} (the `GetTokenFiltersById` operationId).
+func (c *Client) GetTokenFiltersById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTokenFiltersByIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutTokenFiltersByIdWithBody Update Token Filter
+//
+// Replaces an existing Tokens-board filter preset for the authenticated user.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+func (c *Client) PutTokenFiltersByIdWithBody(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTokenFiltersByIdRequestWithBody(c.Server, id, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutTokenFiltersById Update Token Filter
+//
+// Replaces an existing Tokens-board filter preset for the authenticated user.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+func (c *Client) PutTokenFiltersById(ctx context.Context, id string, body PutTokenFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTokenFiltersByIdRequest(c.Server, id, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6504,6 +6712,30 @@ func NewGetMintsRequest(server string, params *GetMintsParams) (*http.Request, e
 		if params.MinFeesSol != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_fees_sol", *params.MinFeesSol, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxAgeSecs != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_age_secs", *params.MaxAgeSecs, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinAgeSecs != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_age_secs", *params.MinAgeSecs, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -8743,6 +8975,188 @@ func NewGetTipsServicesRequest(server string, params *GetTipsServicesParams) (*h
 	return req, nil
 }
 
+// NewGetTokenFiltersRequest constructs an http.Request for the GetTokenFilters method
+func NewGetTokenFiltersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/token-filters/")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostTokenFiltersRequest calls the generic PostTokenFilters builder with application/json body
+func NewPostTokenFiltersRequest(server string, body PostTokenFiltersJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostTokenFiltersRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostTokenFiltersRequestWithBody constructs an http.Request for the PostTokenFilters method, with any body, and a specified content type
+func NewPostTokenFiltersRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/token-filters/")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewDeleteTokenFiltersByIdRequest constructs an http.Request for the DeleteTokenFiltersById method
+func NewDeleteTokenFiltersByIdRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/token-filters/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetTokenFiltersByIdRequest constructs an http.Request for the GetTokenFiltersById method
+func NewGetTokenFiltersByIdRequest(server string, id string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/token-filters/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutTokenFiltersByIdRequest calls the generic PutTokenFiltersById builder with application/json body
+func NewPutTokenFiltersByIdRequest(server string, id string, body PutTokenFiltersByIdJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutTokenFiltersByIdRequestWithBody(server, id, "application/json", bodyReader)
+}
+
+// NewPutTokenFiltersByIdRequestWithBody constructs an http.Request for the PutTokenFiltersById method, with any body, and a specified content type
+func NewPutTokenFiltersByIdRequestWithBody(server string, id string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/token-filters/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetTraderFiltersRequest constructs an http.Request for the GetTraderFilters method
 func NewGetTraderFiltersRequest(server string) (*http.Request, error) {
 	var err error
@@ -10915,6 +11329,69 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/tips/services (the `GetTipsServices` operationId).
 	GetTipsServicesWithResponse(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*GetTipsServicesResponse, error)
+
+	// GetTokenFiltersWithResponse List Token Filters
+	//
+	// Returns all saved Tokens-board filter presets belonging to the authenticated user.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/token-filters/ (the `GetTokenFilters` operationId).
+	GetTokenFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTokenFiltersResponse, error)
+
+	// PostTokenFiltersWithBodyWithResponse Create Token Filter
+	//
+	// Creates a new Tokens-board filter preset for the authenticated user.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+	PostTokenFiltersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTokenFiltersResponse, error)
+
+	// PostTokenFiltersWithResponse Create Token Filter
+	//
+	// Creates a new Tokens-board filter preset for the authenticated user.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+	PostTokenFiltersWithResponse(ctx context.Context, body PostTokenFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTokenFiltersResponse, error)
+
+	// DeleteTokenFiltersByIdWithResponse Delete Token Filter
+	//
+	// Permanently removes a Tokens-board filter preset belonging to the authenticated user.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /api/token-filters/{id} (the `DeleteTokenFiltersById` operationId).
+	DeleteTokenFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteTokenFiltersByIdResponse, error)
+
+	// GetTokenFiltersByIdWithResponse Get Token Filter
+	//
+	// Returns a specific Tokens-board filter preset by ID.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/token-filters/{id} (the `GetTokenFiltersById` operationId).
+	GetTokenFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTokenFiltersByIdResponse, error)
+
+	// PutTokenFiltersByIdWithBodyWithResponse Update Token Filter
+	//
+	// Replaces an existing Tokens-board filter preset for the authenticated user.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+	PutTokenFiltersByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTokenFiltersByIdResponse, error)
+
+	// PutTokenFiltersByIdWithResponse Update Token Filter
+	//
+	// Replaces an existing Tokens-board filter preset for the authenticated user.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+	PutTokenFiltersByIdWithResponse(ctx context.Context, id string, body PutTokenFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTokenFiltersByIdResponse, error)
 
 	// GetTraderFiltersWithResponse List Trader Filters
 	//
@@ -13736,6 +14213,330 @@ func (r GetTipsServicesResponse) ContentType() string {
 	return ""
 }
 
+type GetTokenFiltersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]PulsightInternalCoreDomainTokenviewFilter
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTokenFiltersResponse) GetJSON200() *[]PulsightInternalCoreDomainTokenviewFilter {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetTokenFiltersResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetTokenFiltersResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTokenFiltersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTokenFiltersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTokenFiltersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTokenFiltersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostTokenFiltersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *PulsightInternalCoreDomainTokenviewFilter
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PostTokenFiltersResponse) GetJSON201() *PulsightInternalCoreDomainTokenviewFilter {
+	return r.JSON201
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PostTokenFiltersResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r PostTokenFiltersResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PostTokenFiltersResponse) GetJSON403() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON403
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r PostTokenFiltersResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r PostTokenFiltersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostTokenFiltersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostTokenFiltersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostTokenFiltersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteTokenFiltersByIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteTokenFiltersByIdResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r DeleteTokenFiltersByIdResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r DeleteTokenFiltersByIdResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r DeleteTokenFiltersByIdResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteTokenFiltersByIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteTokenFiltersByIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteTokenFiltersByIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteTokenFiltersByIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTokenFiltersByIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainTokenviewFilter
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTokenFiltersByIdResponse) GetJSON200() *PulsightInternalCoreDomainTokenviewFilter {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetTokenFiltersByIdResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetTokenFiltersByIdResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetTokenFiltersByIdResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetTokenFiltersByIdResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTokenFiltersByIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTokenFiltersByIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTokenFiltersByIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTokenFiltersByIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutTokenFiltersByIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainTokenviewFilter
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutTokenFiltersByIdResponse) GetJSON200() *PulsightInternalCoreDomainTokenviewFilter {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PutTokenFiltersByIdResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r PutTokenFiltersByIdResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r PutTokenFiltersByIdResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r PutTokenFiltersByIdResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r PutTokenFiltersByIdResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutTokenFiltersByIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutTokenFiltersByIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutTokenFiltersByIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetTraderFiltersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -16261,6 +17062,111 @@ func (c *ClientWithResponses) GetTipsServicesWithResponse(ctx context.Context, p
 	return ParseGetTipsServicesResponse(rsp)
 }
 
+// GetTokenFiltersWithResponse List Token Filters
+//
+// Returns all saved Tokens-board filter presets belonging to the authenticated user.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/token-filters/ (the `GetTokenFilters` operationId).
+func (c *ClientWithResponses) GetTokenFiltersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTokenFiltersResponse, error) {
+	rsp, err := c.GetTokenFilters(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTokenFiltersResponse(rsp)
+}
+
+// PostTokenFiltersWithBodyWithResponse Create Token Filter
+//
+// Creates a new Tokens-board filter preset for the authenticated user.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+func (c *ClientWithResponses) PostTokenFiltersWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTokenFiltersResponse, error) {
+	rsp, err := c.PostTokenFiltersWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTokenFiltersResponse(rsp)
+}
+
+// PostTokenFiltersWithResponse Create Token Filter
+//
+// Creates a new Tokens-board filter preset for the authenticated user.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/token-filters/ (the `PostTokenFilters` operationId).
+func (c *ClientWithResponses) PostTokenFiltersWithResponse(ctx context.Context, body PostTokenFiltersJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTokenFiltersResponse, error) {
+	rsp, err := c.PostTokenFilters(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostTokenFiltersResponse(rsp)
+}
+
+// DeleteTokenFiltersByIdWithResponse Delete Token Filter
+//
+// Permanently removes a Tokens-board filter preset belonging to the authenticated user.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /api/token-filters/{id} (the `DeleteTokenFiltersById` operationId).
+func (c *ClientWithResponses) DeleteTokenFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*DeleteTokenFiltersByIdResponse, error) {
+	rsp, err := c.DeleteTokenFiltersById(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteTokenFiltersByIdResponse(rsp)
+}
+
+// GetTokenFiltersByIdWithResponse Get Token Filter
+//
+// Returns a specific Tokens-board filter preset by ID.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/token-filters/{id} (the `GetTokenFiltersById` operationId).
+func (c *ClientWithResponses) GetTokenFiltersByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetTokenFiltersByIdResponse, error) {
+	rsp, err := c.GetTokenFiltersById(ctx, id, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTokenFiltersByIdResponse(rsp)
+}
+
+// PutTokenFiltersByIdWithBodyWithResponse Update Token Filter
+//
+// Replaces an existing Tokens-board filter preset for the authenticated user.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+func (c *ClientWithResponses) PutTokenFiltersByIdWithBodyWithResponse(ctx context.Context, id string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTokenFiltersByIdResponse, error) {
+	rsp, err := c.PutTokenFiltersByIdWithBody(ctx, id, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutTokenFiltersByIdResponse(rsp)
+}
+
+// PutTokenFiltersByIdWithResponse Update Token Filter
+//
+// Replaces an existing Tokens-board filter preset for the authenticated user.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/token-filters/{id} (the `PutTokenFiltersById` operationId).
+func (c *ClientWithResponses) PutTokenFiltersByIdWithResponse(ctx context.Context, id string, body PutTokenFiltersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTokenFiltersByIdResponse, error) {
+	rsp, err := c.PutTokenFiltersById(ctx, id, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutTokenFiltersByIdResponse(rsp)
+}
+
 // GetTraderFiltersWithResponse List Trader Filters
 //
 // Returns all saved filter presets belonging to the authenticated user.
@@ -18540,6 +19446,258 @@ func ParseGetTipsServicesResponse(rsp *http.Response) (*GetTipsServicesResponse,
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTokenFiltersResponse parses an HTTP response from a GetTokenFiltersWithResponse call
+func ParseGetTokenFiltersResponse(rsp *http.Response) (*GetTokenFiltersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTokenFiltersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []PulsightInternalCoreDomainTokenviewFilter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostTokenFiltersResponse parses an HTTP response from a PostTokenFiltersWithResponse call
+func ParsePostTokenFiltersResponse(rsp *http.Response) (*PostTokenFiltersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostTokenFiltersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest PulsightInternalCoreDomainTokenviewFilter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteTokenFiltersByIdResponse parses an HTTP response from a DeleteTokenFiltersByIdWithResponse call
+func ParseDeleteTokenFiltersByIdResponse(rsp *http.Response) (*DeleteTokenFiltersByIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteTokenFiltersByIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTokenFiltersByIdResponse parses an HTTP response from a GetTokenFiltersByIdWithResponse call
+func ParseGetTokenFiltersByIdResponse(rsp *http.Response) (*GetTokenFiltersByIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTokenFiltersByIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainTokenviewFilter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutTokenFiltersByIdResponse parses an HTTP response from a PutTokenFiltersByIdWithResponse call
+func ParsePutTokenFiltersByIdResponse(rsp *http.Response) (*PutTokenFiltersByIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutTokenFiltersByIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainTokenviewFilter
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
 
 	}
 
