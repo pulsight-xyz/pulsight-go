@@ -36,34 +36,52 @@ func (e PulsightInternalCoreDomainAggregatorRiskLevel) Valid() bool {
 
 // Defines values for PulsightInternalCoreDomainAggregatorTimeframe.
 const (
+	Timeframe12h PulsightInternalCoreDomainAggregatorTimeframe = "12h"
 	Timeframe15m PulsightInternalCoreDomainAggregatorTimeframe = "15m"
 	Timeframe15s PulsightInternalCoreDomainAggregatorTimeframe = "15s"
+	Timeframe1h  PulsightInternalCoreDomainAggregatorTimeframe = "1h"
 	Timeframe1m  PulsightInternalCoreDomainAggregatorTimeframe = "1m"
 	Timeframe1s  PulsightInternalCoreDomainAggregatorTimeframe = "1s"
+	Timeframe24h PulsightInternalCoreDomainAggregatorTimeframe = "24h"
+	Timeframe2h  PulsightInternalCoreDomainAggregatorTimeframe = "2h"
 	Timeframe30m PulsightInternalCoreDomainAggregatorTimeframe = "30m"
 	Timeframe30s PulsightInternalCoreDomainAggregatorTimeframe = "30s"
+	Timeframe4h  PulsightInternalCoreDomainAggregatorTimeframe = "4h"
 	Timeframe5m  PulsightInternalCoreDomainAggregatorTimeframe = "5m"
 	Timeframe5s  PulsightInternalCoreDomainAggregatorTimeframe = "5s"
+	Timeframe6h  PulsightInternalCoreDomainAggregatorTimeframe = "6h"
 )
 
 // Valid indicates whether the value is a known member of the PulsightInternalCoreDomainAggregatorTimeframe enum.
 func (e PulsightInternalCoreDomainAggregatorTimeframe) Valid() bool {
 	switch e {
+	case Timeframe12h:
+		return true
 	case Timeframe15m:
 		return true
 	case Timeframe15s:
+		return true
+	case Timeframe1h:
 		return true
 	case Timeframe1m:
 		return true
 	case Timeframe1s:
 		return true
+	case Timeframe24h:
+		return true
+	case Timeframe2h:
+		return true
 	case Timeframe30m:
 		return true
 	case Timeframe30s:
 		return true
+	case Timeframe4h:
+		return true
 	case Timeframe5m:
 		return true
 	case Timeframe5s:
+		return true
+	case Timeframe6h:
 		return true
 	default:
 		return false
@@ -386,6 +404,14 @@ type InternalAdaptersPrimaryHttpHandlerDashboardStats struct {
 	TotalStrategies    *int                                          `json:"total_strategies,omitempty"`
 }
 
+// InternalAdaptersPrimaryHttpHandlerPaginatedCreditLedger defines model for internal_adapters_primary_http_handler.PaginatedCreditLedger.
+type InternalAdaptersPrimaryHttpHandlerPaginatedCreditLedger struct {
+	Items  *[]PulsightInternalCoreDomainCreditTransaction `json:"items,omitempty"`
+	Limit  *int                                           `json:"limit,omitempty"`
+	Offset *int                                           `json:"offset,omitempty"`
+	Total  *int                                           `json:"total,omitempty"`
+}
+
 // InternalAdaptersPrimaryHttpHandlerPaginatedPnls defines model for internal_adapters_primary_http_handler.PaginatedPnls.
 type InternalAdaptersPrimaryHttpHandlerPaginatedPnls struct {
 	Items  *[]PulsightInternalCoreDomainTraderPnl `json:"items,omitempty"`
@@ -416,15 +442,6 @@ type InternalAdaptersPrimaryHttpHandlerStrategyStats struct {
 	LastRunTrades     *int       `json:"last_run_trades,omitempty"`
 	LastRunWinRatePct *float32   `json:"last_run_win_rate_pct,omitempty"`
 	TotalRuns         *int       `json:"total_runs,omitempty"`
-}
-
-// InternalAdaptersPrimaryHttpHandlerTraderExportRequest defines model for internal_adapters_primary_http_handler.TraderExportRequest.
-type InternalAdaptersPrimaryHttpHandlerTraderExportRequest struct {
-	Columns   *[]string               `json:"columns,omitempty"`
-	Direction *string                 `json:"direction,omitempty"`
-	Filters   *map[string]interface{} `json:"filters,omitempty"`
-	Format    *string                 `json:"format,omitempty"`
-	SortBy    *string                 `json:"sort_by,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerWebhookNotifierCreateRequest defines model for internal_adapters_primary_http_handler.WebhookNotifierCreateRequest.
@@ -474,8 +491,13 @@ type InternalAdaptersPrimaryHttpHandlerCopyabilityRequest struct {
 	// default ladder. Blocks rather than milliseconds because the stored swap
 	// timestamp resolves only to whole seconds, so a sub-second ladder cannot
 	// be answered — see domain/trader/copyability.go.
-	DelaysSlots *[]int  `json:"delays_slots,omitempty"`
-	From        *string `json:"from,omitempty"`
+	DelaysSlots *[]int `json:"delays_slots,omitempty"`
+
+	// FromTs Half-open measurement window [from_ts, to_ts) in Unix epoch SECONDS.
+	// Seconds rather than an RFC3339 string because every timestamp this
+	// measurement touches already is one: Solana's blockTime is an i64 of whole
+	// seconds, and the per-leg ledger stores it unchanged.
+	FromTs *int `json:"from_ts,omitempty"`
 
 	// SizeLamports OPTIONAL copier trade size in lamports. Supplying it attaches the
 	// execution half — what slippage band each fill needed, and what each
@@ -483,7 +505,7 @@ type InternalAdaptersPrimaryHttpHandlerCopyabilityRequest struct {
 	// concrete size against a concrete depth, while the price-transfer curve
 	// above is deliberately unit-free; both come from one read either way.
 	SizeLamports *int      `json:"size_lamports,omitempty"`
-	To           *string   `json:"to,omitempty"`
+	ToTs         *int      `json:"to_ts,omitempty"`
 	Wallets      *[]string `json:"wallets,omitempty"`
 }
 
@@ -491,13 +513,13 @@ type InternalAdaptersPrimaryHttpHandlerCopyabilityRequest struct {
 type InternalAdaptersPrimaryHttpHandlerCopyabilityResponse struct {
 	BandsBps    *[]int                                               `json:"bands_bps,omitempty"`
 	DelaysSlots *[]int                                               `json:"delays_slots,omitempty"`
-	From        *string                                              `json:"from,omitempty"`
+	FromTs      *int                                                 `json:"from_ts,omitempty"`
 	Reports     *[]PulsightInternalCoreDomainTraderCopyabilityReport `json:"reports,omitempty"`
 
 	// SizeLamports Echoed only when a size was supplied, alongside the band ladder the
 	// execution half was evaluated on.
-	SizeLamports *int    `json:"size_lamports,omitempty"`
-	To           *string `json:"to,omitempty"`
+	SizeLamports *int `json:"size_lamports,omitempty"`
+	ToTs         *int `json:"to_ts,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerErrorResponse defines model for internal_adapters_primary_http_handler.errorResponse.
@@ -507,8 +529,16 @@ type InternalAdaptersPrimaryHttpHandlerErrorResponse struct {
 
 // InternalAdaptersPrimaryHttpHandlerNeighborRowResponse defines model for internal_adapters_primary_http_handler.neighborRowResponse.
 type InternalAdaptersPrimaryHttpHandlerNeighborRowResponse struct {
-	FollowRate      *float32 `json:"follow_rate,omitempty"`
-	Hits            *int     `json:"hits,omitempty"`
+	FollowRate *float32 `json:"follow_rate,omitempty"`
+	Hits       *int     `json:"hits,omitempty"`
+
+	// MedSlotDelta MedSlotDelta is the median signed slot gap (neighbour minus subject), so
+	// a negative value means the neighbour traded first. Real copy-trading
+	// clusters at 1-2 slots, roughly 0.3-0.6s at current block times, while
+	// coincidence scatters over tens of slots. Zero means the SAME block, the
+	// tightest gap this endpoint can report: the source data carries no
+	// transaction index, so which of the two went first inside that block is
+	// unknown, not absent.
 	MedSlotDelta    *int     `json:"med_slot_delta,omitempty"`
 	MutualRate      *float32 `json:"mutual_rate,omitempty"`
 	NeighborEntries *int     `json:"neighbor_entries,omitempty"`
@@ -577,22 +607,34 @@ type InternalAdaptersPrimaryHttpHandlerSnapshotRow struct {
 	AvgHoldSecs       *float32 `json:"avg_hold_secs,omitempty"`
 	AvgReactivitySecs *float32 `json:"avg_reactivity_secs,omitempty"`
 
+	// AvgRp1d lamports
+	AvgRp1d *float32 `json:"avg_rp_1d,omitempty"`
+
 	// AvgRp30d lamports
 	AvgRp30d *float32 `json:"avg_rp_30d,omitempty"`
 
 	// AvgRp7d lamports
-	AvgRp7d            *float32 `json:"avg_rp_7d,omitempty"`
+	AvgRp7d *float32 `json:"avg_rp_7d,omitempty"`
+
+	// AvgRpAll lamports, per-mint over the wallet's life
+	AvgRpAll           *float32 `json:"avg_rp_all,omitempty"`
 	AvgSellsPerToken   *float32 `json:"avg_sells_per_token,omitempty"`
 	HoldingPnlLamports *float32 `json:"holding_pnl_lamports,omitempty"`
 	MedBuysPerToken    *float32 `json:"med_buys_per_token,omitempty"`
 	MedHoldSecs        *float32 `json:"med_hold_secs,omitempty"`
 	MedReactivitySecs  *float32 `json:"med_reactivity_secs,omitempty"`
 
+	// MedRp1d lamports
+	MedRp1d *float32 `json:"med_rp_1d,omitempty"`
+
 	// MedRp30d lamports
 	MedRp30d *float32 `json:"med_rp_30d,omitempty"`
 
 	// MedRp7d lamports
-	MedRp7d          *float32 `json:"med_rp_7d,omitempty"`
+	MedRp7d *float32 `json:"med_rp_7d,omitempty"`
+
+	// MedRpAll lamports, per-mint over the wallet's life
+	MedRpAll         *float32 `json:"med_rp_all,omitempty"`
 	MedSellsPerToken *float32 `json:"med_sells_per_token,omitempty"`
 	OldestTradeAt    *string  `json:"oldest_trade_at,omitempty"`
 	PnlDistribution  *[]int   `json:"pnl_distribution,omitempty"`
@@ -842,8 +884,15 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
 	PumpUsername *string `json:"pump_username,omitempty"`
 
 	// Rank Rank is 1-based within the requested window + filters (offset-aware).
-	Rank                *int `json:"rank,omitempty"`
-	TotalVolumeLamports *int `json:"total_volume_lamports,omitempty"`
+	Rank *int `json:"rank,omitempty"`
+
+	// Tags Tags are the derived classification tags (`deriveTags`), resolved for
+	// the whole page in one round trip so a row states what the wallet is
+	// without being expanded. Empty on a censored row, and nil when the
+	// enrichment query failed — best-effort by contract, never an error the
+	// board surfaces.
+	Tags                *[]string `json:"tags,omitempty"`
+	TotalVolumeLamports *int      `json:"total_volume_lamports,omitempty"`
 
 	// Trader Trader is empty on a censored landing row (Censored true): the figures
 	// stay real, the identity is withheld server-side.
@@ -1353,10 +1402,13 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 
 // PulsightInternalCoreDomainAggregatorMintStatsByWindow defines model for pulsight_internal_core_domain_aggregator.MintStatsByWindow.
 type PulsightInternalCoreDomainAggregatorMintStatsByWindow struct {
+	N12h *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"12h,omitempty"`
 	N1h  *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"1h,omitempty"`
 	N1m  *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"1m,omitempty"`
 	N24h *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"24h,omitempty"`
+	N30m *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"30m,omitempty"`
 	N5m  *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"5m,omitempty"`
+	N6h  *PulsightInternalCoreDomainAggregatorMintWindowStats `json:"6h,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintTraderQuality defines model for pulsight_internal_core_domain_aggregator.MintTraderQuality.
@@ -1457,6 +1509,13 @@ type PulsightInternalCoreDomainAggregatorMintWindowStatsBundle struct {
 	// window). Feeds the token detail page's header bar. nil until the
 	// migration is applied or when the best-effort read fails.
 	TotalFeesLifetimeSol *int `json:"total_fees_lifetime_sol,omitempty"`
+
+	// TotalTxCountLifetime TotalTxCountLifetime — LIFETIME swap count for the mint, from the same
+	// mint_activity_totals seek as TotalFeesLifetimeSol and on its same basis.
+	// It is the denominator a windowless token-metric gate reads, and pairing
+	// the two keeps a per-transaction fee figure on one basis. nil whenever
+	// TotalFeesLifetimeSol is.
+	TotalTxCountLifetime *int `json:"total_tx_count_lifetime,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorProgramBoardCounts defines model for pulsight_internal_core_domain_aggregator.ProgramBoardCounts.
@@ -1714,25 +1773,34 @@ type PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint struct {
 
 // PulsightInternalCoreDomainAggregatorTraderBehavioralStats defines model for pulsight_internal_core_domain_aggregator.TraderBehavioralStats.
 type PulsightInternalCoreDomainAggregatorTraderBehavioralStats struct {
-	ActiveHoursCount     *int     `json:"active_hours_count,omitempty"`
-	AvgBuyCountPerToken  *float32 `json:"avg_buy_count_per_token,omitempty"`
-	AvgHoldingTimeSecs   *float32 `json:"avg_holding_time_secs,omitempty"`
-	AvgReactivitySecs    *float32 `json:"avg_reactivity_secs,omitempty"`
-	AvgSellCountPerToken *float32 `json:"avg_sell_count_per_token,omitempty"`
+	ActiveHoursCount    *int     `json:"active_hours_count,omitempty"`
+	AvgBuyCountPerToken *float32 `json:"avg_buy_count_per_token,omitempty"`
+	AvgHoldingTimeSecs  *float32 `json:"avg_holding_time_secs,omitempty"`
+	AvgReactivitySecs   *float32 `json:"avg_reactivity_secs,omitempty"`
+
+	// AvgRealizedProfitLamports Avg/MedianRealizedProfitLamports are the window's realized profit per
+	// TOKEN — one figure per mint the wallet actually sold, then averaged and
+	// medianed across them. Mints with no sell in the window are excluded
+	// rather than counted as zero: an unclosed position has no realized
+	// outcome, and zeros would drag the median toward it. The pair is the
+	// per-window twin of the leaderboard's Avg RP / Med RP columns.
+	AvgRealizedProfitLamports *float32 `json:"avg_realized_profit_lamports,omitempty"`
+	AvgSellCountPerToken      *float32 `json:"avg_sell_count_per_token,omitempty"`
 
 	// AvgTradeSizeLamports AvgTradeSizeLamports is TotalVolumeLamports over the window's swap
 	// count — the wallet's typical clip. It is what makes the price-impact
 	// figures legible: impact is size against pool depth, so the two are
 	// read together.
-	AvgTradeSizeLamports    *float32 `json:"avg_trade_size_lamports,omitempty"`
-	MedianBuyCountPerToken  *float32 `json:"median_buy_count_per_token,omitempty"`
-	MedianHoldingTimeSecs   *float32 `json:"median_holding_time_secs,omitempty"`
-	MedianReactivitySecs    *float32 `json:"median_reactivity_secs,omitempty"`
-	MedianSellCountPerToken *float32 `json:"median_sell_count_per_token,omitempty"`
-	OldestTradeAt           *string  `json:"oldest_trade_at,omitempty"`
-	ProfitPerTradeLamports  *float32 `json:"profit_per_trade_lamports,omitempty"`
-	Pubkey                  *string  `json:"pubkey,omitempty"`
-	RebalancingRatio        *float32 `json:"rebalancing_ratio,omitempty"`
+	AvgTradeSizeLamports         *float32 `json:"avg_trade_size_lamports,omitempty"`
+	MedianBuyCountPerToken       *float32 `json:"median_buy_count_per_token,omitempty"`
+	MedianHoldingTimeSecs        *float32 `json:"median_holding_time_secs,omitempty"`
+	MedianReactivitySecs         *float32 `json:"median_reactivity_secs,omitempty"`
+	MedianRealizedProfitLamports *float32 `json:"median_realized_profit_lamports,omitempty"`
+	MedianSellCountPerToken      *float32 `json:"median_sell_count_per_token,omitempty"`
+	OldestTradeAt                *string  `json:"oldest_trade_at,omitempty"`
+	ProfitPerTradeLamports       *float32 `json:"profit_per_trade_lamports,omitempty"`
+	Pubkey                       *string  `json:"pubkey,omitempty"`
+	RebalancingRatio             *float32 `json:"rebalancing_ratio,omitempty"`
 
 	// TotalVolumeLamports TotalVolumeLamports is the window's traded value, both sides, read as
 	// the QUOTE side of each row — see the adapter's swapQuoteSideExpr for
@@ -2249,8 +2317,10 @@ type PulsightInternalCoreDomainTraderTagSource string
 // PulsightInternalCoreDomainTraderTrader defines model for pulsight_internal_core_domain_trader.Trader.
 type PulsightInternalCoreDomainTraderTrader struct {
 	ActiveHoursCount *int     `json:"active_hours_count,omitempty"`
+	ArbTxRatio1d     *float32 `json:"arb_tx_ratio_1d,omitempty"`
 	ArbTxRatio30d    *float32 `json:"arb_tx_ratio_30d,omitempty"`
 	ArbTxRatio7d     *float32 `json:"arb_tx_ratio_7d,omitempty"`
+	ArbTxRatioAll    *float32 `json:"arb_tx_ratio_all,omitempty"`
 	Avatar           *string  `json:"avatar,omitempty"`
 
 	// AvgBuyCountPerToken Per-token buy/sell counts
@@ -2261,64 +2331,87 @@ type PulsightInternalCoreDomainTraderTrader struct {
 
 	// AvgHoldingTime Holding time (seconds)
 	AvgHoldingTime       *float32 `json:"avg_holding_time,omitempty"`
+	AvgRealizedProfit1d  *float32 `json:"avg_realized_profit_1d,omitempty"`
 	AvgRealizedProfit30d *float32 `json:"avg_realized_profit_30d,omitempty"`
 	AvgRealizedProfit7d  *float32 `json:"avg_realized_profit_7d,omitempty"`
+	AvgRealizedProfitAll *float32 `json:"avg_realized_profit_all,omitempty"`
 	AvgSellCountPerToken *float32 `json:"avg_sell_count_per_token,omitempty"`
+	Buy1d                *int     `json:"buy_1d,omitempty"`
 	Buy30d               *int     `json:"buy_30d,omitempty"`
 	Buy7d                *int     `json:"buy_7d,omitempty"`
+	BuyAll               *int     `json:"buy_all,omitempty"`
+	BuySellRatio1d       *float32 `json:"buy_sell_ratio_1d,omitempty"`
 	BuySellRatio30d      *float32 `json:"buy_sell_ratio_30d,omitempty"`
 
 	// BuySellRatio7d Computed ratios
-	BuySellRatio7d *float32 `json:"buy_sell_ratio_7d,omitempty"`
-	BuySizeCv      *float32 `json:"buy_size_cv,omitempty"`
-	Cashback30d    *float32 `json:"cashback_30d,omitempty"`
+	BuySellRatio7d  *float32 `json:"buy_sell_ratio_7d,omitempty"`
+	BuySellRatioAll *float32 `json:"buy_sell_ratio_all,omitempty"`
+	BuySizeCv       *float32 `json:"buy_size_cv,omitempty"`
+	Cashback1d      *float32 `json:"cashback_1d,omitempty"`
+	Cashback30d     *float32 `json:"cashback_30d,omitempty"`
 
 	// Cashback7d Pump cashback, lamports. `Cashback*` is what ACCRUED in the window
 	// (the screening signal); `CashbackClaimed*` is what was swept, and is
 	// the component already folded into NetProfit* — do not add it again.
 	Cashback7d            *float32 `json:"cashback_7d,omitempty"`
+	CashbackAll           *float32 `json:"cashback_all,omitempty"`
+	CashbackClaimCount1d  *int     `json:"cashback_claim_count_1d,omitempty"`
 	CashbackClaimCount30d *int     `json:"cashback_claim_count_30d,omitempty"`
 	CashbackClaimCount7d  *int     `json:"cashback_claim_count_7d,omitempty"`
+	CashbackClaimCountAll *int     `json:"cashback_claim_count_all,omitempty"`
+	CashbackClaimed1d     *float32 `json:"cashback_claimed_1d,omitempty"`
 	CashbackClaimed30d    *float32 `json:"cashback_claimed_30d,omitempty"`
 	CashbackClaimed7d     *float32 `json:"cashback_claimed_7d,omitempty"`
+	CashbackClaimedAll    *float32 `json:"cashback_claimed_all,omitempty"`
+	CashbackShare1d       *float32 `json:"cashback_share_1d,omitempty"`
 	CashbackShare30d      *float32 `json:"cashback_share_30d,omitempty"`
 	CashbackShare7d       *float32 `json:"cashback_share_7d,omitempty"`
+	CashbackShareAll      *float32 `json:"cashback_share_all,omitempty"`
 
 	// Chain "sol" | "eth"
 	Chain            *string                                        `json:"chain,omitempty"`
 	CreatedAt        *string                                        `json:"created_at,omitempty"`
 	DailyProfits     *[]PulsightInternalCoreDomainTraderDailyProfit `json:"daily_profits,omitempty"`
+	DidntBuySells1d  *int                                           `json:"didnt_buy_sells_1d,omitempty"`
 	DidntBuySells30d *int                                           `json:"didnt_buy_sells_30d,omitempty"`
 
 	// DidntBuySells7d Uncovered-sell counters for the window (CA migration 000018):
 	// sells with no observed buy of the mint / sells exceeding the
 	// observed bought balance.
-	DidntBuySells7d *int     `json:"didnt_buy_sells_7d,omitempty"`
-	DustTxRatio     *float32 `json:"dust_tx_ratio,omitempty"`
-	FailedTxs30d    *int     `json:"failed_txs_30d,omitempty"`
-	FailedTxs7d     *int     `json:"failed_txs_7d,omitempty"`
-	Id              *string  `json:"id,omitempty"`
-	IsFavorite      *bool    `json:"is_favorite,omitempty"`
+	DidntBuySells7d  *int     `json:"didnt_buy_sells_7d,omitempty"`
+	DidntBuySellsAll *int     `json:"didnt_buy_sells_all,omitempty"`
+	DustTxRatio      *float32 `json:"dust_tx_ratio,omitempty"`
+	FailedTxs1d      *int     `json:"failed_txs_1d,omitempty"`
+	FailedTxs30d     *int     `json:"failed_txs_30d,omitempty"`
+	FailedTxs7d      *int     `json:"failed_txs_7d,omitempty"`
+	FailedTxsAll     *int     `json:"failed_txs_all,omitempty"`
+	Id               *string  `json:"id,omitempty"`
+	IsFavorite       *bool    `json:"is_favorite,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/KOL/...) from the
 	// known_addresses registry; empty when the wallet isn't labelled.
 	Label        *string `json:"label,omitempty"`
 	LabelType    *string `json:"label_type,omitempty"`
+	LandedTxs1d  *int    `json:"landed_txs_1d,omitempty"`
 	LandedTxs30d *int    `json:"landed_txs_30d,omitempty"`
 	LandedTxs7d  *int    `json:"landed_txs_7d,omitempty"`
+	LandedTxsAll *int    `json:"landed_txs_all,omitempty"`
 
 	// LastActiveTimestamp Activity
 	LastActiveTimestamp      *int     `json:"last_active_timestamp,omitempty"`
 	MedianBuyCountPerToken   *float32 `json:"median_buy_count_per_token,omitempty"`
 	MedianFirstBuyReactivity *float32 `json:"median_first_buy_reactivity,omitempty"`
 	MedianHoldingTime        *float32 `json:"median_holding_time,omitempty"`
+	MedianRealizedProfit1d   *float32 `json:"median_realized_profit_1d,omitempty"`
 	MedianRealizedProfit30d  *float32 `json:"median_realized_profit_30d,omitempty"`
 	MedianRealizedProfit7d   *float32 `json:"median_realized_profit_7d,omitempty"`
+	MedianRealizedProfitAll  *float32 `json:"median_realized_profit_all,omitempty"`
 	MedianSellCountPerToken  *float32 `json:"median_sell_count_per_token,omitempty"`
 	MmScore                  *int     `json:"mm_score,omitempty"`
 
 	// Name Identifiers / social
 	Name         *string  `json:"name,omitempty"`
+	NetProfit1d  *float32 `json:"net_profit_1d,omitempty"`
 	NetProfit30d *float32 `json:"net_profit_30d,omitempty"`
 
 	// NetProfit7d Realized profit per-mint averages / medians. UNIT: lamports
@@ -2330,6 +2423,7 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	// SuccessRate / SpamRate are nil when the window observed no
 	// transactions at all (0 would read as "never lands").
 	NetProfit7d   *float32 `json:"net_profit_7d,omitempty"`
+	NetProfitAll  *float32 `json:"net_profit_all,omitempty"`
 	OldestTradeAt *int     `json:"oldest_trade_at,omitempty"`
 	Pnl0x2xNum30d *int     `json:"pnl_0x2x_num_30d,omitempty"`
 
@@ -2357,6 +2451,11 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	ProfitPerTrade *float32                               `json:"profit_per_trade,omitempty"`
 	RealizedProfit *float32                               `json:"realized_profit,omitempty"`
 
+	// RealizedProfit1d 1-day window. Same measures and same derivations as the 7d/30d
+	// blocks, hydrated per page rather than read off the board — so these
+	// are DISPLAY-only: neither sorting nor an `f=` clause can address them.
+	RealizedProfit1d *float32 `json:"realized_profit_1d,omitempty"`
+
 	// RealizedProfit30d 30-day period
 	RealizedProfit30d *float32 `json:"realized_profit_30d,omitempty"`
 
@@ -2368,28 +2467,45 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	RiskLevel            *string  `json:"risk_level,omitempty"`
 
 	// RiskScore Risk assessment
-	RiskScore *int `json:"risk_score,omitempty"`
-	Sell30d   *int `json:"sell_30d,omitempty"`
-	Sell7d    *int `json:"sell_7d,omitempty"`
+	RiskScore *int     `json:"risk_score,omitempty"`
+	Roi1d     *float32 `json:"roi_1d,omitempty"`
+
+	// RoiAll Lifetime window, also DISPLAY-only. The gross figure is RealizedProfit
+	// above. There is deliberately no lifetime failure record: the failed-tx
+	// planes are TTL-bounded to three months while the landed side is not,
+	// so a lifetime success or spam rate would be structurally flattering.
+	RoiAll  *float32 `json:"roi_all,omitempty"`
+	Sell1d  *int     `json:"sell_1d,omitempty"`
+	Sell30d *int     `json:"sell_30d,omitempty"`
+	Sell7d  *int     `json:"sell_7d,omitempty"`
+	SellAll *int     `json:"sell_all,omitempty"`
 
 	// SolBalance Balances. UNIT: lamports (BIGINT, held as *float64 for wire
 	// compatibility). The field name says "Sol" for historical reasons;
 	// the wire convention is lamports because the frontend's
 	// FormattedSol component divides by 1e9 itself.
 	SolBalance           *float32 `json:"sol_balance,omitempty"`
+	SoldGtBoughtSells1d  *int     `json:"sold_gt_bought_sells_1d,omitempty"`
 	SoldGtBoughtSells30d *int     `json:"sold_gt_bought_sells_30d,omitempty"`
 	SoldGtBoughtSells7d  *int     `json:"sold_gt_bought_sells_7d,omitempty"`
+	SoldGtBoughtSellsAll *int     `json:"sold_gt_bought_sells_all,omitempty"`
+	SpamRate1d           *float32 `json:"spam_rate_1d,omitempty"`
 	SpamRate30d          *float32 `json:"spam_rate_30d,omitempty"`
 	SpamRate7d           *float32 `json:"spam_rate_7d,omitempty"`
+	SuccessRate1d        *float32 `json:"success_rate_1d,omitempty"`
 	SuccessRate30d       *float32 `json:"success_rate_30d,omitempty"`
 	SuccessRate7d        *float32 `json:"success_rate_7d,omitempty"`
 
 	// Tags Relations (loaded on demand)
 	Tags          *[]PulsightInternalCoreDomainTraderTag `json:"tags,omitempty"`
+	TokenNum1d    *int                                   `json:"token_num_1d,omitempty"`
 	TokenNum30d   *int                                   `json:"token_num_30d,omitempty"`
 	TokenNum7d    *int                                   `json:"token_num_7d,omitempty"`
+	TokenNumAll   *int                                   `json:"token_num_all,omitempty"`
+	TotalCosts1d  *float32                               `json:"total_costs_1d,omitempty"`
 	TotalCosts30d *float32                               `json:"total_costs_30d,omitempty"`
 	TotalCosts7d  *float32                               `json:"total_costs_7d,omitempty"`
+	TotalCostsAll *float32                               `json:"total_costs_all,omitempty"`
 
 	// TotalProfit Profit stats (all-time). UNIT: lamports (see SolBalance note).
 	TotalProfit       *float32 `json:"total_profit,omitempty"`
@@ -2411,8 +2527,10 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	UnrealizedProfitPnl7d  *float32 `json:"unrealized_profit_pnl_7d,omitempty"`
 	UpdatedAt              *string  `json:"updated_at,omitempty"`
 	WalletAddress          *string  `json:"wallet_address,omitempty"`
+	Winrate1d              *float32 `json:"winrate_1d,omitempty"`
 	Winrate30d             *float32 `json:"winrate_30d,omitempty"`
 	Winrate7d              *float32 `json:"winrate_7d,omitempty"`
+	WinrateAll             *float32 `json:"winrate_all,omitempty"`
 }
 
 // PulsightInternalCoreDomainWebhookNotifier defines model for pulsight_internal_core_domain_webhook.Notifier.
@@ -2843,13 +2961,16 @@ type PulsightInternalCoreUsecasesTraderDailyProfitsResult struct {
 
 // PulsightInternalCoreUsecasesTraderPnlSeriesPoint defines model for pulsight_internal_core_usecases_trader.PnlSeriesPoint.
 type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
+	Cashback   *int    `json:"cashback,omitempty"`
 	Day        *string `json:"day,omitempty"`
 	FailedCost *int    `json:"failed_cost,omitempty"`
 	FailedTxs  *int    `json:"failed_txs,omitempty"`
 
 	// Fees Costs of the day (lamports): per-tx fees, tips, and failed-tx burn,
-	// with `net = profit - fees - tips - failed_cost`. The charts plot NET
-	// as the headline series; `profit` stays as the flat/gross component.
+	// plus the day's CLAIMED pump cashback (cash basis, the one positive
+	// component), with `net = profit - fees - tips - failed_cost +
+	// cashback`. The charts plot NET as the headline series; `profit` stays
+	// as the flat/gross component.
 	Fees        *int     `json:"fees,omitempty"`
 	Net         *int     `json:"net,omitempty"`
 	Profit      *int     `json:"profit,omitempty"`
@@ -2873,13 +2994,17 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesResult struct {
 // PulsightInternalCoreUsecasesTraderTraderListItem defines model for pulsight_internal_core_usecases_trader.TraderListItem.
 type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	ActiveHoursCount      *int     `json:"active_hours_count,omitempty"`
+	ArbTxRatio1d          *float32 `json:"arb_tx_ratio_1d,omitempty"`
 	ArbTxRatio30d         *float32 `json:"arb_tx_ratio_30d,omitempty"`
 	ArbTxRatio7d          *float32 `json:"arb_tx_ratio_7d,omitempty"`
+	ArbTxRatioAll         *float32 `json:"arb_tx_ratio_all,omitempty"`
 	AvgBuyCountPerToken   *float32 `json:"avg_buy_count_per_token,omitempty"`
 	AvgFirstBuyReactivity *float32 `json:"avg_first_buy_reactivity,omitempty"`
 	AvgHoldingTime        *float32 `json:"avg_holding_time,omitempty"`
+	AvgRealizedProfit1d   *float32 `json:"avg_realized_profit_1d,omitempty"`
 	AvgRealizedProfit30d  *float32 `json:"avg_realized_profit_30d,omitempty"`
 	AvgRealizedProfit7d   *float32 `json:"avg_realized_profit_7d,omitempty"`
+	AvgRealizedProfitAll  *float32 `json:"avg_realized_profit_all,omitempty"`
 	AvgSellCountPerToken  *float32 `json:"avg_sell_count_per_token,omitempty"`
 
 	// Behavioral1d Behavioral1d/7d/30d/All are the rows the "Behavioural" panel
@@ -2889,36 +3014,57 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	Behavioral30d   *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_30d,omitempty"`
 	Behavioral7d    *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_7d,omitempty"`
 	BehavioralAll   *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_all,omitempty"`
+	Buy1d           *int                                                       `json:"buy_1d,omitempty"`
 	Buy30d          *int                                                       `json:"buy_30d,omitempty"`
 	Buy7d           *int                                                       `json:"buy_7d,omitempty"`
+	BuyAll          *int                                                       `json:"buy_all,omitempty"`
+	BuySellRatio1d  *float32                                                   `json:"buy_sell_ratio_1d,omitempty"`
 	BuySellRatio30d *float32                                                   `json:"buy_sell_ratio_30d,omitempty"`
 	BuySellRatio7d  *float32                                                   `json:"buy_sell_ratio_7d,omitempty"`
+	BuySellRatioAll *float32                                                   `json:"buy_sell_ratio_all,omitempty"`
 	BuySizeCv       *float32                                                   `json:"buy_size_cv,omitempty"`
+	Cashback1d      *float32                                                   `json:"cashback_1d,omitempty"`
 	Cashback30d     *float32                                                   `json:"cashback_30d,omitempty"`
 
 	// Cashback7d Pump cashback: accrued in the window (the screening signal) and
 	// swept. Claimed is ALREADY inside NetProfit7d — never add it on top.
 	Cashback7d            *float32                                              `json:"cashback_7d,omitempty"`
+	CashbackAll           *float32                                              `json:"cashback_all,omitempty"`
+	CashbackClaimCount1d  *int                                                  `json:"cashback_claim_count_1d,omitempty"`
 	CashbackClaimCount30d *int                                                  `json:"cashback_claim_count_30d,omitempty"`
 	CashbackClaimCount7d  *int                                                  `json:"cashback_claim_count_7d,omitempty"`
+	CashbackClaimCountAll *int                                                  `json:"cashback_claim_count_all,omitempty"`
+	CashbackClaimed1d     *float32                                              `json:"cashback_claimed_1d,omitempty"`
 	CashbackClaimed30d    *float32                                              `json:"cashback_claimed_30d,omitempty"`
 	CashbackClaimed7d     *float32                                              `json:"cashback_claimed_7d,omitempty"`
+	CashbackClaimedAll    *float32                                              `json:"cashback_claimed_all,omitempty"`
+	CashbackShare1d       *float32                                              `json:"cashback_share_1d,omitempty"`
 	CashbackShare30d      *float32                                              `json:"cashback_share_30d,omitempty"`
 	CashbackShare7d       *float32                                              `json:"cashback_share_7d,omitempty"`
+	CashbackShareAll      *float32                                              `json:"cashback_share_all,omitempty"`
 	Chain                 *string                                               `json:"chain,omitempty"`
 	CreatedAt             *string                                               `json:"created_at,omitempty"`
 	DailyProfit30d        *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry `json:"daily_profit_30d,omitempty"`
 	DailyProfit7d         *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry `json:"daily_profit_7d,omitempty"`
+	DidntBuySells1d       *int                                                  `json:"didnt_buy_sells_1d,omitempty"`
 	DidntBuySells30d      *int                                                  `json:"didnt_buy_sells_30d,omitempty"`
 
 	// DidntBuySells7d Uncovered-sell counters (CA migration 000018): sells with no
 	// observed buy of the mint / sells exceeding the observed bought
 	// balance, scoped to the window.
-	DidntBuySells7d *int     `json:"didnt_buy_sells_7d,omitempty"`
-	DustTxRatio     *float32 `json:"dust_tx_ratio,omitempty"`
-	FailedTxs30d    *int     `json:"failed_txs_30d,omitempty"`
-	FailedTxs7d     *int     `json:"failed_txs_7d,omitempty"`
-	HasAvatar       *bool    `json:"has_avatar,omitempty"`
+	DidntBuySells7d  *int     `json:"didnt_buy_sells_7d,omitempty"`
+	DidntBuySellsAll *int     `json:"didnt_buy_sells_all,omitempty"`
+	DustTxRatio      *float32 `json:"dust_tx_ratio,omitempty"`
+	FailedTxs1d      *int     `json:"failed_txs_1d,omitempty"`
+	FailedTxs30d     *int     `json:"failed_txs_30d,omitempty"`
+	FailedTxs7d      *int     `json:"failed_txs_7d,omitempty"`
+
+	// FailedTxsAll There is deliberately no lifetime success/spam rate here: their
+	// denominator is the one read that cannot prune by partition, so it is
+	// not paid per listing page. The trader-detail reliability panel serves
+	// them per wallet.
+	FailedTxsAll *int  `json:"failed_txs_all,omitempty"`
+	HasAvatar    *bool `json:"has_avatar,omitempty"`
 
 	// HoldingPnlLamports HoldingPnlLamports is the wallet's current unrealised PnL across
 	// all open positions, in lamports. Nil when CA has no live price
@@ -2931,21 +3077,27 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// known_addresses registry; empty when the wallet isn't labelled.
 	Label                    *string  `json:"label,omitempty"`
 	LabelType                *string  `json:"label_type,omitempty"`
+	LandedTxs1d              *int     `json:"landed_txs_1d,omitempty"`
 	LandedTxs30d             *int     `json:"landed_txs_30d,omitempty"`
 	LandedTxs7d              *int     `json:"landed_txs_7d,omitempty"`
+	LandedTxsAll             *int     `json:"landed_txs_all,omitempty"`
 	LastActiveTimestamp      *int     `json:"last_active_timestamp,omitempty"`
 	MedianBuyCountPerToken   *float32 `json:"median_buy_count_per_token,omitempty"`
 	MedianFirstBuyReactivity *float32 `json:"median_first_buy_reactivity,omitempty"`
 	MedianHoldingTime        *float32 `json:"median_holding_time,omitempty"`
+	MedianRealizedProfit1d   *float32 `json:"median_realized_profit_1d,omitempty"`
 	MedianRealizedProfit30d  *float32 `json:"median_realized_profit_30d,omitempty"`
 	MedianRealizedProfit7d   *float32 `json:"median_realized_profit_7d,omitempty"`
+	MedianRealizedProfitAll  *float32 `json:"median_realized_profit_all,omitempty"`
 	MedianSellCountPerToken  *float32 `json:"median_sell_count_per_token,omitempty"`
 	MmScore                  *int     `json:"mm_score,omitempty"`
 	Name                     *string  `json:"name,omitempty"`
+	NetProfit1d              *float32 `json:"net_profit_1d,omitempty"`
 	NetProfit30d             *float32 `json:"net_profit_30d,omitempty"`
 
 	// NetProfit7d Net-of-costs figures — see trader.Trader for the definitions.
 	NetProfit7d   *float32 `json:"net_profit_7d,omitempty"`
+	NetProfitAll  *float32 `json:"net_profit_all,omitempty"`
 	OldestTradeAt *int     `json:"oldest_trade_at,omitempty"`
 
 	// Periods Periods is one row per canonical UTC-aligned window (1d, 7d, 30d,
@@ -2979,28 +3131,48 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// expressed in lamports per day on the wire (matches CA's BIGINT
 	// storage and the FormattedSol contract elsewhere). Nil when the
 	// snapshot wasn't inlined.
-	PnlSparkline7d       *[]float32 `json:"pnl_sparkline_7d,omitempty"`
-	ProfitPerTrade       *float32   `json:"profit_per_trade,omitempty"`
-	RealizedProfit       *float32   `json:"realized_profit,omitempty"`
-	RealizedProfit30d    *float32   `json:"realized_profit_30d,omitempty"`
-	RealizedProfit7d     *float32   `json:"realized_profit_7d,omitempty"`
-	RealizedProfitPnl30d *float32   `json:"realized_profit_pnl_30d,omitempty"`
-	RealizedProfitPnl7d  *float32   `json:"realized_profit_pnl_7d,omitempty"`
-	RebalancingRatio     *float32   `json:"rebalancing_ratio,omitempty"`
-	RiskLevel            *string    `json:"risk_level,omitempty"`
-	RiskScore            *int       `json:"risk_score,omitempty"`
-	Sell30d              *int       `json:"sell_30d,omitempty"`
-	Sell7d               *int       `json:"sell_7d,omitempty"`
-	SolBalance           *float32   `json:"sol_balance,omitempty"`
-	SoldGtBoughtSells30d *int       `json:"sold_gt_bought_sells_30d,omitempty"`
-	SoldGtBoughtSells7d  *int       `json:"sold_gt_bought_sells_7d,omitempty"`
-	SpamRate30d          *float32   `json:"spam_rate_30d,omitempty"`
-	SpamRate7d           *float32   `json:"spam_rate_7d,omitempty"`
-	SuccessRate30d       *float32   `json:"success_rate_30d,omitempty"`
-	SuccessRate7d        *float32   `json:"success_rate_7d,omitempty"`
-	Tags                 *[]string  `json:"tags,omitempty"`
-	TokenNum30d          *int       `json:"token_num_30d,omitempty"`
-	TokenNum7d           *int       `json:"token_num_7d,omitempty"`
+	PnlSparkline7d *[]float32 `json:"pnl_sparkline_7d,omitempty"`
+	ProfitPerTrade *float32   `json:"profit_per_trade,omitempty"`
+	RealizedProfit *float32   `json:"realized_profit,omitempty"`
+
+	// RealizedProfit1d 1-day window. Same measures and derivations as the 7d/30d blocks,
+	// hydrated per page instead of read off the leaderboard — DISPLAY-only,
+	// so neither `sort` nor an `f=` clause can address these.
+	RealizedProfit1d     *float32 `json:"realized_profit_1d,omitempty"`
+	RealizedProfit30d    *float32 `json:"realized_profit_30d,omitempty"`
+	RealizedProfit7d     *float32 `json:"realized_profit_7d,omitempty"`
+	RealizedProfitPnl30d *float32 `json:"realized_profit_pnl_30d,omitempty"`
+	RealizedProfitPnl7d  *float32 `json:"realized_profit_pnl_7d,omitempty"`
+	RebalancingRatio     *float32 `json:"rebalancing_ratio,omitempty"`
+	RiskLevel            *string  `json:"risk_level,omitempty"`
+	RiskScore            *int     `json:"risk_score,omitempty"`
+	Roi1d                *float32 `json:"roi_1d,omitempty"`
+
+	// RoiAll Lifetime window, also DISPLAY-only; the gross figure is
+	// RealizedProfit. No lifetime failure record is served: the failed-tx
+	// planes are TTL-bounded to three months while the landed side is not,
+	// so a lifetime success or spam rate would be structurally flattering.
+	RoiAll               *float32  `json:"roi_all,omitempty"`
+	Sell1d               *int      `json:"sell_1d,omitempty"`
+	Sell30d              *int      `json:"sell_30d,omitempty"`
+	Sell7d               *int      `json:"sell_7d,omitempty"`
+	SellAll              *int      `json:"sell_all,omitempty"`
+	SolBalance           *float32  `json:"sol_balance,omitempty"`
+	SoldGtBoughtSells1d  *int      `json:"sold_gt_bought_sells_1d,omitempty"`
+	SoldGtBoughtSells30d *int      `json:"sold_gt_bought_sells_30d,omitempty"`
+	SoldGtBoughtSells7d  *int      `json:"sold_gt_bought_sells_7d,omitempty"`
+	SoldGtBoughtSellsAll *int      `json:"sold_gt_bought_sells_all,omitempty"`
+	SpamRate1d           *float32  `json:"spam_rate_1d,omitempty"`
+	SpamRate30d          *float32  `json:"spam_rate_30d,omitempty"`
+	SpamRate7d           *float32  `json:"spam_rate_7d,omitempty"`
+	SuccessRate1d        *float32  `json:"success_rate_1d,omitempty"`
+	SuccessRate30d       *float32  `json:"success_rate_30d,omitempty"`
+	SuccessRate7d        *float32  `json:"success_rate_7d,omitempty"`
+	Tags                 *[]string `json:"tags,omitempty"`
+	TokenNum1d           *int      `json:"token_num_1d,omitempty"`
+	TokenNum30d          *int      `json:"token_num_30d,omitempty"`
+	TokenNum7d           *int      `json:"token_num_7d,omitempty"`
+	TokenNumAll          *int      `json:"token_num_all,omitempty"`
 
 	// TokensCreated TokensCreated / TokensGraduated are the wallet's lifetime
 	// creator-token counts (distinct mints created, and the subset that
@@ -3008,8 +3180,10 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// wasn't inlined. Mirror the creator_tokens_* leaderboard filters.
 	TokensCreated          *int     `json:"tokens_created,omitempty"`
 	TokensGraduated        *int     `json:"tokens_graduated,omitempty"`
+	TotalCosts1d           *float32 `json:"total_costs_1d,omitempty"`
 	TotalCosts30d          *float32 `json:"total_costs_30d,omitempty"`
 	TotalCosts7d           *float32 `json:"total_costs_7d,omitempty"`
+	TotalCostsAll          *float32 `json:"total_costs_all,omitempty"`
 	TotalProfit            *float32 `json:"total_profit,omitempty"`
 	TotalProfit30d         *float32 `json:"total_profit_30d,omitempty"`
 	TotalProfit7d          *float32 `json:"total_profit_7d,omitempty"`
@@ -3027,8 +3201,10 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	UnrealizedProfitPnl7d  *float32 `json:"unrealized_profit_pnl_7d,omitempty"`
 	UpdatedAt              *string  `json:"updated_at,omitempty"`
 	WalletAddress          *string  `json:"wallet_address,omitempty"`
+	Winrate1d              *float32 `json:"winrate_1d,omitempty"`
 	Winrate30d             *float32 `json:"winrate_30d,omitempty"`
 	Winrate7d              *float32 `json:"winrate_7d,omitempty"`
+	WinrateAll             *float32 `json:"winrate_all,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesTraderTraderListResult defines model for pulsight_internal_core_usecases_trader.TraderListResult.
@@ -3104,6 +3280,15 @@ type GetCashbackSummaryParams struct {
 type GetMeCreditsLedgerParams struct {
 	// Limit Max entries to return (default 50, max 200)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Entries to skip (default 0)
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// From Window start, inclusive (RFC3339)
+	From *string `form:"from,omitempty" json:"from,omitempty"`
+
+	// To Window end, exclusive (RFC3339)
+	To *string `form:"to,omitempty" json:"to,omitempty"`
 }
 
 // GetMintsParams defines parameters for GetMints.
@@ -3419,6 +3604,9 @@ type GetTradersParams struct {
 
 	// FavoritesOnly Restrict to the caller's favorited traders (authenticated only)
 	FavoritesOnly *bool `form:"favorites_only,omitempty" json:"favorites_only,omitempty"`
+
+	// ExtraWindows Comma list of DISPLAY-only window families to hydrate: 1d, all. Costs one extra query per page; sorting and f= filters are unaffected (they read 7d/30d board columns).
+	ExtraWindows *string `form:"extra_windows,omitempty" json:"extra_windows,omitempty"`
 }
 
 // GetTradersSearchParams defines parameters for GetTradersSearch.
@@ -3601,9 +3789,6 @@ type PutTraderFiltersByIdJSONRequestBody = PulsightInternalCorePortsInputFilterU
 // PostTradersCopyabilityJSONRequestBody defines body for PostTradersCopyability for application/json ContentType.
 type PostTradersCopyabilityJSONRequestBody = InternalAdaptersPrimaryHttpHandlerCopyabilityRequest
 
-// PostTradersExportJSONRequestBody defines body for PostTradersExport for application/json ContentType.
-type PostTradersExportJSONRequestBody = InternalAdaptersPrimaryHttpHandlerTraderExportRequest
-
 // PostWebhookNotifiersJSONRequestBody defines body for PostWebhookNotifiers for application/json ContentType.
 type PostWebhookNotifiersJSONRequestBody = InternalAdaptersPrimaryHttpHandlerWebhookNotifierCreateRequest
 
@@ -3776,7 +3961,7 @@ type ClientInterface interface {
 
 	// GetMeCreditsLedger Get My Credit Ledger
 	//
-	// Returns the caller's recent credit ledger entries (grants, consumes, refunds), newest first.
+	// Returns one page of the caller's credit ledger entries (grants, consumes, refunds), newest first, alongside the total the request matches. `from` and `to` are RFC3339 and bound a half-open [from, to) window; either may be omitted to leave that side unbounded, and `total` counts the window rather than the whole ledger.
 	//
 	// Corresponds with GET /api/me/credits/ledger (the `GetMeCreditsLedger` operationId).
 	GetMeCreditsLedger(ctx context.Context, params *GetMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4174,7 +4359,7 @@ type ClientInterface interface {
 
 	// PostTradersCopyabilityWithBody Copyability of a wallet set at simulated latencies
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -4183,30 +4368,12 @@ type ClientInterface interface {
 
 	// PostTradersCopyability Copyability of a wallet set at simulated latencies
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 	//
 	// Takes a body of the `application/json` content type.
 	//
 	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
 	PostTradersCopyability(ctx context.Context, body PostTradersCopyabilityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostTradersExportWithBody Export Traders
-	//
-	// Exports trader records based on advanced filters.
-	//
-	// Takes any type of body and a specified content type.
-	//
-	// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-	PostTradersExportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostTradersExport Export Traders
-	//
-	// Exports trader records based on advanced filters.
-	//
-	// Takes a body of the `application/json` content type.
-	//
-	// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-	PostTradersExport(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTradersSearch Search Traders
 	//
@@ -4580,7 +4747,7 @@ func (c *Client) GetMeCredits(ctx context.Context, reqEditors ...RequestEditorFn
 
 // GetMeCreditsLedger Get My Credit Ledger
 //
-// Returns the caller's recent credit ledger entries (grants, consumes, refunds), newest first.
+// Returns one page of the caller's credit ledger entries (grants, consumes, refunds), newest first, alongside the total the request matches. `from` and `to` are RFC3339 and bound a half-open [from, to) window; either may be omitted to leave that side unbounded, and `total` counts the window rather than the whole ledger.
 //
 // Corresponds with GET /api/me/credits/ledger (the `GetMeCreditsLedger` operationId).
 func (c *Client) GetMeCreditsLedger(ctx context.Context, params *GetMeCreditsLedgerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5558,7 +5725,7 @@ func (c *Client) GetTradersByWalletByWalletAddress(ctx context.Context, walletAd
 
 // PostTradersCopyabilityWithBody Copyability of a wallet set at simulated latencies
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 //
 // Takes any type of body and a specified content type.
 //
@@ -5577,51 +5744,13 @@ func (c *Client) PostTradersCopyabilityWithBody(ctx context.Context, contentType
 
 // PostTradersCopyability Copyability of a wallet set at simulated latencies
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 //
 // Takes a body of the `application/json` content type.
 //
 // Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
 func (c *Client) PostTradersCopyability(ctx context.Context, body PostTradersCopyabilityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostTradersCopyabilityRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// PostTradersExportWithBody Export Traders
-//
-// Exports trader records based on advanced filters.
-//
-// Takes any type of body and a specified content type.
-//
-// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-func (c *Client) PostTradersExportWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTradersExportRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// PostTradersExport Export Traders
-//
-// Exports trader records based on advanced filters.
-//
-// Takes a body of the `application/json` content type.
-//
-// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-func (c *Client) PostTradersExport(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTradersExportRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -6578,6 +6707,42 @@ func NewGetMeCreditsLedgerRequest(server string, params *GetMeCreditsLedgerParam
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -9427,6 +9592,18 @@ func NewGetTradersRequest(server string, params *GetTradersParams) (*http.Reques
 
 		}
 
+		if params.ExtraWindows != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "extra_windows", *params.ExtraWindows, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if encoded := queryValues.Encode(); encoded != "" {
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
@@ -9530,46 +9707,6 @@ func NewPostTradersCopyabilityRequestWithBody(server string, contentType string,
 	}
 
 	operationPath := fmt.Sprintf("/api/traders/copyability")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostTradersExportRequest calls the generic PostTradersExport builder with application/json body
-func NewPostTradersExportRequest(server string, body PostTradersExportJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostTradersExportRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostTradersExportRequestWithBody constructs an http.Request for the PostTradersExport method, with any body, and a specified content type
-func NewPostTradersExportRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/traders/export")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11003,7 +11140,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMeCreditsLedgerWithResponse Get My Credit Ledger
 	//
-	// Returns the caller's recent credit ledger entries (grants, consumes, refunds), newest first.
+	// Returns one page of the caller's credit ledger entries (grants, consumes, refunds), newest first, alongside the total the request matches. `from` and `to` are RFC3339 and bound a half-open [from, to) window; either may be omitted to leave that side unbounded, and `total` counts the window rather than the whole ledger.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11485,7 +11622,7 @@ type ClientWithResponsesInterface interface {
 
 	// PostTradersCopyabilityWithBodyWithResponse Copyability of a wallet set at simulated latencies
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -11494,30 +11631,12 @@ type ClientWithResponsesInterface interface {
 
 	// PostTradersCopyabilityWithResponse Copyability of a wallet set at simulated latencies
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
 	PostTradersCopyabilityWithResponse(ctx context.Context, body PostTradersCopyabilityJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTradersCopyabilityResponse, error)
-
-	// PostTradersExportWithBodyWithResponse Export Traders
-	//
-	// Exports trader records based on advanced filters.
-	//
-	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-	PostTradersExportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error)
-
-	// PostTradersExportWithResponse Export Traders
-	//
-	// Exports trader records based on advanced filters.
-	//
-	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-	PostTradersExportWithResponse(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error)
 
 	// GetTradersSearchWithResponse Search Traders
 	//
@@ -12273,7 +12392,9 @@ type GetMeCreditsLedgerResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]PulsightInternalCoreDomainCreditTransaction
+	JSON200 *InternalAdaptersPrimaryHttpHandlerPaginatedCreditLedger
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON401 the response for an HTTP 401 `application/json` response
 	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON500 the response for an HTTP 500 `application/json` response
@@ -12281,8 +12402,13 @@ type GetMeCreditsLedgerResponse struct {
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetMeCreditsLedgerResponse) GetJSON200() *[]PulsightInternalCoreDomainCreditTransaction {
+func (r GetMeCreditsLedgerResponse) GetJSON200() *InternalAdaptersPrimaryHttpHandlerPaginatedCreditLedger {
 	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetMeCreditsLedgerResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
 }
 
 // GetJSON401 returns the response for an HTTP 401 `application/json` response
@@ -15151,75 +15277,6 @@ func (r PostTradersCopyabilityResponse) ContentType() string {
 	return ""
 }
 
-type PostTradersExportResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]PulsightInternalCoreDomainTraderTrader
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON401 the response for an HTTP 401 `application/json` response
-	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON402 the response for an HTTP 402 `application/json` response
-	JSON402 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON500 the response for an HTTP 500 `application/json` response
-	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r PostTradersExportResponse) GetJSON200() *[]PulsightInternalCoreDomainTraderTrader {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r PostTradersExportResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetJSON401 returns the response for an HTTP 401 `application/json` response
-func (r PostTradersExportResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON401
-}
-
-// GetJSON402 returns the response for an HTTP 402 `application/json` response
-func (r PostTradersExportResponse) GetJSON402() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON402
-}
-
-// GetJSON500 returns the response for an HTTP 500 `application/json` response
-func (r PostTradersExportResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON500
-}
-
-// GetBody returns the raw response body bytes
-func (r PostTradersExportResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r PostTradersExportResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostTradersExportResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostTradersExportResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 type GetTradersSearchResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -16489,7 +16546,7 @@ func (c *ClientWithResponses) GetMeCreditsWithResponse(ctx context.Context, reqE
 
 // GetMeCreditsLedgerWithResponse Get My Credit Ledger
 //
-// Returns the caller's recent credit ledger entries (grants, consumes, refunds), newest first.
+// Returns one page of the caller's credit ledger entries (grants, consumes, refunds), newest first, alongside the total the request matches. `from` and `to` are RFC3339 and bound a half-open [from, to) window; either may be omitted to leave that side unbounded, and `total` counts the window rather than the whole ledger.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17319,7 +17376,7 @@ func (c *ClientWithResponses) GetTradersByWalletByWalletAddressWithResponse(ctx 
 
 // PostTradersCopyabilityWithBodyWithResponse Copyability of a wallet set at simulated latencies
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -17334,7 +17391,7 @@ func (c *ClientWithResponses) PostTradersCopyabilityWithBodyWithResponse(ctx con
 
 // PostTradersCopyabilityWithResponse Copyability of a wallet set at simulated latencies
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -17345,36 +17402,6 @@ func (c *ClientWithResponses) PostTradersCopyabilityWithResponse(ctx context.Con
 		return nil, err
 	}
 	return ParsePostTradersCopyabilityResponse(rsp)
-}
-
-// PostTradersExportWithBodyWithResponse Export Traders
-//
-// Exports trader records based on advanced filters.
-//
-// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-func (c *ClientWithResponses) PostTradersExportWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error) {
-	rsp, err := c.PostTradersExportWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTradersExportResponse(rsp)
-}
-
-// PostTradersExportWithResponse Export Traders
-//
-// Exports trader records based on advanced filters.
-//
-// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/traders/export (the `PostTradersExport` operationId).
-func (c *ClientWithResponses) PostTradersExportWithResponse(ctx context.Context, body PostTradersExportJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTradersExportResponse, error) {
-	rsp, err := c.PostTradersExport(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTradersExportResponse(rsp)
 }
 
 // GetTradersSearchWithResponse Search Traders
@@ -18084,11 +18111,18 @@ func ParseGetMeCreditsLedgerResponse(rsp *http.Response) (*GetMeCreditsLedgerRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []PulsightInternalCoreDomainCreditTransaction
+		var dest InternalAdaptersPrimaryHttpHandlerPaginatedCreditLedger
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
@@ -20180,75 +20214,6 @@ func ParsePostTradersCopyabilityResponse(rsp *http.Response) (*PostTradersCopyab
 			return nil, err
 		}
 		response.JSON400 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostTradersExportResponse parses an HTTP response from a PostTradersExportWithResponse call
-func ParsePostTradersExportResponse(rsp *http.Response) (*PostTradersExportResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostTradersExportResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []PulsightInternalCoreDomainTraderTrader
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 402:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON402 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	case rsp.StatusCode == 200:
-	// Content-type (text/csv) unsupported
-
-	case rsp.StatusCode == 400:
-	// Content-type (text/csv) unsupported
-
-	case rsp.StatusCode == 401:
-	// Content-type (text/csv) unsupported
-
-	case rsp.StatusCode == 402:
-	// Content-type (text/csv) unsupported
-
-	case rsp.StatusCode == 500:
-		// Content-type (text/csv) unsupported
 
 	}
 
