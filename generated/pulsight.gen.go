@@ -499,11 +499,8 @@ type InternalAdaptersPrimaryHttpHandlerCopyabilityRequest struct {
 	// seconds, and the per-leg ledger stores it unchanged.
 	FromTs *int `json:"from_ts,omitempty"`
 
-	// SizeLamports OPTIONAL copier trade size in lamports. Supplying it attaches the
-	// execution half — what slippage band each fill needed, and what each
-	// widening step buys. Optional because a band is a threshold for a
-	// concrete size against a concrete depth, while the price-transfer curve
-	// above is deliberately unit-free; both come from one read either way.
+	// SizeLamports Size of each mirrored buy in lamports; 1e9 (1 SOL) when omitted. Every
+	// return in the report is on the capital this size deploys.
 	SizeLamports *int      `json:"size_lamports,omitempty"`
 	ToTs         *int      `json:"to_ts,omitempty"`
 	Wallets      *[]string `json:"wallets,omitempty"`
@@ -516,8 +513,8 @@ type InternalAdaptersPrimaryHttpHandlerCopyabilityResponse struct {
 	FromTs      *int                                                 `json:"from_ts,omitempty"`
 	Reports     *[]PulsightInternalCoreDomainTraderCopyabilityReport `json:"reports,omitempty"`
 
-	// SizeLamports Echoed only when a size was supplied, alongside the band ladder the
-	// execution half was evaluated on.
+	// SizeLamports The mirrored buy size the reports were replayed at, and the slippage
+	// ladder their execution profile was evaluated on.
 	SizeLamports *int `json:"size_lamports,omitempty"`
 	ToTs         *int `json:"to_ts,omitempty"`
 }
@@ -2150,19 +2147,19 @@ type PulsightInternalCoreDomainTraderCopyBandPoint struct {
 	FillRatePct *float32 `json:"fill_rate_pct,omitempty"`
 	Filled      *int     `json:"filled,omitempty"`
 
-	// MarginalFills Fills this rung adds over the previous (tighter) rung, and what they are
-	// worth priced at the target's own realised exit. This is the number the
-	// band decision turns on: a rung that adds fills at a negative return is
-	// buying losses, however much it improves the fill rate.
+	// MarginalFills Buys this rung adds over the previous, tighter one, and their mean
+	// return priced at the copier's own exit from the position. A rung that
+	// adds buys at a negative return is buying losses, whatever it does to
+	// the fill rate.
 	MarginalFills  *int     `json:"marginal_fills,omitempty"`
 	MarginalPnlPct *float32 `json:"marginal_pnl_pct,omitempty"`
 
-	// MeanEntryVsTargetBps Mean execution price of the filled trades against the target's own fill
-	// price. Positive is worse for the copier, matching copyability's sign.
+	// MeanEntryVsTargetBps Mean price the filled buys execute at against the wallet's own price
+	// for the same buy. Positive is worse for the copier.
 	MeanEntryVsTargetBps *float32 `json:"mean_entry_vs_target_bps,omitempty"`
 
-	// MeanPnlPct Expected return over everything filled at this band, same pricing.
-	// NULL when no filled trade has a priceable exit.
+	// MeanPnlPct Mean return over every buy filled at this setting, same pricing. NULL
+	// when nothing filled.
 	MeanPnlPct *float32 `json:"mean_pnl_pct,omitempty"`
 }
 
@@ -2180,28 +2177,38 @@ type PulsightInternalCoreDomainTraderCopyBandQuantiles struct {
 type PulsightInternalCoreDomainTraderCopyDelayPoint struct {
 	DelaySlots *int `json:"delay_slots,omitempty"`
 
-	// EdgeRetainedPct Share of the target's edge left after paying the round-trip cost.
-	// NULL when the target's edge is not positive: you cannot "retain" a
-	// share of an edge that is not there, and reporting 0% would read as
-	// "latency destroyed it" when latency was never the problem.
-	EdgeRetainedPct *float32 `json:"edge_retained_pct,omitempty"`
+	// DeployedLamports The copier's outcome at the requested size: one order of size_lamports
+	// mirrored on each of the wallet's buys, every sell mirrored in proportion,
+	// unsold tokens valued at the pool's last price in the window.
+	DeployedLamports *int `json:"deployed_lamports,omitempty"`
 
-	// EntrySlippageBps Positive is ALWAYS worse for the copier, on both sides: a buy filled
-	// higher than the target's, a sell filled lower.
-	EntrySlippageBps *float32 `json:"entry_slippage_bps,omitempty"`
+	// EntryCostBps What copying costs, in order: buying after the wallet at the copier's
+	// size, selling after it, and transaction fees plus tips on every
+	// mirrored transaction.
+	EntryCostBps *float32 `json:"entry_cost_bps,omitempty"`
 
-	// Execution Present only when the caller supplied a trade size: what band this
-	// latency needs and what each widening step buys. See copyexecution.go.
+	// EntrySlippageBps Price drift alone, independent of size: the pool's worst price in the
+	// landing block against the price the wallet's own trade left, averaged
+	// over positions. Positive is always worse for the copier.
+	EntrySlippageBps *float32                                              `json:"entry_slippage_bps,omitempty"`
 	Execution        *PulsightInternalCoreDomainTraderCopyExecutionAtDelay `json:"execution,omitempty"`
+	ExitCostBps      *float32                                              `json:"exit_cost_bps,omitempty"`
 	ExitSlippageBps  *float32                                              `json:"exit_slippage_bps,omitempty"`
+	FeesBps          *float32                                              `json:"fees_bps,omitempty"`
 	MeasuredFills    *int                                                  `json:"measured_fills,omitempty"`
-	RoundTripCostBps *float32                                              `json:"round_trip_cost_bps,omitempty"`
+	PnlLamports      *int                                                  `json:"pnl_lamports,omitempty"`
 
-	// TargetEdgeBps The target's own gross round-trip return over the same fills, so the
-	// comparison below is self-consistent — one price source, one window.
-	TargetEdgeBps *float32 `json:"target_edge_bps,omitempty"`
+	// Positions Positions the replay could price at this latency, and how they ended
+	// for the copier after fees.
+	Positions     *int     `json:"positions,omitempty"`
+	PositionsLost *int     `json:"positions_lost,omitempty"`
+	PositionsWon  *int     `json:"positions_won,omitempty"`
+	ReturnBps     *float32 `json:"return_bps,omitempty"`
 
-	// UnmeasurableFills Fills with no trade to copy into at this latency.
+	// TargetReturnBps What the wallet itself made on the same positions, at its own fills.
+	TargetReturnBps *float32 `json:"target_return_bps,omitempty"`
+
+	// UnmeasurableFills Swap legs with and without a pool state to execute into.
 	UnmeasurableFills *int `json:"unmeasurable_fills,omitempty"`
 }
 
@@ -2209,15 +2216,15 @@ type PulsightInternalCoreDomainTraderCopyDelayPoint struct {
 type PulsightInternalCoreDomainTraderCopyExecutionAtDelay struct {
 	Bands *[]PulsightInternalCoreDomainTraderCopyBandPoint `json:"bands,omitempty"`
 
-	// InBlockMoveBps Where the adverse move comes from. `InBlockSharePct` is the share of the
-	// total move that had already happened by the end of the target's OWN
-	// block — i.e. from the copy wave the target's trade set off, not from
-	// latency. Only populated when the ladder includes slot 0.
+	// InBlockMoveBps Where the adverse entry move comes from: the share that had already
+	// happened by the end of the wallet's own block, before any latency of
+	// the copier's. Populated only when the ladder includes block 0.
 	InBlockMoveBps  *float32 `json:"in_block_move_bps,omitempty"`
 	InBlockSharePct *float32 `json:"in_block_share_pct,omitempty"`
 	MeasuredFills   *int     `json:"measured_fills,omitempty"`
 
-	// Required Required band, split because the population is bimodal.
+	// Required Slippage needed, split because the first buy on a token is contested
+	// and later buys rarely are.
 	Required          *PulsightInternalCoreDomainTraderCopyBandQuantiles `json:"required,omitempty"`
 	RequiredFollowOn  *PulsightInternalCoreDomainTraderCopyBandQuantiles `json:"required_follow_on,omitempty"`
 	RequiredSignalBuy *PulsightInternalCoreDomainTraderCopyBandQuantiles `json:"required_signal_buy,omitempty"`
@@ -2227,12 +2234,8 @@ type PulsightInternalCoreDomainTraderCopyExecutionAtDelay struct {
 
 // PulsightInternalCoreDomainTraderCopyExecutionSummary defines model for pulsight_internal_core_domain_trader.CopyExecutionSummary.
 type PulsightInternalCoreDomainTraderCopyExecutionSummary struct {
-	ExitsUnpriced *int `json:"exits_unpriced,omitempty"`
-	Fills         *int `json:"fills,omitempty"`
-	FollowOns     *int `json:"follow_ons,omitempty"`
-
-	// MedianPoolQuoteLamports Context that explains the numbers: how deep the pools are when this
-	// wallet buys, and how hard its own buy hits them.
+	Fills                   *int     `json:"fills,omitempty"`
+	FollowOns               *int     `json:"follow_ons,omitempty"`
 	MedianPoolQuoteLamports *int     `json:"median_pool_quote_lamports,omitempty"`
 	MedianTargetImpactBps   *float32 `json:"median_target_impact_bps,omitempty"`
 	SignalBuys              *int     `json:"signal_buys,omitempty"`
@@ -2241,16 +2244,35 @@ type PulsightInternalCoreDomainTraderCopyExecutionSummary struct {
 
 // PulsightInternalCoreDomainTraderCopyabilityReport defines model for pulsight_internal_core_domain_trader.CopyabilityReport.
 type PulsightInternalCoreDomainTraderCopyabilityReport struct {
-	// Delays Never nil on the wire: an empty curve is [], not null.
-	Delays *[]PulsightInternalCoreDomainTraderCopyDelayPoint `json:"delays,omitempty"`
-
-	// ExecutionSummary Present only when the caller supplied a trade size.
+	// Delays Never nil on the wire: an empty ladder is [], not null.
+	Delays           *[]PulsightInternalCoreDomainTraderCopyDelayPoint     `json:"delays,omitempty"`
 	ExecutionSummary *PulsightInternalCoreDomainTraderCopyExecutionSummary `json:"execution_summary,omitempty"`
 
-	// RoundTripMints Positions (mints) that had BOTH a buy and a sell in the window — the
-	// only ones a round-trip cost can be measured on.
-	RoundTripMints *int    `json:"round_trip_mints,omitempty"`
-	Wallet         *string `json:"wallet,omitempty"`
+	// FeePerTxLamports The wallet's median transaction fee plus tip, lamports, charged to the
+	// copier on every mirrored transaction.
+	FeePerTxLamports *int `json:"fee_per_tx_lamports,omitempty"`
+
+	// Positions Positions the wallet opened in the window that the replay sampled: the
+	// most recent ones, bounded per wallet.
+	Positions *int `json:"positions,omitempty"`
+
+	// PositionsClosed Positions the wallet had sold in full by the end of the window; the
+	// rest are valued at the last price seen.
+	PositionsClosed *int `json:"positions_closed,omitempty"`
+
+	// RoundTripMints Positions with at least one sell in the window.
+	RoundTripMints *int `json:"round_trip_mints,omitempty"`
+
+	// SampleFromTs Earliest position open in the sample, Unix seconds; 0 when nothing was
+	// sampled.
+	SampleFromTs *int `json:"sample_from_ts,omitempty"`
+
+	// SizeLamports Size of each mirrored buy, lamports.
+	SizeLamports *int `json:"size_lamports,omitempty"`
+
+	// TxsPerPosition Mean number of transactions, buys plus sells, per sampled position.
+	TxsPerPosition *float32 `json:"txs_per_position,omitempty"`
+	Wallet         *string  `json:"wallet,omitempty"`
 }
 
 // PulsightInternalCoreDomainTraderDailyProfit defines model for pulsight_internal_core_domain_trader.DailyProfit.
@@ -4438,18 +4460,18 @@ type ClientInterface interface {
 	// Corresponds with GET /api/traders/by-wallet/{walletAddress} (the `GetTradersByWalletByWalletAddress` operationId).
 	GetTradersByWalletByWalletAddress(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostTradersCopyabilityWithBody Copyability of a wallet set at simulated latencies
+	// PostTradersCopyabilityWithBody What copying a wallet set would have returned, by landing latency
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 	//
 	// Takes any type of body and a specified content type.
 	//
 	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
 	PostTradersCopyabilityWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostTradersCopyability Copyability of a wallet set at simulated latencies
+	// PostTradersCopyability What copying a wallet set would have returned, by landing latency
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -5804,9 +5826,9 @@ func (c *Client) GetTradersByWalletByWalletAddress(ctx context.Context, walletAd
 	return c.Client.Do(req)
 }
 
-// PostTradersCopyabilityWithBody Copyability of a wallet set at simulated latencies
+// PostTradersCopyabilityWithBody What copying a wallet set would have returned, by landing latency
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 //
 // Takes any type of body and a specified content type.
 //
@@ -5823,9 +5845,9 @@ func (c *Client) PostTradersCopyabilityWithBody(ctx context.Context, contentType
 	return c.Client.Do(req)
 }
 
-// PostTradersCopyability Copyability of a wallet set at simulated latencies
+// PostTradersCopyability What copying a wallet set would have returned, by landing latency
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -11701,18 +11723,18 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/traders/by-wallet/{walletAddress} (the `GetTradersByWalletByWalletAddress` operationId).
 	GetTradersByWalletByWalletAddressWithResponse(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*GetTradersByWalletByWalletAddressResponse, error)
 
-	// PostTradersCopyabilityWithBodyWithResponse Copyability of a wallet set at simulated latencies
+	// PostTradersCopyabilityWithBodyWithResponse What copying a wallet set would have returned, by landing latency
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
 	PostTradersCopyabilityWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTradersCopyabilityResponse, error)
 
-	// PostTradersCopyabilityWithResponse Copyability of a wallet set at simulated latencies
+	// PostTradersCopyabilityWithResponse What copying a wallet set would have returned, by landing latency
 	//
-	// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -17455,9 +17477,9 @@ func (c *ClientWithResponses) GetTradersByWalletByWalletAddressWithResponse(ctx 
 	return ParseGetTradersByWalletByWalletAddressResponse(rsp)
 }
 
-// PostTradersCopyabilityWithBodyWithResponse Copyability of a wallet set at simulated latencies
+// PostTradersCopyabilityWithBodyWithResponse What copying a wallet set would have returned, by landing latency
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -17470,9 +17492,9 @@ func (c *ClientWithResponses) PostTradersCopyabilityWithBodyWithResponse(ctx con
 	return ParsePostTradersCopyabilityResponse(rsp)
 }
 
-// PostTradersCopyabilityWithResponse Copyability of a wallet set at simulated latencies
+// PostTradersCopyabilityWithResponse What copying a wallet set would have returned, by landing latency
 //
-// For each wallet's fills, the price a copier filling N blocks later would have got — an entry/exit slippage curve and the share of the wallet's edge that survives. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS. Latency is counted in SLOTS, since the stored swap timestamp resolves only to whole seconds. Measures PRICE TRANSFER, not PnL. Supply size_lamports to also get the EXECUTION half: the slippage band each fill needed (split signal-buy vs follow-on) and what each widening step buys, priced at the target's own exit.
+// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
