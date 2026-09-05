@@ -1431,6 +1431,7 @@ type PulsightInternalCoreDomainAggregatorMintTraderRow struct {
 	// as TraderTokenPosition.ArbTxCount: shown alongside buy/sell, never
 	// subtracted, so lopsided counts on arbitrage wallets are legible.
 	ArbTxCount        *int    `json:"arb_tx_count,omitempty"`
+	BundleSlot        *int    `json:"bundle_slot,omitempty"`
 	BuyTxCount        *int    `json:"buy_tx_count,omitempty"`
 	CostBasisLamports *string `json:"cost_basis_lamports,omitempty"`
 
@@ -1448,9 +1449,14 @@ type PulsightInternalCoreDomainAggregatorMintTraderRow struct {
 	DirectionalSellTxCount *int    `json:"directional_sell_tx_count,omitempty"`
 	FirstBuyTs             *string `json:"first_buy_ts,omitempty"`
 	HoldingPnlLamports     *int    `json:"holding_pnl_lamports,omitempty"`
-	IsBundler              *bool   `json:"is_bundler,omitempty"`
-	IsInsider              *bool   `json:"is_insider,omitempty"`
-	IsSniper               *bool   `json:"is_sniper,omitempty"`
+
+	// InitialPctOfSupply InitialPctOfSupply is a bundler's net launch acquisition as % of total
+	// supply, and BundleSlot the first bundle slot it bought in. Both are set
+	// only on the bundlers path.
+	InitialPctOfSupply *float32 `json:"initial_pct_of_supply,omitempty"`
+	IsBundler          *bool    `json:"is_bundler,omitempty"`
+	IsInsider          *bool    `json:"is_insider,omitempty"`
+	IsSniper           *bool    `json:"is_sniper,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/...) from the
 	// admin-managed registry; empty when unknown.
@@ -1459,9 +1465,9 @@ type PulsightInternalCoreDomainAggregatorMintTraderRow struct {
 	LastActiveTs *string `json:"last_active_ts,omitempty"`
 
 	// PctOfSupply PctOfSupply is the holder's % of circulating supply, set on the
-	// top-holders path (now sourced from on-chain holder_balances). nil on the
-	// top-traders path. IsSniper/IsBundler/IsInsider flag cohort membership
-	// (bundler/insider populate in phase 2 — always false until then).
+	// top-holders and cohort paths (sourced from on-chain holder_balances).
+	// nil on the top-traders path. IsSniper/IsBundler/IsInsider flag cohort
+	// membership on every per-mint trader list.
 	PctOfSupply    *float32 `json:"pct_of_supply,omitempty"`
 	RealizedProfit *int     `json:"realized_profit,omitempty"`
 	SellTxCount    *int     `json:"sell_tx_count,omitempty"`
@@ -3450,6 +3456,30 @@ type GetMintsByPubkeyActivityParams struct {
 	To int `form:"to" json:"to"`
 }
 
+// GetMintsByPubkeyBundlersParams defines parameters for GetMintsByPubkeyBundlers.
+type GetMintsByPubkeyBundlersParams struct {
+	// Sort Sort key (balance|holding_pnl|pnl|volume|swaps|recent, default balance)
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Limit Max rows (default 50, max 500)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset (default 0)
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
+// GetMintsByPubkeyInsidersParams defines parameters for GetMintsByPubkeyInsiders.
+type GetMintsByPubkeyInsidersParams struct {
+	// Sort Sort key (balance|holding_pnl|pnl|volume|swaps|recent, default balance)
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Limit Max rows (default 50, max 500)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset (default 0)
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // GetMintsByPubkeyLpEventsParams defines parameters for GetMintsByPubkeyLpEvents.
 type GetMintsByPubkeyLpEventsParams struct {
 	// Op Filter by op (add|remove|burn)
@@ -4109,6 +4139,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
 	GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMintsByPubkeyBundlers List Mint Bundlers
+	//
+	// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/bundlers (the `GetMintsByPubkeyBundlers` operationId).
+	GetMintsByPubkeyBundlers(ctx context.Context, pubkey string, params *GetMintsByPubkeyBundlersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMintsByPubkeyInsiders List Mint Insiders
+	//
+	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
+	GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyLpEvents List Mint LP Events
 	//
@@ -4933,6 +4977,40 @@ func (c *Client) GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors
 // Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
 func (c *Client) GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetMintsByPubkeyActivityRequest(c.Server, pubkey, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMintsByPubkeyBundlers List Mint Bundlers
+//
+// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+//
+// Corresponds with GET /api/mints/{pubkey}/bundlers (the `GetMintsByPubkeyBundlers` operationId).
+func (c *Client) GetMintsByPubkeyBundlers(ctx context.Context, pubkey string, params *GetMintsByPubkeyBundlersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyBundlersRequest(c.Server, pubkey, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMintsByPubkeyInsiders List Mint Insiders
+//
+// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+//
+// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
+func (c *Client) GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyInsidersRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -7178,6 +7256,176 @@ func NewGetMintsByPubkeyActivityRequest(server string, pubkey string, params *Ge
 			for _, qp := range strings.Split(queryFrag, "&") {
 				rawQueryFragments = append(rawQueryFragments, qp)
 			}
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMintsByPubkeyBundlersRequest constructs an http.Request for the GetMintsByPubkeyBundlers method
+func NewGetMintsByPubkeyBundlersRequest(server string, pubkey string, params *GetMintsByPubkeyBundlersParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pubkey", pubkey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/mints/%s/bundlers", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMintsByPubkeyInsidersRequest constructs an http.Request for the GetMintsByPubkeyInsiders method
+func NewGetMintsByPubkeyInsidersRequest(server string, pubkey string, params *GetMintsByPubkeyInsidersParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pubkey", pubkey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/mints/%s/insiders", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
 		}
 
 		if encoded := queryValues.Encode(); encoded != "" {
@@ -11406,6 +11654,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
 	GetMintsByPubkeyActivityWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyActivityResponse, error)
 
+	// GetMintsByPubkeyBundlersWithResponse List Mint Bundlers
+	//
+	// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/bundlers (the `GetMintsByPubkeyBundlers` operationId).
+	GetMintsByPubkeyBundlersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyBundlersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyBundlersResponse, error)
+
+	// GetMintsByPubkeyInsidersWithResponse List Mint Insiders
+	//
+	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
+	GetMintsByPubkeyInsidersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyInsidersResponse, error)
+
 	// GetMintsByPubkeyLpEventsWithResponse List Mint LP Events
 	//
 	// Recent liquidity-pool add/remove/burn events for a mint (newest first), from `lp_events`. Sparse where upstream doesn't yet extract LP for a DEX; returns an empty array then.
@@ -12878,6 +13144,130 @@ func (r GetMintsByPubkeyActivityResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetMintsByPubkeyActivityResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMintsByPubkeyBundlersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]PulsightInternalCoreDomainAggregatorMintTraderRow
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMintsByPubkeyBundlersResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorMintTraderRow {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetMintsByPubkeyBundlersResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetMintsByPubkeyBundlersResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetMintsByPubkeyBundlersResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMintsByPubkeyBundlersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMintsByPubkeyBundlersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMintsByPubkeyBundlersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMintsByPubkeyBundlersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMintsByPubkeyInsidersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]PulsightInternalCoreDomainAggregatorMintTraderRow
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMintsByPubkeyInsidersResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorMintTraderRow {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetMintsByPubkeyInsidersResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetMintsByPubkeyInsidersResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetMintsByPubkeyInsidersResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMintsByPubkeyInsidersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMintsByPubkeyInsidersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMintsByPubkeyInsidersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMintsByPubkeyInsidersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -16907,6 +17297,36 @@ func (c *ClientWithResponses) GetMintsByPubkeyActivityWithResponse(ctx context.C
 	return ParseGetMintsByPubkeyActivityResponse(rsp)
 }
 
+// GetMintsByPubkeyBundlersWithResponse List Mint Bundlers
+//
+// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/mints/{pubkey}/bundlers (the `GetMintsByPubkeyBundlers` operationId).
+func (c *ClientWithResponses) GetMintsByPubkeyBundlersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyBundlersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyBundlersResponse, error) {
+	rsp, err := c.GetMintsByPubkeyBundlers(ctx, pubkey, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMintsByPubkeyBundlersResponse(rsp)
+}
+
+// GetMintsByPubkeyInsidersWithResponse List Mint Insiders
+//
+// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
+func (c *ClientWithResponses) GetMintsByPubkeyInsidersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyInsidersResponse, error) {
+	rsp, err := c.GetMintsByPubkeyInsiders(ctx, pubkey, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMintsByPubkeyInsidersResponse(rsp)
+}
+
 // GetMintsByPubkeyLpEventsWithResponse List Mint LP Events
 //
 // Recent liquidity-pool add/remove/burn events for a mint (newest first), from `lp_events`. Sparse where upstream doesn't yet extract LP for a DEX; returns an empty array then.
@@ -18596,6 +19016,100 @@ func ParseGetMintsByPubkeyActivityResponse(rsp *http.Response) (*GetMintsByPubke
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMintsByPubkeyBundlersResponse parses an HTTP response from a GetMintsByPubkeyBundlersWithResponse call
+func ParseGetMintsByPubkeyBundlersResponse(rsp *http.Response) (*GetMintsByPubkeyBundlersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMintsByPubkeyBundlersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []PulsightInternalCoreDomainAggregatorMintTraderRow
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMintsByPubkeyInsidersResponse parses an HTTP response from a GetMintsByPubkeyInsidersWithResponse call
+func ParseGetMintsByPubkeyInsidersResponse(rsp *http.Response) (*GetMintsByPubkeyInsidersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMintsByPubkeyInsidersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []PulsightInternalCoreDomainAggregatorMintTraderRow
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
