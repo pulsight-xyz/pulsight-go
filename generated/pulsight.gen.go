@@ -1163,9 +1163,15 @@ type PulsightInternalCoreDomainAggregatorMintMarket struct {
 	// of the requested window, so a listing may carry no flagged row when
 	// the default market is idle (short windows) or older than swap
 	// retention. Resolve defaults from `window=all`.
-	IsDefault         *bool    `json:"is_default,omitempty"`
-	LastSwapTs        *string  `json:"last_swap_ts,omitempty"`
-	Pool              *string  `json:"pool,omitempty"`
+	IsDefault  *bool   `json:"is_default,omitempty"`
+	LastSwapTs *string `json:"last_swap_ts,omitempty"`
+	Pool       *string `json:"pool,omitempty"`
+
+	// QuoteMint QuoteMint is the pool's quote side under CA's registry ranking (USDC >
+	// USDT > USD1 > WSOL), so a SOL/USDC pool quotes in USDC. This market's
+	// candle prices and quote volumes are denominated in it, and the live
+	// chart folds only ticks that carry the same quote.
+	QuoteMint         *string  `json:"quote_mint,omitempty"`
 	SolVolumeLamports *int     `json:"sol_volume_lamports,omitempty"`
 	SolVolumeShare    *float32 `json:"sol_volume_share,omitempty"`
 	SwapCount         *int     `json:"swap_count,omitempty"`
@@ -1386,7 +1392,9 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// is set on the list path only): UniqueTraders is exact and lifetime, so
 	// the list column and the /api/mints/:pubkey detail render the same value.
 	// Populated on BOTH paths, best-effort: nil when the trader_token_stats
-	// read is unavailable.
+	// read is unavailable. A quote-registry mint (WSOL, the USD stables) has
+	// no trader_token_stats rows, so its detail counts the distinct wallets of
+	// its last 30 days of per-leg dex_swaps instead.
 	UniqueTraders *int `json:"unique_traders,omitempty"`
 
 	// Verified Verified marks a mint on the curated verified token list (Jupiter's,
@@ -3475,6 +3483,18 @@ type GetMintsByPubkeySafetyEventsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// GetMintsByPubkeySnipersParams defines parameters for GetMintsByPubkeySnipers.
+type GetMintsByPubkeySnipersParams struct {
+	// Sort Sort key (balance|holding_pnl|pnl|volume|swaps|recent, default balance)
+	Sort *string `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// Limit Max rows (default 50, max 500)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset (default 0)
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // GetMintsByPubkeyTopHoldersParams defines parameters for GetMintsByPubkeyTopHolders.
 type GetMintsByPubkeyTopHoldersParams struct {
 	// Sort Sort key (balance|holding_pnl|recent, default balance)
@@ -4131,6 +4151,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/mints/{pubkey}/safety-events (the `GetMintsByPubkeySafetyEvents` operationId).
 	GetMintsByPubkeySafetyEvents(ctx context.Context, pubkey string, params *GetMintsByPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMintsByPubkeySnipers List Mint Snipers
+	//
+	// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/snipers (the `GetMintsByPubkeySnipers` operationId).
+	GetMintsByPubkeySnipers(ctx context.Context, pubkey string, params *GetMintsByPubkeySnipersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyStats Find Mint Stats Bundle
 	//
@@ -5008,6 +5035,23 @@ func (c *Client) GetMintsByPubkeyRiskCohorts(ctx context.Context, pubkey string,
 // Corresponds with GET /api/mints/{pubkey}/safety-events (the `GetMintsByPubkeySafetyEvents` operationId).
 func (c *Client) GetMintsByPubkeySafetyEvents(ctx context.Context, pubkey string, params *GetMintsByPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetMintsByPubkeySafetyEventsRequest(c.Server, pubkey, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMintsByPubkeySnipers List Mint Snipers
+//
+// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+//
+// Corresponds with GET /api/mints/{pubkey}/snipers (the `GetMintsByPubkeySnipers` operationId).
+func (c *Client) GetMintsByPubkeySnipers(ctx context.Context, pubkey string, params *GetMintsByPubkeySnipersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeySnipersRequest(c.Server, pubkey, params)
 	if err != nil {
 		return nil, err
 	}
@@ -7471,6 +7515,91 @@ func NewGetMintsByPubkeySafetyEventsRequest(server string, pubkey string, params
 		if params.Limit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMintsByPubkeySnipersRequest constructs an http.Request for the GetMintsByPubkeySnipers method
+func NewGetMintsByPubkeySnipersRequest(server string, pubkey string, params *GetMintsByPubkeySnipersParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pubkey", pubkey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/mints/%s/snipers", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Sort != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort", *params.Sort, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -11331,6 +11460,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/mints/{pubkey}/safety-events (the `GetMintsByPubkeySafetyEvents` operationId).
 	GetMintsByPubkeySafetyEventsWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeySafetyEventsParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeySafetyEventsResponse, error)
 
+	// GetMintsByPubkeySnipersWithResponse List Mint Snipers
+	//
+	// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/snipers (the `GetMintsByPubkeySnipers` operationId).
+	GetMintsByPubkeySnipersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeySnipersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeySnipersResponse, error)
+
 	// GetMintsByPubkeyStatsWithResponse Find Mint Stats Bundle
 	//
 	// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for all four windows (1m/5m/1h/24h) in one response.
@@ -13077,6 +13215,68 @@ func (r GetMintsByPubkeySafetyEventsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetMintsByPubkeySafetyEventsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMintsByPubkeySnipersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]PulsightInternalCoreDomainAggregatorMintTraderRow
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMintsByPubkeySnipersResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorMintTraderRow {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetMintsByPubkeySnipersResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetMintsByPubkeySnipersResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetMintsByPubkeySnipersResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMintsByPubkeySnipersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMintsByPubkeySnipersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMintsByPubkeySnipersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMintsByPubkeySnipersResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -16797,6 +16997,21 @@ func (c *ClientWithResponses) GetMintsByPubkeySafetyEventsWithResponse(ctx conte
 	return ParseGetMintsByPubkeySafetyEventsResponse(rsp)
 }
 
+// GetMintsByPubkeySnipersWithResponse List Mint Snipers
+//
+// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/mints/{pubkey}/snipers (the `GetMintsByPubkeySnipers` operationId).
+func (c *ClientWithResponses) GetMintsByPubkeySnipersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeySnipersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeySnipersResponse, error) {
+	rsp, err := c.GetMintsByPubkeySnipers(ctx, pubkey, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMintsByPubkeySnipersResponse(rsp)
+}
+
 // GetMintsByPubkeyStatsWithResponse Find Mint Stats Bundle
 //
 // Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for all four windows (1m/5m/1h/24h) in one response.
@@ -18628,6 +18843,53 @@ func ParseGetMintsByPubkeySafetyEventsResponse(rsp *http.Response) (*GetMintsByP
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMintsByPubkeySnipersResponse parses an HTTP response from a GetMintsByPubkeySnipersWithResponse call
+func ParseGetMintsByPubkeySnipersResponse(rsp *http.Response) (*GetMintsByPubkeySnipersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMintsByPubkeySnipersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []PulsightInternalCoreDomainAggregatorMintTraderRow
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
