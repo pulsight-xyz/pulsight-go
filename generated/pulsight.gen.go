@@ -295,6 +295,48 @@ func (e PulsightInternalCoreUsecasesBacktestBacktestStatus) Valid() bool {
 	}
 }
 
+// Defines values for PulsightInternalCoreUsecasesBacktestDeclineReason.
+const (
+	DeclineCooldown           PulsightInternalCoreUsecasesBacktestDeclineReason = "cooldown"
+	DeclineExposureCap        PulsightInternalCoreUsecasesBacktestDeclineReason = "exposure_cap"
+	DeclineMaxBuysPerPosition PulsightInternalCoreUsecasesBacktestDeclineReason = "max_buys_per_position"
+	DeclineNoBracket          PulsightInternalCoreUsecasesBacktestDeclineReason = "no_bracket"
+	DeclineRateLimited        PulsightInternalCoreUsecasesBacktestDeclineReason = "rate_limited"
+	DeclineReverted           PulsightInternalCoreUsecasesBacktestDeclineReason = "reverted"
+	DeclineSizeOutOfRange     PulsightInternalCoreUsecasesBacktestDeclineReason = "size_out_of_range"
+	DeclineUnmirrored         PulsightInternalCoreUsecasesBacktestDeclineReason = "unmirrored"
+	DeclineUnpriced           PulsightInternalCoreUsecasesBacktestDeclineReason = "unpriced"
+	DeclineZeroSize           PulsightInternalCoreUsecasesBacktestDeclineReason = "zero_size"
+)
+
+// Valid indicates whether the value is a known member of the PulsightInternalCoreUsecasesBacktestDeclineReason enum.
+func (e PulsightInternalCoreUsecasesBacktestDeclineReason) Valid() bool {
+	switch e {
+	case DeclineCooldown:
+		return true
+	case DeclineExposureCap:
+		return true
+	case DeclineMaxBuysPerPosition:
+		return true
+	case DeclineNoBracket:
+		return true
+	case DeclineRateLimited:
+		return true
+	case DeclineReverted:
+		return true
+	case DeclineSizeOutOfRange:
+		return true
+	case DeclineUnmirrored:
+		return true
+	case DeclineUnpriced:
+		return true
+	case DeclineZeroSize:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PulsightInternalCoreUsecasesBacktestSide.
 const (
 	SideBuy  PulsightInternalCoreUsecasesBacktestSide = "buy"
@@ -2058,9 +2100,12 @@ type PulsightInternalCoreDomainStrategyGlobalConstraints struct {
 	MaxBuySol *float32 `json:"max_buy_sol,omitempty"`
 
 	// MaxBuysPerOpenPosition MaxBuysPerOpenPosition is the max number of buys (initial open + adds)
-	// allowed within ONE open position. 0 ⇒ 1 — the historical single-buy-
-	// per-position behaviour; read it through EffectiveMaxBuysPerOpenPosition.
-	// Raise it above 1 to enable DCA / pyramiding.
+	// allowed within ONE open position. An explicit value caps every buy exec.
+	// Absent (0) resolves per exec kind — read it through BuyCapFor: an Emit
+	// buy gets 1 (no adds — the historical single-buy-per-position behaviour;
+	// raise it for DCA / pyramiding), a Copy buy gets NO cap, because a
+	// mirror's add cadence is the target's, not ours — refusing their adds
+	// while mirroring their sells pro-rata decays the position to dust.
 	MaxBuysPerOpenPosition   *int `json:"max_buys_per_open_position,omitempty"`
 	MaxBuysPerTokenPerHour   *int `json:"max_buys_per_token_per_hour,omitempty"`
 	MaxBuysPerTokenPerMinute *int `json:"max_buys_per_token_per_minute,omitempty"`
@@ -2696,6 +2741,40 @@ type PulsightInternalCorePortsInputUserPoolCredits struct {
 	Used *int `json:"used,omitempty"`
 }
 
+// PulsightInternalCoreUsecasesBacktestBacktestDecline defines model for pulsight_internal_core_usecases_backtest.BacktestDecline.
+type PulsightInternalCoreUsecasesBacktestBacktestDecline struct {
+	BacktestId *string `json:"backtest_id,omitempty"`
+
+	// Detail Detail is a short human-readable specific for the reason (the cap
+	// that was full, the drift that tripped the gate, …).
+	Detail *string `json:"detail,omitempty"`
+
+	// FeeSol FeeSol + TipSol are non-zero only on `reverted`: the priority fee and
+	// tip the failed tx still paid (already inside the summary's totals).
+	FeeSol *float32 `json:"fee_sol,omitempty"`
+	Idx    *int     `json:"idx,omitempty"`
+
+	// LandingDriftBps LandingDriftBps is the adverse-signed drift that tripped a `reverted`
+	// fill's slippage gate. Nil otherwise.
+	LandingDriftBps *float32 `json:"landing_drift_bps,omitempty"`
+	Mint            *string  `json:"mint,omitempty"`
+
+	// Pool Pool is the market the triggering swap executed in.
+	Pool   *string                                            `json:"pool,omitempty"`
+	Reason *PulsightInternalCoreUsecasesBacktestDeclineReason `json:"reason,omitempty"`
+
+	// RequestedSol RequestedSol is the SOL the buy would have spent, or the SOL the sell
+	// would have realised, had it filled. 0 when sizing itself failed.
+	RequestedSol *float32                                  `json:"requested_sol,omitempty"`
+	Side         *PulsightInternalCoreUsecasesBacktestSide `json:"side,omitempty"`
+
+	// Source Source is the exec kind that wanted to fire.
+	Source            *PulsightInternalCoreUsecasesBacktestTradeSource `json:"source,omitempty"`
+	TipSol            *float32                                         `json:"tip_sol,omitempty"`
+	TriggeringSwapSig *string                                          `json:"triggering_swap_sig,omitempty"`
+	Ts                *string                                          `json:"ts,omitempty"`
+}
+
 // PulsightInternalCoreUsecasesBacktestBacktestPosition defines model for pulsight_internal_core_usecases_backtest.BacktestPosition.
 type PulsightInternalCoreUsecasesBacktestBacktestPosition struct {
 	CostBasisSol *float32 `json:"cost_basis_sol,omitempty"`
@@ -2796,6 +2875,16 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// went through (reverted ones are excluded; their cost shows as
 	// RevertFeesSol + missed entries). Nil when the run had no landing fills.
 	AvgLandingDriftBps *float32 `json:"avg_landing_drift_bps,omitempty"`
+
+	// CopiesDeclined CopiesDeclined counts target swaps a signal-driven exec wanted to act
+	// on but that a RULE refused: cooldown, sizing, max_buys_per_open_position,
+	// exposure cap, bracket placement, rate limit — plus the sells this run sat
+	// out because the target only sold tokens it had never mirrored. Reverts
+	// and unpriced skips have their own counters and are not in here. Every
+	// one is persisted as a `backtest_declines` row with its reason, so the
+	// trade history reads as a complete account of the target's swaps.
+	// Additive JSONB field — old rows decode as 0.
+	CopiesDeclined *int `json:"copies_declined,omitempty"`
 
 	// CopiesReverted CopiesReverted counts copy fills the slippage gate REJECTED: the pool's
 	// landing price had drifted past the exec's slippage_bps between the
@@ -2963,6 +3052,9 @@ type PulsightInternalCoreUsecasesBacktestBacktestTrade struct {
 	TriggeringSwapSig    *string  `json:"triggering_swap_sig,omitempty"`
 	Ts                   *string  `json:"ts,omitempty"`
 }
+
+// PulsightInternalCoreUsecasesBacktestDeclineReason defines model for pulsight_internal_core_usecases_backtest.DeclineReason.
+type PulsightInternalCoreUsecasesBacktestDeclineReason string
 
 // PulsightInternalCoreUsecasesBacktestPreviewMarker defines model for pulsight_internal_core_usecases_backtest.PreviewMarker.
 type PulsightInternalCoreUsecasesBacktestPreviewMarker struct {
@@ -3355,6 +3447,15 @@ type GetBacktestsParams struct {
 type PostBacktestsParams struct {
 	// IdempotencyKey Deduplicates retried submissions: a repeat with the same key replays the existing run instead of charging and starting a new one (max 128 chars)
 	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
+}
+
+// GetBacktestsByIdDeclinesParams defines parameters for GetBacktestsByIdDeclines.
+type GetBacktestsByIdDeclinesParams struct {
+	// Limit Page size (default 200, max 2000)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset (default 0)
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
 // GetBacktestsByIdTradesParams defines parameters for GetBacktestsByIdTrades.
@@ -4071,6 +4172,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/backtests/{id} (the `GetBacktestsById` operationId).
 	GetBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetBacktestsByIdDeclines List Backtest Declines
+	//
+	// Corresponds with GET /api/backtests/{id}/declines (the `GetBacktestsByIdDeclines` operationId).
+	GetBacktestsByIdDeclines(ctx context.Context, id string, params *GetBacktestsByIdDeclinesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetBacktestsByIdTrades List Backtest Trades
 	//
@@ -4809,6 +4915,21 @@ func (c *Client) DeleteBacktestsById(ctx context.Context, id string, reqEditors 
 // Corresponds with GET /api/backtests/{id} (the `GetBacktestsById` operationId).
 func (c *Client) GetBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetBacktestsByIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetBacktestsByIdDeclines List Backtest Declines
+//
+// Corresponds with GET /api/backtests/{id}/declines (the `GetBacktestsByIdDeclines` operationId).
+func (c *Client) GetBacktestsByIdDeclines(ctx context.Context, id string, params *GetBacktestsByIdDeclinesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBacktestsByIdDeclinesRequest(c.Server, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6569,6 +6690,79 @@ func NewGetBacktestsByIdRequest(server string, id string) (*http.Request, error)
 	queryURL, err := serverURL.Parse(operationPath)
 	if err != nil {
 		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetBacktestsByIdDeclinesRequest constructs an http.Request for the GetBacktestsByIdDeclines method
+func NewGetBacktestsByIdDeclinesRequest(server string, id string, params *GetBacktestsByIdDeclinesParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/backtests/%s/declines", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -11566,6 +11760,13 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/backtests/{id} (the `GetBacktestsById` operationId).
 	GetBacktestsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetBacktestsByIdResponse, error)
 
+	// GetBacktestsByIdDeclinesWithResponse List Backtest Declines
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/backtests/{id}/declines (the `GetBacktestsByIdDeclines` operationId).
+	GetBacktestsByIdDeclinesWithResponse(ctx context.Context, id string, params *GetBacktestsByIdDeclinesParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdDeclinesResponse, error)
+
 	// GetBacktestsByIdTradesWithResponse List Backtest Trades
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -12601,6 +12802,54 @@ func (r GetBacktestsByIdResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetBacktestsByIdResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetBacktestsByIdDeclinesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]PulsightInternalCoreUsecasesBacktestBacktestDecline
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetBacktestsByIdDeclinesResponse) GetJSON200() *[]PulsightInternalCoreUsecasesBacktestBacktestDecline {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetBacktestsByIdDeclinesResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetBacktestsByIdDeclinesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBacktestsByIdDeclinesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBacktestsByIdDeclinesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetBacktestsByIdDeclinesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17149,6 +17398,19 @@ func (c *ClientWithResponses) GetBacktestsByIdWithResponse(ctx context.Context, 
 	return ParseGetBacktestsByIdResponse(rsp)
 }
 
+// GetBacktestsByIdDeclinesWithResponse List Backtest Declines
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/backtests/{id}/declines (the `GetBacktestsByIdDeclines` operationId).
+func (c *ClientWithResponses) GetBacktestsByIdDeclinesWithResponse(ctx context.Context, id string, params *GetBacktestsByIdDeclinesParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdDeclinesResponse, error) {
+	rsp, err := c.GetBacktestsByIdDeclines(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBacktestsByIdDeclinesResponse(rsp)
+}
+
 // GetBacktestsByIdTradesWithResponse List Backtest Trades
 //
 // Returns a wrapper object for the known response body format(s).
@@ -18630,6 +18892,39 @@ func ParseGetBacktestsByIdResponse(rsp *http.Response) (*GetBacktestsByIdRespons
 			return nil, err
 		}
 		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetBacktestsByIdDeclinesResponse parses an HTTP response from a GetBacktestsByIdDeclinesWithResponse call
+func ParseGetBacktestsByIdDeclinesResponse(rsp *http.Response) (*GetBacktestsByIdDeclinesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBacktestsByIdDeclinesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []PulsightInternalCoreUsecasesBacktestBacktestDecline
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
 
 	}
 
