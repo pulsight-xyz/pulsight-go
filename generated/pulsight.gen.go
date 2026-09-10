@@ -527,40 +527,6 @@ type InternalAdaptersPrimaryHttpHandlerBestRunRef struct {
 	StrategyName *string  `json:"strategy_name,omitempty"`
 }
 
-// InternalAdaptersPrimaryHttpHandlerCopyabilityRequest defines model for internal_adapters_primary_http_handler.copyabilityRequest.
-type InternalAdaptersPrimaryHttpHandlerCopyabilityRequest struct {
-	// DelaysSlots Simulated latencies in SLOTS (blocks) behind the target. Omitted ⇒ the
-	// default ladder. Blocks rather than milliseconds because the stored swap
-	// timestamp resolves only to whole seconds, so a sub-second ladder cannot
-	// be answered — see domain/trader/copyability.go.
-	DelaysSlots *[]int `json:"delays_slots,omitempty"`
-
-	// FromTs Half-open measurement window [from_ts, to_ts) in Unix epoch SECONDS.
-	// Seconds rather than an RFC3339 string because every timestamp this
-	// measurement touches already is one: Solana's blockTime is an i64 of whole
-	// seconds, and the per-leg ledger stores it unchanged.
-	FromTs *int `json:"from_ts,omitempty"`
-
-	// SizeLamports Size of each mirrored buy in lamports; 1e9 (1 SOL) when omitted. Every
-	// return in the report is on the capital this size deploys.
-	SizeLamports *int      `json:"size_lamports,omitempty"`
-	ToTs         *int      `json:"to_ts,omitempty"`
-	Wallets      *[]string `json:"wallets,omitempty"`
-}
-
-// InternalAdaptersPrimaryHttpHandlerCopyabilityResponse defines model for internal_adapters_primary_http_handler.copyabilityResponse.
-type InternalAdaptersPrimaryHttpHandlerCopyabilityResponse struct {
-	BandsBps    *[]int                                               `json:"bands_bps,omitempty"`
-	DelaysSlots *[]int                                               `json:"delays_slots,omitempty"`
-	FromTs      *int                                                 `json:"from_ts,omitempty"`
-	Reports     *[]PulsightInternalCoreDomainTraderCopyabilityReport `json:"reports,omitempty"`
-
-	// SizeLamports The mirrored buy size the reports were replayed at, and the slippage
-	// ladder their execution profile was evaluated on.
-	SizeLamports *int `json:"size_lamports,omitempty"`
-	ToTs         *int `json:"to_ts,omitempty"`
-}
-
 // InternalAdaptersPrimaryHttpHandlerErrorResponse defines model for internal_adapters_primary_http_handler.errorResponse.
 type InternalAdaptersPrimaryHttpHandlerErrorResponse struct {
 	Error *string `json:"error,omitempty"`
@@ -2002,8 +1968,9 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 
 // PulsightInternalCoreDomainAggregatorTraderPriceImpactStats defines model for pulsight_internal_core_domain_aggregator.TraderPriceImpactStats.
 type PulsightInternalCoreDomainAggregatorTraderPriceImpactStats struct {
-	// AvgPriceImpactBps AvgBps is the mean and MedianBps the p50 over the window's measurable
-	// legs. Both are reported because the population is heavy-tailed — a
+	// AvgPriceImpactBps AvgBps is the mean and MedianBps the p50 over the measurable legs of the
+	// wallet's most recent fills in the window (a bounded sample, up to 3000
+	// fills). Both are reported because the population is heavy-tailed — a
 	// handful of large fills into thin curves dominate the mean while the
 	// median describes the wallet's ordinary fill.
 	//
@@ -2198,140 +2165,6 @@ type PulsightInternalCoreDomainTokenviewFilter struct {
 	Name      *string                 `json:"name,omitempty"`
 	UpdatedAt *string                 `json:"updated_at,omitempty"`
 	UserId    *string                 `json:"user_id,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderCopyBandPoint defines model for pulsight_internal_core_domain_trader.CopyBandPoint.
-type PulsightInternalCoreDomainTraderCopyBandPoint struct {
-	BandBps     *int     `json:"band_bps,omitempty"`
-	FillRatePct *float32 `json:"fill_rate_pct,omitempty"`
-	Filled      *int     `json:"filled,omitempty"`
-
-	// MarginalFills Buys this rung adds over the previous, tighter one, and their mean
-	// return priced at the copier's own exit from the position. A rung that
-	// adds buys at a negative return is buying losses, whatever it does to
-	// the fill rate.
-	MarginalFills  *int     `json:"marginal_fills,omitempty"`
-	MarginalPnlPct *float32 `json:"marginal_pnl_pct,omitempty"`
-
-	// MeanEntryVsTargetBps Mean price the filled buys execute at against the wallet's own price
-	// for the same buy. Positive is worse for the copier.
-	MeanEntryVsTargetBps *float32 `json:"mean_entry_vs_target_bps,omitempty"`
-
-	// MeanPnlPct Mean return over every buy filled at this setting, same pricing. NULL
-	// when nothing filled.
-	MeanPnlPct *float32 `json:"mean_pnl_pct,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderCopyBandQuantiles defines model for pulsight_internal_core_domain_trader.CopyBandQuantiles.
-type PulsightInternalCoreDomainTraderCopyBandQuantiles struct {
-	Fills  *int `json:"fills,omitempty"`
-	MaxBps *int `json:"max_bps,omitempty"`
-	P50Bps *int `json:"p50_bps,omitempty"`
-	P75Bps *int `json:"p75_bps,omitempty"`
-	P90Bps *int `json:"p90_bps,omitempty"`
-	P95Bps *int `json:"p95_bps,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderCopyDelayPoint defines model for pulsight_internal_core_domain_trader.CopyDelayPoint.
-type PulsightInternalCoreDomainTraderCopyDelayPoint struct {
-	DelaySlots *int `json:"delay_slots,omitempty"`
-
-	// DeployedLamports The copier's outcome at the requested size: one order of size_lamports
-	// mirrored on each of the wallet's buys, every sell mirrored in proportion,
-	// unsold tokens valued at the pool's last price in the window.
-	DeployedLamports *int `json:"deployed_lamports,omitempty"`
-
-	// EntryCostBps What copying costs, in order: buying after the wallet at the copier's
-	// size, selling after it, and transaction fees plus tips on every
-	// mirrored transaction.
-	EntryCostBps *float32 `json:"entry_cost_bps,omitempty"`
-
-	// EntrySlippageBps Price drift alone, independent of size: the pool's worst price in the
-	// landing block against the price the wallet's own trade left, averaged
-	// over positions. Positive is always worse for the copier.
-	EntrySlippageBps *float32                                              `json:"entry_slippage_bps,omitempty"`
-	Execution        *PulsightInternalCoreDomainTraderCopyExecutionAtDelay `json:"execution,omitempty"`
-	ExitCostBps      *float32                                              `json:"exit_cost_bps,omitempty"`
-	ExitSlippageBps  *float32                                              `json:"exit_slippage_bps,omitempty"`
-	FeesBps          *float32                                              `json:"fees_bps,omitempty"`
-	MeasuredFills    *int                                                  `json:"measured_fills,omitempty"`
-	PnlLamports      *int                                                  `json:"pnl_lamports,omitempty"`
-
-	// Positions Positions the replay could price at this latency, and how they ended
-	// for the copier after fees.
-	Positions     *int     `json:"positions,omitempty"`
-	PositionsLost *int     `json:"positions_lost,omitempty"`
-	PositionsWon  *int     `json:"positions_won,omitempty"`
-	ReturnBps     *float32 `json:"return_bps,omitempty"`
-
-	// TargetReturnBps What the wallet itself made on the same positions, at its own fills.
-	TargetReturnBps *float32 `json:"target_return_bps,omitempty"`
-
-	// UnmeasurableFills Swap legs with and without a pool state to execute into.
-	UnmeasurableFills *int `json:"unmeasurable_fills,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderCopyExecutionAtDelay defines model for pulsight_internal_core_domain_trader.CopyExecutionAtDelay.
-type PulsightInternalCoreDomainTraderCopyExecutionAtDelay struct {
-	Bands *[]PulsightInternalCoreDomainTraderCopyBandPoint `json:"bands,omitempty"`
-
-	// InBlockMoveBps Where the adverse entry move comes from: the share that had already
-	// happened by the end of the wallet's own block, before any latency of
-	// the copier's. Populated only when the ladder includes block 0.
-	InBlockMoveBps  *float32 `json:"in_block_move_bps,omitempty"`
-	InBlockSharePct *float32 `json:"in_block_share_pct,omitempty"`
-	MeasuredFills   *int     `json:"measured_fills,omitempty"`
-
-	// Required Slippage needed, split because the first buy on a token is contested
-	// and later buys rarely are.
-	Required          *PulsightInternalCoreDomainTraderCopyBandQuantiles `json:"required,omitempty"`
-	RequiredFollowOn  *PulsightInternalCoreDomainTraderCopyBandQuantiles `json:"required_follow_on,omitempty"`
-	RequiredSignalBuy *PulsightInternalCoreDomainTraderCopyBandQuantiles `json:"required_signal_buy,omitempty"`
-	TotalMoveBps      *float32                                           `json:"total_move_bps,omitempty"`
-	UnmeasurableFills *int                                               `json:"unmeasurable_fills,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderCopyExecutionSummary defines model for pulsight_internal_core_domain_trader.CopyExecutionSummary.
-type PulsightInternalCoreDomainTraderCopyExecutionSummary struct {
-	Fills                   *int     `json:"fills,omitempty"`
-	FollowOns               *int     `json:"follow_ons,omitempty"`
-	MedianPoolQuoteLamports *int     `json:"median_pool_quote_lamports,omitempty"`
-	MedianTargetImpactBps   *float32 `json:"median_target_impact_bps,omitempty"`
-	SignalBuys              *int     `json:"signal_buys,omitempty"`
-	SizeLamports            *int     `json:"size_lamports,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderCopyabilityReport defines model for pulsight_internal_core_domain_trader.CopyabilityReport.
-type PulsightInternalCoreDomainTraderCopyabilityReport struct {
-	// Delays Never nil on the wire: an empty ladder is [], not null.
-	Delays           *[]PulsightInternalCoreDomainTraderCopyDelayPoint     `json:"delays,omitempty"`
-	ExecutionSummary *PulsightInternalCoreDomainTraderCopyExecutionSummary `json:"execution_summary,omitempty"`
-
-	// FeePerTxLamports The wallet's median transaction fee plus tip, lamports, charged to the
-	// copier on every mirrored transaction.
-	FeePerTxLamports *int `json:"fee_per_tx_lamports,omitempty"`
-
-	// Positions Positions the wallet opened in the window that the replay sampled: the
-	// most recent ones, bounded per wallet.
-	Positions *int `json:"positions,omitempty"`
-
-	// PositionsClosed Positions the wallet had sold in full by the end of the window; the
-	// rest are valued at the last price seen.
-	PositionsClosed *int `json:"positions_closed,omitempty"`
-
-	// RoundTripMints Positions with at least one sell in the window.
-	RoundTripMints *int `json:"round_trip_mints,omitempty"`
-
-	// SampleFromTs Earliest position open in the sample, Unix seconds; 0 when nothing was
-	// sampled.
-	SampleFromTs *int `json:"sample_from_ts,omitempty"`
-
-	// SizeLamports Size of each mirrored buy, lamports.
-	SizeLamports *int `json:"size_lamports,omitempty"`
-
-	// TxsPerPosition Mean number of transactions, buys plus sells, per sampled position.
-	TxsPerPosition *float32 `json:"txs_per_position,omitempty"`
-	Wallet         *string  `json:"wallet,omitempty"`
 }
 
 // PulsightInternalCoreDomainTraderDailyProfit defines model for pulsight_internal_core_domain_trader.DailyProfit.
@@ -4040,9 +3873,6 @@ type PostTraderFiltersJSONRequestBody = PulsightInternalCorePortsInputFilterCrea
 // PutTraderFiltersByIdJSONRequestBody defines body for PutTraderFiltersById for application/json ContentType.
 type PutTraderFiltersByIdJSONRequestBody = PulsightInternalCorePortsInputFilterUpdateRequest
 
-// PostTradersCopyabilityJSONRequestBody defines body for PostTradersCopyability for application/json ContentType.
-type PostTradersCopyabilityJSONRequestBody = InternalAdaptersPrimaryHttpHandlerCopyabilityRequest
-
 // PostWebhookNotifiersJSONRequestBody defines body for PostWebhookNotifiers for application/json ContentType.
 type PostWebhookNotifiersJSONRequestBody = InternalAdaptersPrimaryHttpHandlerWebhookNotifierCreateRequest
 
@@ -4636,24 +4466,6 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/traders/by-wallet/{walletAddress} (the `GetTradersByWalletByWalletAddress` operationId).
 	GetTradersByWalletByWalletAddress(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostTradersCopyabilityWithBody What copying a wallet set would have returned, by landing latency
-	//
-	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-	//
-	// Takes any type of body and a specified content type.
-	//
-	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-	PostTradersCopyabilityWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostTradersCopyability What copying a wallet set would have returned, by landing latency
-	//
-	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-	//
-	// Takes a body of the `application/json` content type.
-	//
-	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-	PostTradersCopyability(ctx context.Context, body PostTradersCopyabilityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTradersSearch Search Traders
 	//
@@ -6059,44 +5871,6 @@ func (c *Client) GetTradersByIdByTraderID(ctx context.Context, traderID string, 
 // Corresponds with GET /api/traders/by-wallet/{walletAddress} (the `GetTradersByWalletByWalletAddress` operationId).
 func (c *Client) GetTradersByWalletByWalletAddress(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTradersByWalletByWalletAddressRequest(c.Server, walletAddress)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// PostTradersCopyabilityWithBody What copying a wallet set would have returned, by landing latency
-//
-// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-//
-// Takes any type of body and a specified content type.
-//
-// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-func (c *Client) PostTradersCopyabilityWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTradersCopyabilityRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// PostTradersCopyability What copying a wallet set would have returned, by landing latency
-//
-// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-//
-// Takes a body of the `application/json` content type.
-//
-// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-func (c *Client) PostTradersCopyability(ctx context.Context, body PostTradersCopyabilityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostTradersCopyabilityRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -10360,46 +10134,6 @@ func NewGetTradersByWalletByWalletAddressRequest(server string, walletAddress st
 	return req, nil
 }
 
-// NewPostTradersCopyabilityRequest calls the generic PostTradersCopyability builder with application/json body
-func NewPostTradersCopyabilityRequest(server string, body PostTradersCopyabilityJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostTradersCopyabilityRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostTradersCopyabilityRequestWithBody constructs an http.Request for the PostTradersCopyability method, with any body, and a specified content type
-func NewPostTradersCopyabilityRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/traders/copyability")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
 // NewGetTradersSearchRequest constructs an http.Request for the GetTradersSearch method
 func NewGetTradersSearchRequest(server string, params *GetTradersSearchParams) (*http.Request, error) {
 	var err error
@@ -12327,24 +12061,6 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/traders/by-wallet/{walletAddress} (the `GetTradersByWalletByWalletAddress` operationId).
 	GetTradersByWalletByWalletAddressWithResponse(ctx context.Context, walletAddress string, reqEditors ...RequestEditorFn) (*GetTradersByWalletByWalletAddressResponse, error)
-
-	// PostTradersCopyabilityWithBodyWithResponse What copying a wallet set would have returned, by landing latency
-	//
-	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-	//
-	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-	PostTradersCopyabilityWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTradersCopyabilityResponse, error)
-
-	// PostTradersCopyabilityWithResponse What copying a wallet set would have returned, by landing latency
-	//
-	// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-	//
-	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-	PostTradersCopyabilityWithResponse(ctx context.Context, body PostTradersCopyabilityJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTradersCopyabilityResponse, error)
 
 	// GetTradersSearchWithResponse Search Traders
 	//
@@ -16171,54 +15887,6 @@ func (r GetTradersByWalletByWalletAddressResponse) ContentType() string {
 	return ""
 }
 
-type PostTradersCopyabilityResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *InternalAdaptersPrimaryHttpHandlerCopyabilityResponse
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r PostTradersCopyabilityResponse) GetJSON200() *InternalAdaptersPrimaryHttpHandlerCopyabilityResponse {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r PostTradersCopyabilityResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetBody returns the raw response body bytes
-func (r PostTradersCopyabilityResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r PostTradersCopyabilityResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostTradersCopyabilityResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r PostTradersCopyabilityResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 type GetTradersSearchResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -18372,36 +18040,6 @@ func (c *ClientWithResponses) GetTradersByWalletByWalletAddressWithResponse(ctx 
 		return nil, err
 	}
 	return ParseGetTradersByWalletByWalletAddressResponse(rsp)
-}
-
-// PostTradersCopyabilityWithBodyWithResponse What copying a wallet set would have returned, by landing latency
-//
-// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-//
-// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-func (c *ClientWithResponses) PostTradersCopyabilityWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostTradersCopyabilityResponse, error) {
-	rsp, err := c.PostTradersCopyabilityWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTradersCopyabilityResponse(rsp)
-}
-
-// PostTradersCopyabilityWithResponse What copying a wallet set would have returned, by landing latency
-//
-// Replays each wallet's most recent positions in the window as a copier would have traded them: an order of size_lamports on every buy, every sell mirrored in proportion, executed against the pool state a copier landing N blocks later found, with pool fees, the wallet's own transaction fees and tips, and unsold tokens valued at the pool's closing price. Per wallet and per latency: the copier's return on deployed capital (return_bps, pnl_lamports), the wallet's own return on the same positions (target_return_bps), and the waterfall between them (entry_cost_bps, exit_cost_bps, fees_bps), plus positions won and lost. The execution profile gives the slippage setting each buy needed and what widening it buys. The window is a half-open [from_ts, to_ts) in Unix epoch SECONDS; latency is counted in BLOCKS because the stored swap timestamp resolves only to whole seconds. An estimate, not a backtest: it prices against observed pool states and books no rent or borrow.
-//
-// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/traders/copyability (the `PostTradersCopyability` operationId).
-func (c *ClientWithResponses) PostTradersCopyabilityWithResponse(ctx context.Context, body PostTradersCopyabilityJSONRequestBody, reqEditors ...RequestEditorFn) (*PostTradersCopyabilityResponse, error) {
-	rsp, err := c.PostTradersCopyability(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostTradersCopyabilityResponse(rsp)
 }
 
 // GetTradersSearchWithResponse Search Traders
@@ -21355,39 +20993,6 @@ func ParseGetTradersByWalletByWalletAddressResponse(rsp *http.Response) (*GetTra
 			return nil, err
 		}
 		response.JSON504 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostTradersCopyabilityResponse parses an HTTP response from a PostTradersCopyabilityWithResponse call
-func ParsePostTradersCopyabilityResponse(rsp *http.Response) (*PostTradersCopyabilityResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostTradersCopyabilityResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InternalAdaptersPrimaryHttpHandlerCopyabilityResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
 
 	}
 
