@@ -1161,6 +1161,26 @@ type PulsightInternalCoreDomainAggregatorMintInsiders struct {
 	Wallets     *int     `json:"wallets,omitempty"`
 }
 
+// PulsightInternalCoreDomainAggregatorMintLiveMetrics defines model for pulsight_internal_core_domain_aggregator.MintLiveMetrics.
+type PulsightInternalCoreDomainAggregatorMintLiveMetrics struct {
+	AsOf         *string  `json:"as_of,omitempty"`
+	MarketCapUsd *float32 `json:"market_cap_usd,omitempty"`
+	Mint         *string  `json:"mint,omitempty"`
+
+	// PriceUsd PriceUsd / MarketCapUsd carry MintRow.PriceUsd and MintRow.MarketCapUsd
+	// verbatim, including their nil conditions (no WSOL pool, unknown
+	// decimals, no SOL/USD reference, absent supply).
+	PriceUsd *float32 `json:"price_usd,omitempty"`
+
+	// UniqueTraders UniqueTraders is MintRow.UniqueTraders read straight off the insert-time
+	// uniq plane, so it is as fresh as ingest rather than as fresh as the
+	// holder-fold refresh that stamps the identity row. nil without the plane:
+	// this route never falls back to the lifetime position-table fold, which is
+	// the read it exists to stop paying at poll cadence. A quote-registry mint
+	// has no rows on that plane and so never reports a count here.
+	UniqueTraders *int `json:"unique_traders,omitempty"`
+}
+
 // PulsightInternalCoreDomainAggregatorMintMarket defines model for pulsight_internal_core_domain_aggregator.MintMarket.
 type PulsightInternalCoreDomainAggregatorMintMarket struct {
 	Dex *string `json:"dex,omitempty"`
@@ -1394,15 +1414,18 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	TraderQuality *PulsightInternalCoreDomainAggregatorMintTraderQuality `json:"trader_quality,omitempty"`
 
 	// UniqueTraders UniqueTraders is the number of distinct wallets that have EVER traded
-	// this mint (all-time count() over trader_token_stats, the same
-	// projection-served source as HolderCount). Distinct from TraderCount
-	// (which is a WINDOWED, HLL-approximate count over the `?hours` gate and
-	// is set on the list path only): UniqueTraders is exact and lifetime, so
-	// the list column and the /api/mints/:pubkey detail render the same value.
-	// Populated on BOTH paths, best-effort: nil when the trader_token_stats
-	// read is unavailable. A quote-registry mint (WSOL, the USD stables) has
-	// no trader_token_stats rows, so its detail counts the distinct wallets of
-	// its last 30 days of per-leg dex_swaps instead.
+	// this mint, folded from the insert-time uniq plane (`mint_trader_uniq`)
+	// that accumulates one `uniq` state per mint off `swaps`. Distinct from
+	// TraderCount (a WINDOWED count over the `?hours` gate, list path only):
+	// UniqueTraders is LIFETIME, so the list column and the
+	// /api/mints/:pubkey detail render the same value. Exact below ~10k
+	// distinct wallets and HLL-approximate above — a trader set only ever
+	// grows, which is what lets it be an accumulator at all (a holder set does
+	// not, and HolderCount keeps its fold). Populated on BOTH paths,
+	// best-effort: nil when the read is unavailable. A quote-registry mint
+	// (WSOL, the USD stables) never appears as `swaps.mint`, so its detail
+	// counts the distinct wallets of its last 30 days of per-leg dex_swaps
+	// instead.
 	UniqueTraders *int `json:"unique_traders,omitempty"`
 
 	// Verified Verified marks a mint on the curated verified token list (Jupiter's,
@@ -4090,6 +4113,13 @@ type ClientInterface interface {
 	// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
 	GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetMintsByPubkeyLive Get Mint Live Metrics
+	//
+	// Returns the mint's live header figures — latest price, market cap and lifetime distinct traders — on the same basis as the corresponding fields of GET /api/mints/{pubkey}, from sources that update with ingest rather than on a refresh cadence. Intended for polling: it reads none of the identity row's enrichment (authorities, bonding curve, dev holdings, risk cohorts). Fields are independently optional — an unpriceable mint reports no price, and a quote-registry mint (WSOL, the USD stables) reports no trader count.
+	//
+	// Corresponds with GET /api/mints/{pubkey}/live (the `GetMintsByPubkeyLive` operationId).
+	GetMintsByPubkeyLive(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetMintsByPubkeyLpEvents List Mint LP Events
 	//
 	// Recent liquidity-pool add/remove/burn events for a mint (newest first), from `lp_events`. Sparse where upstream doesn't yet extract LP for a DEX; returns an empty array then.
@@ -4944,6 +4974,23 @@ func (c *Client) GetMintsByPubkeyBundlers(ctx context.Context, pubkey string, pa
 // Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
 func (c *Client) GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetMintsByPubkeyInsidersRequest(c.Server, pubkey, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMintsByPubkeyLive Get Mint Live Metrics
+//
+// Returns the mint's live header figures — latest price, market cap and lifetime distinct traders — on the same basis as the corresponding fields of GET /api/mints/{pubkey}, from sources that update with ingest rather than on a refresh cadence. Intended for polling: it reads none of the identity row's enrichment (authorities, bonding curve, dev holdings, risk cohorts). Fields are independently optional — an unpriceable mint reports no price, and a quote-registry mint (WSOL, the USD stables) reports no trader count.
+//
+// Corresponds with GET /api/mints/{pubkey}/live (the `GetMintsByPubkeyLive` operationId).
+func (c *Client) GetMintsByPubkeyLive(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMintsByPubkeyLiveRequest(c.Server, pubkey)
 	if err != nil {
 		return nil, err
 	}
@@ -7400,6 +7447,40 @@ func NewGetMintsByPubkeyInsidersRequest(server string, pubkey string, params *Ge
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
 		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMintsByPubkeyLiveRequest constructs an http.Request for the GetMintsByPubkeyLive method
+func NewGetMintsByPubkeyLiveRequest(server string, pubkey string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "pubkey", pubkey, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/mints/%s/live", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -11607,6 +11688,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
 	GetMintsByPubkeyInsidersWithResponse(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyInsidersResponse, error)
 
+	// GetMintsByPubkeyLiveWithResponse Get Mint Live Metrics
+	//
+	// Returns the mint's live header figures — latest price, market cap and lifetime distinct traders — on the same basis as the corresponding fields of GET /api/mints/{pubkey}, from sources that update with ingest rather than on a refresh cadence. Intended for polling: it reads none of the identity row's enrichment (authorities, bonding curve, dev holdings, risk cohorts). Fields are independently optional — an unpriceable mint reports no price, and a quote-registry mint (WSOL, the USD stables) reports no trader count.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/mints/{pubkey}/live (the `GetMintsByPubkeyLive` operationId).
+	GetMintsByPubkeyLiveWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyLiveResponse, error)
+
 	// GetMintsByPubkeyLpEventsWithResponse List Mint LP Events
 	//
 	// Recent liquidity-pool add/remove/burn events for a mint (newest first), from `lp_events`. Sparse where upstream doesn't yet extract LP for a DEX; returns an empty array then.
@@ -13233,6 +13323,61 @@ func (r GetMintsByPubkeyInsidersResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetMintsByPubkeyInsidersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMintsByPubkeyLiveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorMintLiveMetrics
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMintsByPubkeyLiveResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorMintLiveMetrics {
+	return r.JSON200
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetMintsByPubkeyLiveResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetMintsByPubkeyLiveResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON500
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMintsByPubkeyLiveResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMintsByPubkeyLiveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMintsByPubkeyLiveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMintsByPubkeyLiveResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17257,6 +17402,21 @@ func (c *ClientWithResponses) GetMintsByPubkeyInsidersWithResponse(ctx context.C
 	return ParseGetMintsByPubkeyInsidersResponse(rsp)
 }
 
+// GetMintsByPubkeyLiveWithResponse Get Mint Live Metrics
+//
+// Returns the mint's live header figures — latest price, market cap and lifetime distinct traders — on the same basis as the corresponding fields of GET /api/mints/{pubkey}, from sources that update with ingest rather than on a refresh cadence. Intended for polling: it reads none of the identity row's enrichment (authorities, bonding curve, dev holdings, risk cohorts). Fields are independently optional — an unpriceable mint reports no price, and a quote-registry mint (WSOL, the USD stables) reports no trader count.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/mints/{pubkey}/live (the `GetMintsByPubkeyLive` operationId).
+func (c *ClientWithResponses) GetMintsByPubkeyLiveWithResponse(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*GetMintsByPubkeyLiveResponse, error) {
+	rsp, err := c.GetMintsByPubkeyLive(ctx, pubkey, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMintsByPubkeyLiveResponse(rsp)
+}
+
 // GetMintsByPubkeyLpEventsWithResponse List Mint LP Events
 //
 // Recent liquidity-pool add/remove/burn events for a mint (newest first), from `lp_events`. Sparse where upstream doesn't yet extract LP for a DEX; returns an empty array then.
@@ -19043,6 +19203,46 @@ func ParseGetMintsByPubkeyInsidersResponse(rsp *http.Response) (*GetMintsByPubke
 			return nil, err
 		}
 		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMintsByPubkeyLiveResponse parses an HTTP response from a GetMintsByPubkeyLiveWithResponse call
+func ParseGetMintsByPubkeyLiveResponse(rsp *http.Response) (*GetMintsByPubkeyLiveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMintsByPubkeyLiveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorMintLiveMetrics
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
