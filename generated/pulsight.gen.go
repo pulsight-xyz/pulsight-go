@@ -3692,7 +3692,7 @@ type GetTradersParams struct {
 	// FavoritesOnly Restrict to the caller's favorited traders (authenticated only)
 	FavoritesOnly *bool `form:"favorites_only,omitempty" json:"favorites_only,omitempty"`
 
-	// ExtraWindows Comma list of DISPLAY-only window families to hydrate: 1d, all. Costs one extra query per page; sorting and f= filters are unaffected (they read 7d/30d board columns).
+	// ExtraWindows Comma list of DISPLAY-only window families to hydrate: 1d, all. Costs one extra query per page; sorting is unaffected (it reads 7d/30d board columns) and f= filters read 1d/7d/30d board columns.
 	ExtraWindows *string `form:"extra_windows,omitempty" json:"extra_windows,omitempty"`
 }
 
