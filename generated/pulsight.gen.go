@@ -412,6 +412,27 @@ func (e PulsightInternalCoreUsecasesBacktestTradeSource) Valid() bool {
 	}
 }
 
+// Defines values for GetMintsParamsHours.
+const (
+	N1  GetMintsParamsHours = 1
+	N24 GetMintsParamsHours = 24
+	N6  GetMintsParamsHours = 6
+)
+
+// Valid indicates whether the value is a known member of the GetMintsParamsHours enum.
+func (e GetMintsParamsHours) Valid() bool {
+	switch e {
+	case N1:
+		return true
+	case N24:
+		return true
+	case N6:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for GetTradersByWalletAddressPnlSeriesParamsWindow.
 const (
 	All  GetTradersByWalletAddressPnlSeriesParamsWindow = "all"
@@ -878,10 +899,19 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
 	// accumulator (since classifier 0cb3f9c, executor-routed fills whose
 	// accumulator belongs to the filler are excluded); the board's primary
 	// measure (claiming is sporadic, earning is the smooth signal).
-	EarnedLamports *int    `json:"earned_lamports,omitempty"`
-	FirstSeenMs    *int    `json:"first_seen_ms,omitempty"`
-	LastActiveMs   *int    `json:"last_active_ms,omitempty"`
-	PumpImage      *string `json:"pump_image,omitempty"`
+	EarnedLamports      *int `json:"earned_lamports,omitempty"`
+	FirstSeenMs         *int `json:"first_seen_ms,omitempty"`
+	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
+
+	// HolderRewardsLamports HolderRewardsLamports / HolderRewardPayouts — what pump PAID this wallet
+	// in holder rewards in the window (CA 000221), in priced lamports, and the
+	// number of payouts behind it. Holder rewards are pushed, not claimed, so
+	// this one figure is already a receipt. RewardsTotalLamports is the board's
+	// default rank: cashback CLAIMED plus holder rewards RECEIVED, both cash
+	// basis — never cashback earned, which is an accrual of the same money.
+	HolderRewardsLamports *int    `json:"holder_rewards_lamports,omitempty"`
+	LastActiveMs          *int    `json:"last_active_ms,omitempty"`
+	PumpImage             *string `json:"pump_image,omitempty"`
 
 	// PumpUsername Pump.fun profile enrichment (server-side, cached): the wallet's pump
 	// username and avatar when it has a profile. Always nil on a censored
@@ -889,7 +919,8 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
 	PumpUsername *string `json:"pump_username,omitempty"`
 
 	// Rank Rank is 1-based within the requested window + filters (offset-aware).
-	Rank *int `json:"rank,omitempty"`
+	Rank                 *int `json:"rank,omitempty"`
+	RewardsTotalLamports *int `json:"rewards_total_lamports,omitempty"`
 
 	// Tags Tags are the derived classification tags (`deriveTags`), resolved for
 	// the whole page in one round trip so a row states what the wallet is
@@ -917,21 +948,40 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardSummary struct {
 
 	// Earners Earners / EarnedLamports — wallets with any earned cashback in the
 	// window, and their summed earnings (the "% of pool" denominator).
-	Earners *int `json:"earners,omitempty"`
+	Earners             *int `json:"earners,omitempty"`
+	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
+
+	// HolderRewardsLamports HolderRewardsLamports / HolderRewardPayouts / RewardsTotalLamports —
+	// the same population's holder-reward side and the merged cash-basis
+	// total the board ranks on by default.
+	HolderRewardsLamports *int `json:"holder_rewards_lamports,omitempty"`
 
 	// MedianEarnedLamports Population marks.
 	MedianEarnedLamports *int                                        `json:"median_earned_lamports,omitempty"`
 	Rank1EarnedLamports  *int                                        `json:"rank1_earned_lamports,omitempty"`
+	RewardsTotalLamports *int                                        `json:"rewards_total_lamports,omitempty"`
 	Window               *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorCashbackClaimRow defines model for pulsight_internal_core_domain_aggregator.CashbackClaimRow.
 type PulsightInternalCoreDomainAggregatorCashbackClaimRow struct {
-	AmountLamports *int    `json:"amount_lamports,omitempty"`
-	Program        *string `json:"program,omitempty"`
-	QuoteMint      *string `json:"quote_mint,omitempty"`
-	Signature      *string `json:"signature,omitempty"`
-	Timestamp      *string `json:"timestamp,omitempty"`
+	// Amount Amount is the raw payout in QuoteMint's base units, and Priced says
+	// whether AmountLamports carries a SOL valuation of it. Both are zero on
+	// a claim, whose AmountLamports is already lamports.
+	Amount         *int `json:"amount,omitempty"`
+	AmountLamports *int `json:"amount_lamports,omitempty"`
+
+	// Kind Kind is "cashback_claim" or "holder_reward".
+	Kind *string `json:"kind,omitempty"`
+
+	// Mint Mint is the coin that paid a holder reward; empty on a claim, which is
+	// per-accumulator rather than per-coin.
+	Mint      *string `json:"mint,omitempty"`
+	Priced    *bool   `json:"priced,omitempty"`
+	Program   *string `json:"program,omitempty"`
+	QuoteMint *string `json:"quote_mint,omitempty"`
+	Signature *string `json:"signature,omitempty"`
+	Timestamp *string `json:"timestamp,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorCashbackClaimsPage defines model for pulsight_internal_core_domain_aggregator.CashbackClaimsPage.
@@ -1901,7 +1951,17 @@ type PulsightInternalCoreDomainAggregatorTraderCashbackStats struct {
 	// EarnedLamports EarnedLamports — cashback ACCRUED by the window's swaps (the exact
 	// per-swap amounts from the pump trade events, WSOL-quoted markets
 	// only). Informational: the net-PnL formulas fold CLAIMED, not this.
-	EarnedLamports          *int    `json:"earned_lamports,omitempty"`
+	EarnedLamports      *int `json:"earned_lamports,omitempty"`
+	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
+
+	// HolderRewardsLamports The holder-reward half of the same panel (CA 000220). pump PUSHES
+	// these, so there is no accrued/claimed pair and nothing to claim:
+	// HolderRewardsLamports is already a receipt, and the payout count is
+	// the cadence figure ClaimCount is for cashback. Lifetime is exact —
+	// the receipt ledger carries no TTL — but both lamport figures count
+	// only payouts whose quote could be priced in SOL, because a coin
+	// paired with another token pays in that token (CA r89).
+	HolderRewardsLamports   *int    `json:"holder_rewards_lamports,omitempty"`
 	LastClaimAt             *string `json:"last_claim_at,omitempty"`
 	LifetimeClaimedLamports *int    `json:"lifetime_claimed_lamports,omitempty"`
 
@@ -1911,7 +1971,9 @@ type PulsightInternalCoreDomainAggregatorTraderCashbackStats struct {
 	// 75-day retention (CA 000098) — the same compromise reliability's "all"
 	// window makes, undercounting rather than inventing. ProgramTotals below
 	// carries the program's own all-time figures beside it.
-	LifetimeEarnedLamports *int `json:"lifetime_earned_lamports,omitempty"`
+	LifetimeEarnedLamports        *int `json:"lifetime_earned_lamports,omitempty"`
+	LifetimeHolderRewardPayouts   *int `json:"lifetime_holder_reward_payouts,omitempty"`
+	LifetimeHolderRewardsLamports *int `json:"lifetime_holder_rewards_lamports,omitempty"`
 
 	// ProgramTotals ProgramTotals — the lifetime running totals the pump program itself
 	// stamped on the wallet's LATEST claim event, one row per program
@@ -1926,9 +1988,10 @@ type PulsightInternalCoreDomainAggregatorTraderCashbackStats struct {
 	ProgramTotals *[]PulsightInternalCoreDomainAggregatorCashbackProgramTotals `json:"program_totals,omitempty"`
 	Pubkey        *string                                                      `json:"pubkey,omitempty"`
 
-	// RecentClaims RecentClaims — the wallet's latest claims, newest first (≤10).
-	// AmountLamports is in the claim's quote-mint base units — lamports for
-	// WSOL rows, which is nearly all of them.
+	// RecentClaims RecentClaims — the wallet's latest REWARDS, newest first (≤10):
+	// cashback claims and holder-reward payouts interleaved by timestamp,
+	// told apart by Kind. AmountLamports is in the row's quote-mint base
+	// units — lamports for WSOL rows, which is nearly all of the claims.
 	RecentClaims        *[]PulsightInternalCoreDomainAggregatorCashbackClaimRow `json:"recent_claims,omitempty"`
 	TotalVolumeLamports *int                                                    `json:"total_volume_lamports,omitempty"`
 	VolumeShare         *float32                                                `json:"volume_share,omitempty"`
@@ -2341,13 +2404,26 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	// DidntBuySells7d Uncovered-sell counters for the window (CA migration 000018):
 	// sells with no observed buy of the mint / sells exceeding the
 	// observed bought balance.
-	DidntBuySells7d  *int     `json:"didnt_buy_sells_7d,omitempty"`
-	DidntBuySellsAll *int     `json:"didnt_buy_sells_all,omitempty"`
-	DustTxRatio      *float32 `json:"dust_tx_ratio,omitempty"`
-	FailedTxs1d      *int     `json:"failed_txs_1d,omitempty"`
-	FailedTxs30d     *int     `json:"failed_txs_30d,omitempty"`
-	FailedTxs7d      *int     `json:"failed_txs_7d,omitempty"`
-	FailedTxsAll     *int     `json:"failed_txs_all,omitempty"`
+	DidntBuySells7d        *int     `json:"didnt_buy_sells_7d,omitempty"`
+	DidntBuySellsAll       *int     `json:"didnt_buy_sells_all,omitempty"`
+	DustTxRatio            *float32 `json:"dust_tx_ratio,omitempty"`
+	FailedTxs1d            *int     `json:"failed_txs_1d,omitempty"`
+	FailedTxs30d           *int     `json:"failed_txs_30d,omitempty"`
+	FailedTxs7d            *int     `json:"failed_txs_7d,omitempty"`
+	FailedTxsAll           *int     `json:"failed_txs_all,omitempty"`
+	HolderRewardPayouts1d  *int     `json:"holder_reward_payouts_1d,omitempty"`
+	HolderRewardPayouts30d *int     `json:"holder_reward_payouts_30d,omitempty"`
+	HolderRewardPayouts7d  *int     `json:"holder_reward_payouts_7d,omitempty"`
+	HolderRewardPayoutsAll *int     `json:"holder_reward_payouts_all,omitempty"`
+	HolderRewards1d        *float32 `json:"holder_rewards_1d,omitempty"`
+	HolderRewards30d       *float32 `json:"holder_rewards_30d,omitempty"`
+
+	// HolderRewards7d Pump holder rewards, lamports. Pushed rather than claimed, so the one
+	// figure is already a receipt and is what net PnL folds; the payout count
+	// counts every payout, including one on a coin whose quote could not be
+	// priced in SOL and therefore adds no lamports.
+	HolderRewards7d  *float32 `json:"holder_rewards_7d,omitempty"`
+	HolderRewardsAll *float32 `json:"holder_rewards_all,omitempty"`
 	Id               *string  `json:"id,omitempty"`
 	IsFavorite       *bool    `json:"is_favorite,omitempty"`
 
@@ -3144,8 +3220,16 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// denominator is the one read that cannot prune by partition, so it is
 	// not paid per listing page. The trader-detail reliability panel serves
 	// them per wallet.
-	FailedTxsAll *int  `json:"failed_txs_all,omitempty"`
-	HasAvatar    *bool `json:"has_avatar,omitempty"`
+	FailedTxsAll           *int     `json:"failed_txs_all,omitempty"`
+	HasAvatar              *bool    `json:"has_avatar,omitempty"`
+	HolderRewardPayouts1d  *int     `json:"holder_reward_payouts_1d,omitempty"`
+	HolderRewardPayouts30d *int     `json:"holder_reward_payouts_30d,omitempty"`
+	HolderRewardPayouts7d  *int     `json:"holder_reward_payouts_7d,omitempty"`
+	HolderRewardPayoutsAll *int     `json:"holder_reward_payouts_all,omitempty"`
+	HolderRewards1d        *float32 `json:"holder_rewards_1d,omitempty"`
+	HolderRewards30d       *float32 `json:"holder_rewards_30d,omitempty"`
+	HolderRewards7d        *float32 `json:"holder_rewards_7d,omitempty"`
+	HolderRewardsAll       *float32 `json:"holder_rewards_all,omitempty"`
 
 	// HoldingPnlLamports HoldingPnlLamports is the wallet's current unrealised PnL across
 	// all open positions, in lamports. Nil when CA has no live price
@@ -3344,7 +3428,7 @@ type GetCashbackLeaderboardParams struct {
 	// Window 1d|7d|30d|all (default 7d)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 
-	// SortBy cashback|cashback_claimed|cashback_share|cashback_claim_count|cashback_volume (default cashback)
+	// SortBy rewards_total|holder_rewards|holder_reward_payouts|cashback|cashback_claimed|cashback_share|cashback_claim_count|cashback_volume (default rewards_total)
 	SortBy *string `form:"sort_by,omitempty" json:"sort_by,omitempty"`
 
 	// Direction asc|desc (default desc)
@@ -3395,8 +3479,8 @@ type GetMintsParams struct {
 	// Dex Restrict to mints traded on any of these DEXes (repeatable)
 	Dex *[]string `form:"dex,omitempty" json:"dex,omitempty"`
 
-	// Hours Activity-gate lookback hours (1..168, default 24)
-	Hours *int `form:"hours,omitempty" json:"hours,omitempty"`
+	// Hours Activity-gate lookback hours (1, 6 or 24; default 24)
+	Hours *GetMintsParamsHours `form:"hours,omitempty" json:"hours,omitempty"`
 
 	// MinPoolSol Min window pool quote-reserves (liquidity), WSOL lamports. Omitted ⇒ a default ~1 SOL floor hides dust on untargeted browse; pass 0 to disable, or any value to override.
 	MinPoolSol *float32 `form:"min_pool_sol,omitempty" json:"min_pool_sol,omitempty"`
@@ -3419,6 +3503,9 @@ type GetMintsParams struct {
 	// Offset Pagination offset
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
+
+// GetMintsParamsHours defines parameters for GetMints.
+type GetMintsParamsHours int
 
 // GetMintsByPubkeyActivityParams defines parameters for GetMintsByPubkeyActivity.
 type GetMintsByPubkeyActivityParams struct {
@@ -4052,16 +4139,16 @@ type ClientInterface interface {
 	// Corresponds with GET /api/backtests/{id}/trades (the `GetBacktestsByIdTrades` operationId).
 	GetBacktestsByIdTrades(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetCashbackLeaderboard Pump cashback leaderboard
+	// GetCashbackLeaderboard Pump rewards leaderboard
 	//
-	// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+	// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
 	//
 	// Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
 	GetCashbackLeaderboard(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetCashbackSummary Pump cashback board summary
+	// GetCashbackSummary Pump rewards board summary
 	//
-	// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+	// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
 	//
 	// Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
 	GetCashbackSummary(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4539,14 +4626,14 @@ type ClientInterface interface {
 	// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
 	GetTradersByTraderIDPnls(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTradersByWalletAddressCashback Pump cashback rewards of a wallet
+	// GetTradersByWalletAddressCashback Pump rewards of a wallet
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
 	GetTradersByWalletAddressCashback(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTradersByWalletAddressCashbackClaims Cashback claim history of a wallet
+	// GetTradersByWalletAddressCashbackClaims Reward history of a wallet
 	//
-	// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+	// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
 	GetTradersByWalletAddressCashbackClaims(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4813,9 +4900,9 @@ func (c *Client) GetBacktestsByIdTrades(ctx context.Context, id string, params *
 	return c.Client.Do(req)
 }
 
-// GetCashbackLeaderboard Pump cashback leaderboard
+// GetCashbackLeaderboard Pump rewards leaderboard
 //
-// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
 //
 // Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
 func (c *Client) GetCashbackLeaderboard(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -4830,9 +4917,9 @@ func (c *Client) GetCashbackLeaderboard(ctx context.Context, params *GetCashback
 	return c.Client.Do(req)
 }
 
-// GetCashbackSummary Pump cashback board summary
+// GetCashbackSummary Pump rewards board summary
 //
-// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
 //
 // Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
 func (c *Client) GetCashbackSummary(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -6010,7 +6097,7 @@ func (c *Client) GetTradersByTraderIDPnls(ctx context.Context, traderID string, 
 	return c.Client.Do(req)
 }
 
-// GetTradersByWalletAddressCashback Pump cashback rewards of a wallet
+// GetTradersByWalletAddressCashback Pump rewards of a wallet
 //
 // Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
 func (c *Client) GetTradersByWalletAddressCashback(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -6025,9 +6112,9 @@ func (c *Client) GetTradersByWalletAddressCashback(ctx context.Context, walletAd
 	return c.Client.Do(req)
 }
 
-// GetTradersByWalletAddressCashbackClaims Cashback claim history of a wallet
+// GetTradersByWalletAddressCashbackClaims Reward history of a wallet
 //
-// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
 //
 // Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
 func (c *Client) GetTradersByWalletAddressCashbackClaims(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -11605,18 +11692,18 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/backtests/{id}/trades (the `GetBacktestsByIdTrades` operationId).
 	GetBacktestsByIdTradesWithResponse(ctx context.Context, id string, params *GetBacktestsByIdTradesParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdTradesResponse, error)
 
-	// GetCashbackLeaderboardWithResponse Pump cashback leaderboard
+	// GetCashbackLeaderboardWithResponse Pump rewards leaderboard
 	//
-	// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+	// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
 	GetCashbackLeaderboardWithResponse(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*GetCashbackLeaderboardResponse, error)
 
-	// GetCashbackSummaryWithResponse Pump cashback board summary
+	// GetCashbackSummaryWithResponse Pump rewards board summary
 	//
-	// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+	// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12202,16 +12289,16 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
 	GetTradersByTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDPnlsResponse, error)
 
-	// GetTradersByWalletAddressCashbackWithResponse Pump cashback rewards of a wallet
+	// GetTradersByWalletAddressCashbackWithResponse Pump rewards of a wallet
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
 	GetTradersByWalletAddressCashbackWithResponse(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackParams, reqEditors ...RequestEditorFn) (*GetTradersByWalletAddressCashbackResponse, error)
 
-	// GetTradersByWalletAddressCashbackClaimsWithResponse Cashback claim history of a wallet
+	// GetTradersByWalletAddressCashbackClaimsWithResponse Reward history of a wallet
 	//
-	// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+	// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -17253,9 +17340,9 @@ func (c *ClientWithResponses) GetBacktestsByIdTradesWithResponse(ctx context.Con
 	return ParseGetBacktestsByIdTradesResponse(rsp)
 }
 
-// GetCashbackLeaderboardWithResponse Pump cashback leaderboard
+// GetCashbackLeaderboardWithResponse Pump rewards leaderboard
 //
-// Wallets ranked by pump cashback over a window. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus cashback-specific sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17268,9 +17355,9 @@ func (c *ClientWithResponses) GetCashbackLeaderboardWithResponse(ctx context.Con
 	return ParseGetCashbackLeaderboardResponse(rsp)
 }
 
-// GetCashbackSummaryWithResponse Pump cashback board summary
+// GetCashbackSummaryWithResponse Pump rewards board summary
 //
-// Pool totals, the median wallet and the top earner for a window. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger.
+// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -18276,7 +18363,7 @@ func (c *ClientWithResponses) GetTradersByTraderIDPnlsWithResponse(ctx context.C
 	return ParseGetTradersByTraderIDPnlsResponse(rsp)
 }
 
-// GetTradersByWalletAddressCashbackWithResponse Pump cashback rewards of a wallet
+// GetTradersByWalletAddressCashbackWithResponse Pump rewards of a wallet
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -18289,9 +18376,9 @@ func (c *ClientWithResponses) GetTradersByWalletAddressCashbackWithResponse(ctx 
 	return ParseGetTradersByWalletAddressCashbackResponse(rsp)
 }
 
-// GetTradersByWalletAddressCashbackClaimsWithResponse Cashback claim history of a wallet
+// GetTradersByWalletAddressCashbackClaimsWithResponse Reward history of a wallet
 //
-// One wallet's claim_cashback executions, newest first, paged. Read from the raw claim ledger (75-day retention): older claims have aged out; the program-reported anchors on the cashback panel carry the true all-time totals. Amounts are in the claim's quote-mint base units (lamports for WSOL rows, which is nearly all of them).
+// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
 //
 // Returns a wrapper object for the known response body format(s).
 //
