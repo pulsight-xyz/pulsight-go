@@ -972,15 +972,22 @@ type PulsightInternalCoreDomainAggregatorCashbackClaimRow struct {
 	AmountLamports *int `json:"amount_lamports,omitempty"`
 
 	// Kind Kind is "cashback_claim" or "holder_reward".
-	Kind *string `json:"kind,omitempty"`
+	Kind    *string `json:"kind,omitempty"`
+	LogoUri *string `json:"logo_uri,omitempty"`
 
 	// Mint Mint is the coin that paid a holder reward; empty on a claim, which is
 	// per-accumulator rather than per-coin.
 	Mint      *string `json:"mint,omitempty"`
+	Name      *string `json:"name,omitempty"`
 	Priced    *bool   `json:"priced,omitempty"`
 	Program   *string `json:"program,omitempty"`
 	QuoteMint *string `json:"quote_mint,omitempty"`
 	Signature *string `json:"signature,omitempty"`
+
+	// Symbol Symbol / Name / LogoURI name the paying coin so a payout renders as a
+	// token rather than a raw address. Empty on a claim, and on a coin whose
+	// metadata has not been fetched yet.
+	Symbol    *string `json:"symbol,omitempty"`
 	Timestamp *string `json:"timestamp,omitempty"`
 }
 
