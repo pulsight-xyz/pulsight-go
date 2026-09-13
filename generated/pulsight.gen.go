@@ -968,21 +968,44 @@ type PulsightInternalCoreDomainAggregatorCashbackClaimRow struct {
 	// Amount Amount is the raw payout in QuoteMint's base units, and Priced says
 	// whether AmountLamports carries a SOL valuation of it. Both are zero on
 	// a claim, whose AmountLamports is already lamports.
-	Amount         *int `json:"amount,omitempty"`
+	Amount *int `json:"amount,omitempty"`
+
+	// AmountGross AmountGross is a cashback claim's RAW swept amount before the part the
+	// wallet immediately re-parked; AmountLamports is what it KEPT. They differ
+	// on a park-resweep, where kept is legitimately zero and only the gross
+	// shows a claim happened at all. Zero on a payout, which cannot be parked.
+	AmountGross    *int `json:"amount_gross,omitempty"`
 	AmountLamports *int `json:"amount_lamports,omitempty"`
 
-	// Kind Kind is "cashback_claim" or "holder_reward".
+	// Kind Kind is RewardKindCashbackClaim or RewardKindHolderReward.
 	Kind    *string `json:"kind,omitempty"`
 	LogoUri *string `json:"logo_uri,omitempty"`
 
 	// Mint Mint is the coin that paid a holder reward; empty on a claim, which is
 	// per-accumulator rather than per-coin.
-	Mint      *string `json:"mint,omitempty"`
-	Name      *string `json:"name,omitempty"`
-	Priced    *bool   `json:"priced,omitempty"`
-	Program   *string `json:"program,omitempty"`
-	QuoteMint *string `json:"quote_mint,omitempty"`
-	Signature *string `json:"signature,omitempty"`
+	Mint *string `json:"mint,omitempty"`
+	Name *string `json:"name,omitempty"`
+
+	// PriceBasis PriceBasis says HOW AmountLamports was arrived at: "exact" when the
+	// payout was already in SOL, "market" when it was valued through the
+	// quote's own SOL market at that minute, "unpriced" when no value could
+	// be stated. A market figure moves with the quote; an exact one is the
+	// amount received. Empty on a cashback claim.
+	PriceBasis    *string `json:"price_basis,omitempty"`
+	Priced        *bool   `json:"priced,omitempty"`
+	Program       *string `json:"program,omitempty"`
+	QuoteDecimals *int    `json:"quote_decimals,omitempty"`
+	QuoteLogoUri  *string `json:"quote_logo_uri,omitempty"`
+	QuoteMint     *string `json:"quote_mint,omitempty"`
+	QuoteName     *string `json:"quote_name,omitempty"`
+
+	// QuoteSymbol QuoteSymbol / QuoteName / QuoteLogoURI name QuoteMint — the token the
+	// reward was actually paid in, which on a holder-rewards coin is its
+	// pool's quote and only rarely WSOL. QuoteDecimals scales Amount into
+	// whole tokens and is -1 when unknown; it is per-token (PUMP 6, ZEC 8,
+	// XMR 12), so a reader must not assume a default.
+	QuoteSymbol *string `json:"quote_symbol,omitempty"`
+	Signature   *string `json:"signature,omitempty"`
 
 	// Symbol Symbol / Name / LogoURI name the paying coin so a payout renders as a
 	// token rather than a raw address. Empty on a claim, and on a coin whose
@@ -993,11 +1016,16 @@ type PulsightInternalCoreDomainAggregatorCashbackClaimRow struct {
 
 // PulsightInternalCoreDomainAggregatorCashbackClaimsPage defines model for pulsight_internal_core_domain_aggregator.CashbackClaimsPage.
 type PulsightInternalCoreDomainAggregatorCashbackClaimsPage struct {
-	Items  *[]PulsightInternalCoreDomainAggregatorCashbackClaimRow `json:"items,omitempty"`
-	Limit  *int                                                    `json:"limit,omitempty"`
-	Offset *int                                                    `json:"offset,omitempty"`
-	Pubkey *string                                                 `json:"pubkey,omitempty"`
-	Total  *int                                                    `json:"total,omitempty"`
+	Items *[]PulsightInternalCoreDomainAggregatorCashbackClaimRow `json:"items,omitempty"`
+
+	// Kind Kind is the reward kind this page was filtered to, empty when it carries
+	// both. Total counts the same set the items come from, so a caller never
+	// pages one kind against the other's count.
+	Kind   *string `json:"kind,omitempty"`
+	Limit  *int    `json:"limit,omitempty"`
+	Offset *int    `json:"offset,omitempty"`
+	Pubkey *string `json:"pubkey,omitempty"`
+	Total  *int    `json:"total,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorCashbackProgramTotals defines model for pulsight_internal_core_domain_aggregator.CashbackProgramTotals.
@@ -3913,6 +3941,9 @@ type GetTradersByWalletAddressCashbackParams struct {
 
 // GetTradersByWalletAddressCashbackClaimsParams defines parameters for GetTradersByWalletAddressCashbackClaims.
 type GetTradersByWalletAddressCashbackClaimsParams struct {
+	// Kind cashback_claim|holder_reward — omit for both
+	Kind *string `form:"kind,omitempty" json:"kind,omitempty"`
+
 	// Limit Page size (default 50, max 200)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
@@ -10806,6 +10837,18 @@ func NewGetTradersByWalletAddressCashbackClaimsRequest(server string, walletAddr
 		// styled parameters, preserving literal commas as delimiters
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
+
+		if params.Kind != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "kind", *params.Kind, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
 
 		if params.Limit != nil {
 
