@@ -2424,15 +2424,10 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	HolderRewardPayoutsAll *int     `json:"holder_reward_payouts_all,omitempty"`
 	HolderRewards1d        *float32 `json:"holder_rewards_1d,omitempty"`
 	HolderRewards30d       *float32 `json:"holder_rewards_30d,omitempty"`
-
-	// HolderRewards7d Pump holder rewards, lamports. Pushed rather than claimed, so the one
-	// figure is already a receipt and is what net PnL folds; the payout count
-	// counts every payout, including one on a coin whose quote could not be
-	// priced in SOL and therefore adds no lamports.
-	HolderRewards7d  *float32 `json:"holder_rewards_7d,omitempty"`
-	HolderRewardsAll *float32 `json:"holder_rewards_all,omitempty"`
-	Id               *string  `json:"id,omitempty"`
-	IsFavorite       *bool    `json:"is_favorite,omitempty"`
+	HolderRewards7d        *float32 `json:"holder_rewards_7d,omitempty"`
+	HolderRewardsAll       *float32 `json:"holder_rewards_all,omitempty"`
+	Id                     *string  `json:"id,omitempty"`
+	IsFavorite             *bool    `json:"is_favorite,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/KOL/...) from the
 	// known_addresses registry; empty when the wallet isn't labelled.
@@ -2510,7 +2505,16 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	RealizedProfitPnl30d *float32 `json:"realized_profit_pnl_30d,omitempty"`
 	RealizedProfitPnl7d  *float32 `json:"realized_profit_pnl_7d,omitempty"`
 	RebalancingRatio     *float32 `json:"rebalancing_ratio,omitempty"`
-	RiskLevel            *string  `json:"risk_level,omitempty"`
+	RewardsTotal1d       *float32 `json:"rewards_total_1d,omitempty"`
+	RewardsTotal30d      *float32 `json:"rewards_total_30d,omitempty"`
+
+	// RewardsTotal7d Pump holder rewards, lamports. Pushed rather than claimed, so the one
+	// figure is already a receipt and is what net PnL folds; the payout count
+	// counts every payout, including one on a coin whose quote could not be
+	// priced in SOL and therefore adds no lamports.
+	RewardsTotal7d  *float32 `json:"rewards_total_7d,omitempty"`
+	RewardsTotalAll *float32 `json:"rewards_total_all,omitempty"`
+	RiskLevel       *string  `json:"risk_level,omitempty"`
 
 	// RiskScore Risk assessment
 	RiskScore *int     `json:"risk_score,omitempty"`
@@ -3131,15 +3135,23 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
 	FailedTxs  *int    `json:"failed_txs,omitempty"`
 
 	// Fees Costs of the day (lamports): per-tx fees, tips, and failed-tx burn,
-	// plus the day's CLAIMED pump cashback (cash basis, the one positive
-	// component), with `net = profit - fees - tips - failed_cost +
-	// cashback` (profit already includes the arbitrage take-home). The charts plot NET as the headline series; `profit` stays
-	// as the flat/gross component.
-	Fees        *int     `json:"fees,omitempty"`
-	Net         *int     `json:"net,omitempty"`
-	Profit      *int     `json:"profit,omitempty"`
-	SuccessRate *float32 `json:"success_rate,omitempty"`
-	Tips        *int     `json:"tips,omitempty"`
+	// against what pump paid the wallet that day — cashback CLAIMED and
+	// holder rewards RECEIVED, both cash basis — with `net = profit - fees
+	// - tips - failed_cost + cashback + holder_rewards` (profit already
+	// includes the arbitrage take-home). The charts plot NET as the headline
+	// series; `profit` stays as the flat/gross component.
+	Fees                *int `json:"fees,omitempty"`
+	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
+
+	// HolderRewards HolderRewards is the day's holder-reward payouts valued in SOL, and
+	// HolderRewardPayouts how many payouts there were. A payout in a quote
+	// we cannot price in SOL adds nothing to the value but still counts, so
+	// a day can carry payouts with zero lamports.
+	HolderRewards *int     `json:"holder_rewards,omitempty"`
+	Net           *int     `json:"net,omitempty"`
+	Profit        *int     `json:"profit,omitempty"`
+	SuccessRate   *float32 `json:"success_rate,omitempty"`
+	Tips          *int     `json:"tips,omitempty"`
 
 	// Txs Txs is the day's landed transaction count; FailedTxs the failed-tx
 	// ledger's failed swaps+arbs+other. SuccessRate divides the OBSERVED
@@ -3316,6 +3328,10 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	RealizedProfitPnl30d *float32 `json:"realized_profit_pnl_30d,omitempty"`
 	RealizedProfitPnl7d  *float32 `json:"realized_profit_pnl_7d,omitempty"`
 	RebalancingRatio     *float32 `json:"rebalancing_ratio,omitempty"`
+	RewardsTotal1d       *float32 `json:"rewards_total_1d,omitempty"`
+	RewardsTotal30d      *float32 `json:"rewards_total_30d,omitempty"`
+	RewardsTotal7d       *float32 `json:"rewards_total_7d,omitempty"`
+	RewardsTotalAll      *float32 `json:"rewards_total_all,omitempty"`
 	RiskLevel            *string  `json:"risk_level,omitempty"`
 	RiskScore            *int     `json:"risk_score,omitempty"`
 	Roi1d                *float32 `json:"roi_1d,omitempty"`
