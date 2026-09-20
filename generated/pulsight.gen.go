@@ -229,27 +229,6 @@ func (e PulsightInternalCoreDomainSubscriptionSubscriptionTier) Valid() bool {
 	}
 }
 
-// Defines values for PulsightInternalCoreDomainTraderTagSource.
-const (
-	TagSourceAggregator PulsightInternalCoreDomainTraderTagSource = "aggregator"
-	TagSourceComputed   PulsightInternalCoreDomainTraderTagSource = "computed"
-	TagSourceManual     PulsightInternalCoreDomainTraderTagSource = "manual"
-)
-
-// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainTraderTagSource enum.
-func (e PulsightInternalCoreDomainTraderTagSource) Valid() bool {
-	switch e {
-	case TagSourceAggregator:
-		return true
-	case TagSourceComputed:
-		return true
-	case TagSourceManual:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for PulsightInternalCoreDomainWebhookType.
 const (
 	TypeDiscord  PulsightInternalCoreDomainWebhookType = "discord"
@@ -475,14 +454,6 @@ type InternalAdaptersPrimaryHttpHandlerPaginatedCreditLedger struct {
 	Total  *int                                           `json:"total,omitempty"`
 }
 
-// InternalAdaptersPrimaryHttpHandlerPaginatedPnls defines model for internal_adapters_primary_http_handler.PaginatedPnls.
-type InternalAdaptersPrimaryHttpHandlerPaginatedPnls struct {
-	Items  *[]PulsightInternalCoreDomainTraderPnl `json:"items,omitempty"`
-	Limit  *int                                   `json:"limit,omitempty"`
-	Offset *int                                   `json:"offset,omitempty"`
-	Total  *int                                   `json:"total,omitempty"`
-}
-
 // InternalAdaptersPrimaryHttpHandlerStrategyListItem defines model for internal_adapters_primary_http_handler.StrategyListItem.
 type InternalAdaptersPrimaryHttpHandlerStrategyListItem struct {
 	Record *PulsightInternalCoreDomainStrategyRecord        `json:"record,omitempty"`
@@ -586,19 +557,22 @@ type InternalAdaptersPrimaryHttpHandlerNeighborStatsResponse struct {
 
 // InternalAdaptersPrimaryHttpHandlerOhlcvRow defines model for internal_adapters_primary_http_handler.ohlcvRow.
 type InternalAdaptersPrimaryHttpHandlerOhlcvRow struct {
-	BuyVolumeSol  *float32 `json:"buy_volume_sol,omitempty"`
+	BaseReserve   *int     `json:"base_reserve,omitempty"`
+	BuyVolumeSol  *int     `json:"buy_volume_sol,omitempty"`
+	BuyVolumeUsd  *int     `json:"buy_volume_usd,omitempty"`
 	Close         *float32 `json:"close,omitempty"`
+	DepthSol      *int     `json:"depth_sol,omitempty"`
+	DepthUsd      *int     `json:"depth_usd,omitempty"`
 	High          *float32 `json:"high,omitempty"`
 	Low           *float32 `json:"low,omitempty"`
 	Open          *float32 `json:"open,omitempty"`
-	PoolSol       *float32 `json:"pool_sol,omitempty"`
-	SellVolumeSol *float32 `json:"sell_volume_sol,omitempty"`
+	QuoteReserve  *int     `json:"quote_reserve,omitempty"`
+	SellVolumeSol *int     `json:"sell_volume_sol,omitempty"`
+	SellVolumeUsd *int     `json:"sell_volume_usd,omitempty"`
 	SwapCount     *int     `json:"swap_count,omitempty"`
 	Time          *int     `json:"time,omitempty"`
-	TokenVolume   *float32 `json:"token_volume,omitempty"`
-
-	// VolumeSol buy + sell
-	VolumeSol *float32 `json:"volume_sol,omitempty"`
+	VolumeSol     *int     `json:"volume_sol,omitempty"`
+	VolumeUsd     *int     `json:"volume_usd,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerPickTokensRequest defines model for internal_adapters_primary_http_handler.pickTokensRequest.
@@ -636,38 +610,71 @@ type InternalAdaptersPrimaryHttpHandlerSnapshotRow struct {
 	// AvgRp1d lamports
 	AvgRp1d *float32 `json:"avg_rp_1d,omitempty"`
 
+	// AvgRp1dUsd micro-USD twins of the eight figures above
+	AvgRp1dUsd *float32 `json:"avg_rp_1d_usd,omitempty"`
+
 	// AvgRp30d lamports
 	AvgRp30d *float32 `json:"avg_rp_30d,omitempty"`
+
+	// AvgRp30dUsd micro-USD
+	AvgRp30dUsd *float32 `json:"avg_rp_30d_usd,omitempty"`
 
 	// AvgRp7d lamports
 	AvgRp7d *float32 `json:"avg_rp_7d,omitempty"`
 
+	// AvgRp7dUsd micro-USD
+	AvgRp7dUsd *float32 `json:"avg_rp_7d_usd,omitempty"`
+
 	// AvgRpAll lamports, per-mint over the wallet's life
-	AvgRpAll           *float32 `json:"avg_rp_all,omitempty"`
+	AvgRpAll *float32 `json:"avg_rp_all,omitempty"`
+
+	// AvgRpAllUsd micro-USD
+	AvgRpAllUsd        *float32 `json:"avg_rp_all_usd,omitempty"`
 	AvgSellsPerToken   *float32 `json:"avg_sells_per_token,omitempty"`
 	HoldingPnlLamports *float32 `json:"holding_pnl_lamports,omitempty"`
-	MedBuysPerToken    *float32 `json:"med_buys_per_token,omitempty"`
-	MedHoldSecs        *float32 `json:"med_hold_secs,omitempty"`
-	MedReactivitySecs  *float32 `json:"med_reactivity_secs,omitempty"`
+
+	// HoldingPnlUsd micro-USD, stamped at execution
+	HoldingPnlUsd     *float32 `json:"holding_pnl_usd,omitempty"`
+	MedBuysPerToken   *float32 `json:"med_buys_per_token,omitempty"`
+	MedHoldSecs       *float32 `json:"med_hold_secs,omitempty"`
+	MedReactivitySecs *float32 `json:"med_reactivity_secs,omitempty"`
 
 	// MedRp1d lamports
 	MedRp1d *float32 `json:"med_rp_1d,omitempty"`
 
+	// MedRp1dUsd micro-USD
+	MedRp1dUsd *float32 `json:"med_rp_1d_usd,omitempty"`
+
 	// MedRp30d lamports
 	MedRp30d *float32 `json:"med_rp_30d,omitempty"`
+
+	// MedRp30dUsd micro-USD
+	MedRp30dUsd *float32 `json:"med_rp_30d_usd,omitempty"`
 
 	// MedRp7d lamports
 	MedRp7d *float32 `json:"med_rp_7d,omitempty"`
 
+	// MedRp7dUsd micro-USD
+	MedRp7dUsd *float32 `json:"med_rp_7d_usd,omitempty"`
+
 	// MedRpAll lamports, per-mint over the wallet's life
-	MedRpAll         *float32 `json:"med_rp_all,omitempty"`
+	MedRpAll *float32 `json:"med_rp_all,omitempty"`
+
+	// MedRpAllUsd micro-USD
+	MedRpAllUsd      *float32 `json:"med_rp_all_usd,omitempty"`
 	MedSellsPerToken *float32 `json:"med_sells_per_token,omitempty"`
 	OldestTradeAt    *string  `json:"oldest_trade_at,omitempty"`
 	PnlDistribution  *[]int   `json:"pnl_distribution,omitempty"`
 
+	// PnlDistributionUsd the buckets measured on the USD stamps
+	PnlDistributionUsd *[]int `json:"pnl_distribution_usd,omitempty"`
+
 	// PnlSparkline7d lamports per day
 	PnlSparkline7d *[]float32 `json:"pnl_sparkline_7d,omitempty"`
-	Tags           *[]string  `json:"tags,omitempty"`
+
+	// PnlSparkline7dUsd micro-USD per day
+	PnlSparkline7dUsd *[]float32 `json:"pnl_sparkline_7d_usd,omitempty"`
+	Tags              *[]string  `json:"tags,omitempty"`
 
 	// TokensCreated lifetime mints created
 	TokensCreated *int `json:"tokens_created,omitempty"`
@@ -704,82 +711,55 @@ type InternalAdaptersPrimaryHttpHandlerStrategyUpdateRequest struct {
 	Name        *string                                        `json:"name,omitempty"`
 }
 
-// InternalAdaptersPrimaryHttpHandlerSwapEventRow defines model for internal_adapters_primary_http_handler.swapEventRow.
-type InternalAdaptersPrimaryHttpHandlerSwapEventRow struct {
-	AmountIn            *float32 `json:"amount_in,omitempty"`
-	AmountOut           *float32 `json:"amount_out,omitempty"`
-	ArbPnlLamports      *int     `json:"arb_pnl_lamports,omitempty"`
-	BaseDecimals        *int     `json:"base_decimals,omitempty"`
-	Dex                 *string  `json:"dex,omitempty"`
-	Fee                 *int     `json:"fee,omitempty"`
-	IsArb               *bool    `json:"is_arb,omitempty"`
-	IsBuy               *bool    `json:"is_buy,omitempty"`
-	Label               *string  `json:"label,omitempty"`
-	LabelType           *string  `json:"label_type,omitempty"`
-	Mint                *string  `json:"mint,omitempty"`
-	Pool                *string  `json:"pool,omitempty"`
-	PriorityFeeLamports *int     `json:"priority_fee_lamports,omitempty"`
-	QuoteLamports       *int     `json:"quote_lamports,omitempty"`
-	QuoteMint           *string  `json:"quote_mint,omitempty"`
-	RealizedProfit      *int     `json:"realized_profit,omitempty"`
-	Signature           *string  `json:"signature,omitempty"`
-	Slot                *int     `json:"slot,omitempty"`
-	SoldMoreThanBought  *bool    `json:"sold_more_than_bought,omitempty"`
-	SoldWithoutBuy      *bool    `json:"sold_without_buy,omitempty"`
-	TipLamports         *int     `json:"tip_lamports,omitempty"`
-	TipService          *string  `json:"tip_service,omitempty"`
-	Trader              *string  `json:"trader,omitempty"`
-	Ts                  *int     `json:"ts,omitempty"`
-
-	// VirtualSol null — not in Pulsight SwapRow
-	VirtualSol *int `json:"virtual_sol,omitempty"`
-
-	// VirtualToken null — not in Pulsight SwapRow
-	VirtualToken *string `json:"virtual_token,omitempty"`
-}
-
 // InternalAdaptersPrimaryHttpHandlerTokensRow defines model for internal_adapters_primary_http_handler.tokensRow.
 type InternalAdaptersPrimaryHttpHandlerTokensRow struct {
-	// ArbTxCount Distinct is_arb transactions on this (trader, mint). Shown alongside
-	// buy/sell, never subtracted from them -- an arb still emits a buy row,
-	// a sell row or both. It exists because those counts otherwise read as
-	// broken on arbitrage wallets: a multi-hop arb bridging through a
-	// non-quote token has its target buy leg quoted in that token, which is
-	// not a registry quote, so only the quote-anchored sell reaches `swaps`.
-	// 0 on the legacy Pnl path, which has no arb data -- the frontend hides
-	// the segment at 0.
+	// ArbTxCount The position's arbitrage-flagged trade rows. Shown alongside buy/sell,
+	// never subtracted from them: an arbitrage buy or sell is also counted
+	// there. The frontend hides the segment at 0.
 	ArbTxCount        *int    `json:"arb_tx_count,omitempty"`
 	BuyTxCount        *int    `json:"buy_tx_count,omitempty"`
 	CostBasisLamports *string `json:"cost_basis_lamports,omitempty"`
 
-	// DirectionalBuyTxCount Disjoint from ArbTxCount: these EXCLUDE arbitrage rows, so the UI shows
-	// directional buys / directional sells / arb txs without the three
-	// overlapping. 0 on the legacy Pnl path.
+	// CostBasisUsd micro-USD, stamped at execution
+	CostBasisUsd *string `json:"cost_basis_usd,omitempty"`
+
+	// DirectionalBuyTxCount The same position counters as buy_tx_count / sell_tx_count.
 	DirectionalBuyTxCount  *int     `json:"directional_buy_tx_count,omitempty"`
 	DirectionalSellTxCount *int     `json:"directional_sell_tx_count,omitempty"`
 	FirstBuyTs             *string  `json:"first_buy_ts,omitempty"`
 	HoldingPnlLamports     *float32 `json:"holding_pnl_lamports,omitempty"`
-	LastActiveTs           *string  `json:"last_active_ts,omitempty"`
-	Mint                   *string  `json:"mint,omitempty"`
-	MintDecimals           *int     `json:"mint_decimals,omitempty"`
-	MintLogoUri            *string  `json:"mint_logo_uri,omitempty"`
-	MintName               *string  `json:"mint_name,omitempty"`
-	MintSymbol             *string  `json:"mint_symbol,omitempty"`
-	PoolLiquidity          *string  `json:"pool_liquidity,omitempty"`
+
+	// HoldingPnlUsd micro-USD, the same exit marked in USD
+	HoldingPnlUsd *float32 `json:"holding_pnl_usd,omitempty"`
+	LastActiveTs  *string  `json:"last_active_ts,omitempty"`
+	Mint          *string  `json:"mint,omitempty"`
+	MintDecimals  *int     `json:"mint_decimals,omitempty"`
+	MintLogoUri   *string  `json:"mint_logo_uri,omitempty"`
+	MintName      *string  `json:"mint_name,omitempty"`
+	MintSymbol    *string  `json:"mint_symbol,omitempty"`
+	PoolLiquidity *string  `json:"pool_liquidity,omitempty"`
 
 	// PoolQuoteReserves Rug-aware effective quote reserves of the mint's pool (lamports) and the
 	// exitability tier derived from them server-side. Together they let the row
-	// explain WHY a bag marks at ~0. null / "" mean unknown -- which is what
-	// the legacy Pnl fallback path below always reports, since it has no pool
-	// data; the frontend renders no badge rather than a false rug.
+	// explain WHY a bag marks at ~0. null / "" mean unknown; the frontend
+	// renders no badge rather than a false rug.
 	PoolQuoteReserves *float32 `json:"pool_quote_reserves,omitempty"`
 	RealizedProfit    *float32 `json:"realized_profit,omitempty"`
+
+	// RealizedProfitUsd micro-USD
+	RealizedProfitUsd *float32 `json:"realized_profit_usd,omitempty"`
 	SellTxCount       *int     `json:"sell_tx_count,omitempty"`
 	TokenBalance      *string  `json:"token_balance,omitempty"`
 	TotalFees         *float32 `json:"total_fees,omitempty"`
-	TotalInvested     *float32 `json:"total_invested,omitempty"`
-	Trader            *string  `json:"trader,omitempty"`
-	UpdatedAt         *string  `json:"updated_at,omitempty"`
+
+	// TotalFeesUsd micro-USD
+	TotalFeesUsd  *float32 `json:"total_fees_usd,omitempty"`
+	TotalInvested *float32 `json:"total_invested,omitempty"`
+
+	// TotalInvestedUsd micro-USD
+	TotalInvestedUsd *float32 `json:"total_invested_usd,omitempty"`
+	Trader           *string  `json:"trader,omitempty"`
+	UpdatedAt        *string  `json:"updated_at,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerTraderNeighborsResponse defines model for internal_adapters_primary_http_handler.traderNeighborsResponse.
@@ -813,6 +793,17 @@ type InternalAdaptersPrimaryHttpHandlerValidateStrategyRequest struct {
 	Venue *PulsightInternalCoreDomainStrategyVenueID     `json:"venue,omitempty"`
 }
 
+// PulsightInternalCoreDomainAggregatorArb defines model for pulsight_internal_core_domain_aggregator.Arb.
+type PulsightInternalCoreDomainAggregatorArb struct {
+	Funding  *PulsightInternalCoreDomainAggregatorMoney `json:"funding,omitempty"`
+	Gross    *PulsightInternalCoreDomainAggregatorMoney `json:"gross,omitempty"`
+	Kind     *string                                    `json:"kind,omitempty"`
+	Notional *PulsightInternalCoreDomainAggregatorMoney `json:"notional,omitempty"`
+	Pools    *int                                       `json:"pools,omitempty"`
+	Priced   *bool                                      `json:"priced,omitempty"`
+	TakeHome *PulsightInternalCoreDomainAggregatorMoney `json:"take_home,omitempty"`
+}
+
 // PulsightInternalCoreDomainAggregatorAuthorityStat defines model for pulsight_internal_core_domain_aggregator.AuthorityStat.
 type PulsightInternalCoreDomainAggregatorAuthorityStat struct {
 	Freeze       *string `json:"freeze,omitempty"`
@@ -824,7 +815,7 @@ type PulsightInternalCoreDomainAggregatorAuthorityStat struct {
 
 // PulsightInternalCoreDomainAggregatorBondingCurveState defines model for pulsight_internal_core_domain_aggregator.BondingCurveState.
 type PulsightInternalCoreDomainAggregatorBondingCurveState struct {
-	// Graduated True iff mint_migrations carries any graduation row for this mint.
+	// Graduated True iff a graduation is on file for this mint.
 	Graduated *bool `json:"graduated,omitempty"`
 
 	// GraduationTargetDex Destination dex of the graduation; nil when not graduated.
@@ -837,13 +828,12 @@ type PulsightInternalCoreDomainAggregatorBondingCurveState struct {
 	// (per-pool config not persisted); always set for PumpFun.
 	ProgressPct *float32 `json:"progress_pct,omitempty"`
 
-	// VirtualSolLamports Most recent observed virtual_sol (= dex_swaps.quote_reserves)
-	// snapshot on the launchpad dex, in lamports. 0 for pre-feature
-	// graduations with no curve swap on file.
+	// VirtualSolLamports Latest observed quote reserve of the launchpad curve, in lamports. 0
+	// for a graduation with no curve trade on file.
 	VirtualSolLamports *int `json:"virtual_sol_lamports,omitempty"`
 
-	// VirtualToken Most recent observed virtual_token (NUMERIC → decimal string for
-	// JSON safety). "0" when no curve swap is on file.
+	// VirtualToken Latest observed base reserve of the curve (decimal string for JSON
+	// safety). "0" when no curve trade is on file.
 	VirtualToken *string `json:"virtual_token,omitempty"`
 }
 
@@ -878,7 +868,11 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardPage struct {
 	Limit  *int                                                    `json:"limit,omitempty"`
 	Offset *int                                                    `json:"offset,omitempty"`
 	Total  *int                                                    `json:"total,omitempty"`
-	Window *PulsightInternalCoreDomainAggregatorWindow             `json:"window,omitempty"`
+
+	// Unit Unit is the currency the page was ranked and filtered in (sol|usd);
+	// every row carries both.
+	Unit   *string                                     `json:"unit,omitempty"`
+	Window *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorCashbackBoardRow defines model for pulsight_internal_core_domain_aggregator.CashbackBoardRow.
@@ -886,30 +880,34 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
 	// CashbackVolumeLamports CashbackVolumeLamports over TotalVolumeLamports is VolumeShare — nil
 	// when the window moved no volume (no share, which is not a 0% share).
 	CashbackVolumeLamports *int  `json:"cashback_volume_lamports,omitempty"`
+	CashbackVolumeUsd      *int  `json:"cashback_volume_usd,omitempty"`
 	Censored               *bool `json:"censored,omitempty"`
 	ClaimCount             *int  `json:"claim_count,omitempty"`
 
-	// ClaimedLamports ClaimedLamports / ClaimCount are nil only before CA 000106 exists. On
-	// the lifetime window they are RETENTION-BOUNDED (the raw claim ledger
-	// carries a 75-day TTL) — they undercount once rows age out rather than
-	// inventing, the trader panel's lifetime_claimed precedent.
+	// ClaimedLamports ClaimedLamports / ClaimCount — the cashback the wallet kept from its
+	// claims in the window, and how many claims.
 	ClaimedLamports *int `json:"claimed_lamports,omitempty"`
+	ClaimedUsd      *int `json:"claimed_usd,omitempty"`
 
 	// EarnedLamports EarnedLamports — cashback accrued in the window TO THIS WALLET'S OWN
-	// accumulator (since classifier 0cb3f9c, executor-routed fills whose
-	// accumulator belongs to the filler are excluded); the board's primary
-	// measure (claiming is sporadic, earning is the smooth signal).
-	EarnedLamports      *int `json:"earned_lamports,omitempty"`
+	// accumulator (executor-routed fills whose accumulator belongs to the
+	// filler are excluded).
+	EarnedLamports *int `json:"earned_lamports,omitempty"`
+
+	// EarnedUsd The Usd twins are the same families on the row's USD stamps
+	// (micro-USD).
+	EarnedUsd           *int `json:"earned_usd,omitempty"`
 	FirstSeenMs         *int `json:"first_seen_ms,omitempty"`
 	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
 
 	// HolderRewardsLamports HolderRewardsLamports / HolderRewardPayouts — what pump PAID this wallet
-	// in holder rewards in the window (CA 000221), in priced lamports, and the
+	// in holder rewards in the window, in priced lamports, and the
 	// number of payouts behind it. Holder rewards are pushed, not claimed, so
 	// this one figure is already a receipt. RewardsTotalLamports is the board's
 	// default rank: cashback CLAIMED plus holder rewards RECEIVED, both cash
 	// basis — never cashback earned, which is an accrual of the same money.
 	HolderRewardsLamports *int    `json:"holder_rewards_lamports,omitempty"`
+	HolderRewardsUsd      *int    `json:"holder_rewards_usd,omitempty"`
 	LastActiveMs          *int    `json:"last_active_ms,omitempty"`
 	PumpImage             *string `json:"pump_image,omitempty"`
 
@@ -921,6 +919,7 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
 	// Rank Rank is 1-based within the requested window + filters (offset-aware).
 	Rank                 *int `json:"rank,omitempty"`
 	RewardsTotalLamports *int `json:"rewards_total_lamports,omitempty"`
+	RewardsTotalUsd      *int `json:"rewards_total_usd,omitempty"`
 
 	// Tags Tags are the derived classification tags (`deriveTags`), resolved for
 	// the whole page in one round trip so a row states what the wallet is
@@ -929,6 +928,7 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
 	// board surfaces.
 	Tags                *[]string `json:"tags,omitempty"`
 	TotalVolumeLamports *int      `json:"total_volume_lamports,omitempty"`
+	TotalVolumeUsd      *int      `json:"total_volume_usd,omitempty"`
 
 	// Trader Trader is empty on a censored landing row (Censored true): the figures
 	// stay real, the identity is withheld server-side.
@@ -940,11 +940,15 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardRow struct {
 type PulsightInternalCoreDomainAggregatorCashbackBoardSummary struct {
 	ClaimCount *int `json:"claim_count,omitempty"`
 
-	// ClaimedLamports ClaimedLamports / ClaimCount: on the lifetime window these are
-	// RETENTION-BOUNDED sums over the 75-day claim ledger (undercount, never
-	// invented).
+	// ClaimedLamports ClaimedLamports / ClaimCount: the population's kept claims and their
+	// count.
 	ClaimedLamports *int `json:"claimed_lamports,omitempty"`
+	ClaimedUsd      *int `json:"claimed_usd,omitempty"`
 	EarnedLamports  *int `json:"earned_lamports,omitempty"`
+
+	// EarnedUsd The Usd twins are the same population figures on the USD stamps
+	// (micro-USD).
+	EarnedUsd *int `json:"earned_usd,omitempty"`
 
 	// Earners Earners / EarnedLamports — wallets with any earned cashback in the
 	// window, and their summed earnings (the "% of pool" denominator).
@@ -955,27 +959,34 @@ type PulsightInternalCoreDomainAggregatorCashbackBoardSummary struct {
 	// the same population's holder-reward side and the merged cash-basis
 	// total the board ranks on by default.
 	HolderRewardsLamports *int `json:"holder_rewards_lamports,omitempty"`
+	HolderRewardsUsd      *int `json:"holder_rewards_usd,omitempty"`
 
 	// MedianEarnedLamports Population marks.
 	MedianEarnedLamports *int                                        `json:"median_earned_lamports,omitempty"`
+	MedianEarnedUsd      *int                                        `json:"median_earned_usd,omitempty"`
 	Rank1EarnedLamports  *int                                        `json:"rank1_earned_lamports,omitempty"`
+	Rank1EarnedUsd       *int                                        `json:"rank1_earned_usd,omitempty"`
 	RewardsTotalLamports *int                                        `json:"rewards_total_lamports,omitempty"`
+	RewardsTotalUsd      *int                                        `json:"rewards_total_usd,omitempty"`
 	Window               *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorCashbackClaimRow defines model for pulsight_internal_core_domain_aggregator.CashbackClaimRow.
 type PulsightInternalCoreDomainAggregatorCashbackClaimRow struct {
-	// Amount Amount is the raw payout in QuoteMint's base units, and Priced says
-	// whether AmountLamports carries a SOL valuation of it. Both are zero on
-	// a claim, whose AmountLamports is already lamports.
+	// Amount Amount is the event's raw amount in QuoteMint's base units — a claim's
+	// KEPT amount, a payout's receipt — and Priced says whether
+	// AmountLamports carries a SOL valuation of it.
 	Amount *int `json:"amount,omitempty"`
 
 	// AmountGross AmountGross is a cashback claim's RAW swept amount before the part the
-	// wallet immediately re-parked; AmountLamports is what it KEPT. They differ
-	// on a park-resweep, where kept is legitimately zero and only the gross
-	// shows a claim happened at all. Zero on a payout, which cannot be parked.
+	// wallet immediately re-parked; Amount is what it KEPT. They differ on a
+	// park-resweep, where kept is legitimately zero and only the gross shows
+	// a claim happened at all. Zero on a payout, which cannot be parked.
 	AmountGross    *int `json:"amount_gross,omitempty"`
 	AmountLamports *int `json:"amount_lamports,omitempty"`
+
+	// AmountUsd AmountUsd is the event's value on its USD stamp (micro-USD).
+	AmountUsd *int `json:"amount_usd,omitempty"`
 
 	// Kind Kind is RewardKindCashbackClaim or RewardKindHolderReward.
 	Kind    *string `json:"kind,omitempty"`
@@ -986,11 +997,10 @@ type PulsightInternalCoreDomainAggregatorCashbackClaimRow struct {
 	Mint *string `json:"mint,omitempty"`
 	Name *string `json:"name,omitempty"`
 
-	// PriceBasis PriceBasis says HOW AmountLamports was arrived at: "exact" when the
-	// payout was already in SOL, "market" when it was valued through the
-	// quote's own SOL market at that minute, "unpriced" when no value could
-	// be stated. A market figure moves with the quote; an exact one is the
-	// amount received. Empty on a cashback claim.
+	// PriceBasis PriceBasis says HOW AmountLamports was arrived at: "money" when the
+	// event was paid in WSOL or a USD stablecoin, "pool" when it was valued
+	// through the quote's own market at execution, "unpriced" when no SOL
+	// value could be stated.
 	PriceBasis    *string `json:"price_basis,omitempty"`
 	Priced        *bool   `json:"priced,omitempty"`
 	Program       *string `json:"program,omitempty"`
@@ -1047,12 +1057,27 @@ type PulsightInternalCoreDomainAggregatorCohortStat struct {
 	Wallets  *[]PulsightInternalCoreDomainAggregatorHolderEntry `json:"wallets,omitempty"`
 }
 
+// PulsightInternalCoreDomainAggregatorCosts defines model for pulsight_internal_core_domain_aggregator.Costs.
+type PulsightInternalCoreDomainAggregatorCosts struct {
+	BaseFee       *PulsightInternalCoreDomainAggregatorMoney `json:"base_fee,omitempty"`
+	CashbackOnTop *PulsightInternalCoreDomainAggregatorMoney `json:"cashback_on_top,omitempty"`
+	DexFee        *PulsightInternalCoreDomainAggregatorMoney `json:"dex_fee,omitempty"`
+	Payer         *string                                    `json:"payer,omitempty"`
+	Platform      *string                                    `json:"platform,omitempty"`
+	PlatformFee   *PulsightInternalCoreDomainAggregatorMoney `json:"platform_fee,omitempty"`
+	PriorityFee   *PulsightInternalCoreDomainAggregatorMoney `json:"priority_fee,omitempty"`
+	RentPaid      *PulsightInternalCoreDomainAggregatorMoney `json:"rent_paid,omitempty"`
+	RentRefunded  *PulsightInternalCoreDomainAggregatorMoney `json:"rent_refunded,omitempty"`
+	Tip           *PulsightInternalCoreDomainAggregatorMoney `json:"tip,omitempty"`
+	TipService    *string                                    `json:"tip_service,omitempty"`
+}
+
 // PulsightInternalCoreDomainAggregatorCreatedMintRow defines model for pulsight_internal_core_domain_aggregator.CreatedMintRow.
 type PulsightInternalCoreDomainAggregatorCreatedMintRow struct {
 	Decimals *int `json:"decimals,omitempty"`
 
-	// FirstSeenTs FirstSeenTS proxies "created at" — the create-tx and first buy land in
-	// the same flush window. nil for fixture-only edge cases.
+	// FirstSeenTs FirstSeenTS proxies "created at" — the mint's first trade. nil when no
+	// trade is on file.
 	FirstSeenTs *string `json:"first_seen_ts,omitempty"`
 
 	// Graduated Graduated is true iff the mint has any `mint_migrations` row.
@@ -1069,7 +1094,7 @@ type PulsightInternalCoreDomainAggregatorCreatedMintRow struct {
 
 // PulsightInternalCoreDomainAggregatorDevHoldings defines model for pulsight_internal_core_domain_aggregator.DevHoldings.
 type PulsightInternalCoreDomainAggregatorDevHoldings struct {
-	// BalanceRaw Creator's raw token balance (NUMERIC → decimal string).
+	// BalanceRaw Creator's raw token balance (decimal string).
 	BalanceRaw *string `json:"balance_raw,omitempty"`
 
 	// Creator Creator wallet (mirrors MintRow.Creator).
@@ -1128,6 +1153,15 @@ type PulsightInternalCoreDomainAggregatorHolderEntry struct {
 
 	// PctOfSupply % of circulating, 0..100
 	PctOfSupply *float32 `json:"pct_of_supply,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorHop defines model for pulsight_internal_core_domain_aggregator.Hop.
+type PulsightInternalCoreDomainAggregatorHop struct {
+	Dex       *string `json:"dex,omitempty"`
+	MintInId  *int    `json:"mint_in_id,omitempty"`
+	MintOutId *int    `json:"mint_out_id,omitempty"`
+	Pool      *string `json:"pool,omitempty"`
+	PoolId    *int    `json:"pool_id,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorLpEvent defines model for pulsight_internal_core_domain_aggregator.LpEvent.
@@ -1222,7 +1256,7 @@ type PulsightInternalCoreDomainAggregatorMintHoneypot struct {
 	FeeSellBuyRatio *float32 `json:"fee_sell_buy_ratio,omitempty"`
 
 	// FeeTrapBuckets FeeTrapBuckets/FeeSellBuyRatio back "fee_trap" (confiscatory sell
-	// tax, CA 000133/r59): distinct 15-minute buckets in the last 7 days
+	// tax): distinct 15-minute buckets in the last 7 days
 	// whose sells executed below half that bucket's buy VWAP, and the
 	// window's overall sell/buy exec-price ratio (display only).
 	FeeTrapBuckets *int `json:"fee_trap_buckets,omitempty"`
@@ -1234,9 +1268,8 @@ type PulsightInternalCoreDomainAggregatorMintHoneypot struct {
 	Sellers     *int      `json:"sellers,omitempty"`
 	ThawCount   *int      `json:"thaw_count,omitempty"`
 
-	// TransferFeeBps TransferFeeBps backs "transfer_fee" (Token-2022, CA 000134/r61): the
-	// on-chain transfer fee in basis points (max of the current and
-	// scheduled fee).
+	// TransferFeeBps TransferFeeBps backs "transfer_fee" (Token-2022): the on-chain transfer
+	// fee in basis points (max of the current and scheduled fee).
 	TransferFeeBps *int `json:"transfer_fee_bps,omitempty"`
 }
 
@@ -1259,9 +1292,9 @@ type PulsightInternalCoreDomainAggregatorMintLiveMetrics struct {
 	MarketCapUsd      *float32 `json:"market_cap_usd,omitempty"`
 	Mint              *string  `json:"mint,omitempty"`
 
-	// PriceBasisPool PriceBasisPool is the pool PriceUsd was read from: the mint's DOMINANT
-	// pool by 24h quote volume, which is the basis the whole price surface
-	// uses so a dust side-market's prints cannot move the displayed number.
+	// PriceBasisPool PriceBasisPool is the pool PriceUsd was read from: the mint's reference
+	// pool, which is the basis the whole price surface uses so a dust
+	// side-market's prints cannot move the displayed number.
 	// A client that patches the price from the live swap stream between reads
 	// must believe prints from THIS pool only — and gets the answer from the
 	// server precisely so it never has to resolve a dominant pool of its own.
@@ -1269,38 +1302,49 @@ type PulsightInternalCoreDomainAggregatorMintLiveMetrics struct {
 	PriceBasisPool *string `json:"price_basis_pool,omitempty"`
 
 	// PriceUsd PriceUsd / MarketCapUsd carry MintRow.PriceUsd and MintRow.MarketCapUsd
-	// verbatim, including their nil conditions (no WSOL pool, unknown
-	// decimals, no SOL/USD reference, absent supply).
+	// verbatim, including their nil conditions (no priced reference pool,
+	// unknown decimals, absent supply).
 	PriceUsd *float32 `json:"price_usd,omitempty"`
 
-	// UniqueTraders UniqueTraders is MintRow.UniqueTraders read straight off the insert-time
-	// uniq plane, so it is as fresh as ingest rather than as fresh as the
-	// holder-fold refresh that stamps the identity row. nil without the plane:
-	// this route never falls back to the lifetime position-table fold, which is
-	// the read it exists to stop paying at poll cadence. A quote-registry mint
-	// has no rows on that plane and so never reports a count here.
+	// UniqueTraders UniqueTraders is read straight off the insert-time `mint_traders`
+	// plane, so it is as fresh as ingest. nil when the plane has no row: this
+	// route never falls back to a lifetime fold over positions, which is the
+	// read it exists to stop paying at poll cadence. A quote-registry mint has
+	// no rows on that plane and so never reports a count here.
 	UniqueTraders *int `json:"unique_traders,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintMarket defines model for pulsight_internal_core_domain_aggregator.MintMarket.
 type PulsightInternalCoreDomainAggregatorMintMarket struct {
-	Dex *string `json:"dex,omitempty"`
+	// BaseMint BaseMint is the pool's base side as the aggregator oriented it — the
+	// page's own mint except on a money mint's page, where the mint may be
+	// the quote of the pools listed. BaseSymbol is its symbol, empty when
+	// unknown.
+	BaseMint   *string `json:"base_mint,omitempty"`
+	BaseSymbol *string `json:"base_symbol,omitempty"`
+	Dex        *string `json:"dex,omitempty"`
 
 	// IsDefault IsDefault marks the mint's default market — the pool an unpinned
 	// /api/ohlcv chart resolves to (lifetime-dominant, recency-aware; one
 	// definition, server-side: defaultMarketPool). Resolved independently
 	// of the requested window, so a listing may carry no flagged row when
-	// the default market is idle (short windows) or older than swap
-	// retention. Resolve defaults from `window=all`.
-	IsDefault  *bool   `json:"is_default,omitempty"`
-	LastSwapTs *string `json:"last_swap_ts,omitempty"`
-	Pool       *string `json:"pool,omitempty"`
+	// the default market is idle in a short window. Resolve defaults from
+	// `window=all`.
+	IsDefault     *bool   `json:"is_default,omitempty"`
+	LastSwapTs    *string `json:"last_swap_ts,omitempty"`
+	Pool          *string `json:"pool,omitempty"`
+	QuoteDecimals *int    `json:"quote_decimals,omitempty"`
 
-	// QuoteMint QuoteMint is the pool's quote side under CA's registry ranking (USDC >
-	// USDT > USD1 > WSOL), so a SOL/USDC pool quotes in USDC. This market's
-	// candle prices and quote volumes are denominated in it, and the live
-	// chart folds only ticks that carry the same quote.
-	QuoteMint         *string  `json:"quote_mint,omitempty"`
+	// QuoteMint QuoteMint is the pool's quote side as the aggregator oriented it: a
+	// registry quote when one side is one (USDC > USDT > USD1 > WSOL), else
+	// the pool's own quote token. This market's native candle prices and
+	// quote amounts are denominated in it, and the live chart folds only
+	// ticks that carry the same quote.
+	QuoteMint *string `json:"quote_mint,omitempty"`
+
+	// QuoteSymbol QuoteSymbol and QuoteDecimals describe the quote mint; the decimals are
+	// omitted when the mint is unknown.
+	QuoteSymbol       *string  `json:"quote_symbol,omitempty"`
 	SolVolumeLamports *int     `json:"sol_volume_lamports,omitempty"`
 	SolVolumeShare    *float32 `json:"sol_volume_share,omitempty"`
 	SwapCount         *int     `json:"swap_count,omitempty"`
@@ -1313,15 +1357,15 @@ type PulsightInternalCoreDomainAggregatorMintMigration struct {
 	Mint            *string `json:"mint,omitempty"`
 	Slot            *int    `json:"slot,omitempty"`
 
-	// Source Source ∈ {"observed","inferred"} (CHECK constraint).
+	// Source Source ∈ {"observed","inferred"}.
 	Source *string `json:"source,omitempty"`
 
 	// SourcePool SourcePool is the bonding-curve pool the mint traded on BEFORE
 	// graduating. Together with DestinationPool it is the mint's market
 	// lineage — the pools /api/ohlcv merges into one continuous chart when
-	// no pool is pinned. Empty when unknown (rows predating
-	// carbon-aggregator CH migration 000073, or a venue whose migration ix
-	// doesn't expose the curve); treat '' as "no pre-graduation side".
+	// no pool is pinned. Empty when unknown (a venue whose migration
+	// instruction doesn't expose the curve); treat '' as "no pre-graduation
+	// side".
 	SourcePool *string `json:"source_pool,omitempty"`
 	Timestamp  *string `json:"timestamp,omitempty"`
 	ToDex      *string `json:"to_dex,omitempty"`
@@ -1331,24 +1375,17 @@ type PulsightInternalCoreDomainAggregatorMintMigration struct {
 type PulsightInternalCoreDomainAggregatorMintRow struct {
 	AuthoritiesObservedAt *string `json:"authorities_observed_at,omitempty"`
 
-	// BondingCurve ── CA mint-catalog enrichment (ported from mint_catalog.rs::find /
-	// list_active). bonding_curve + dev_holdings + supply populate on BOTH
-	// /api/mints (list) and /api/mints/:pubkey (detail); authorities
-	// populate on the detail path only (nil on list rows). All pointer +
-	// omitempty so list rows stay lean. The frontend's CurveBadge/DevPill
-	// already render bonding_curve/dev_holdings.
+	// BondingCurve bonding_curve, dev_holdings, supply and the authorities populate on
+	// BOTH /api/mints (list) and /api/mints/:pubkey (detail); metadata_uri
+	// and fetch_status are detail-only. All pointer + omitempty so list rows
+	// stay lean.
 	BondingCurve *PulsightInternalCoreDomainAggregatorBondingCurveState `json:"bonding_curve,omitempty"`
 
-	// Bundled Bundled/Insiders are the audit-cell cohort flags (best-effort list
-	// decoration; absent when not notable). Bundled = a same-slot launch buy
-	// cluster (swap-derived); Insiders = the creator distributed supply via
-	// launch-window SPL transfers (needs token-program capture). Both are
-	// at-a-glance proxies for the per-mint risk card's full cohorts.
-	Bundled *PulsightInternalCoreDomainAggregatorMintBundled `json:"bundled,omitempty"`
-
-	// BuyCount BuyCount/SellCount: buy- vs sell-side swap counts over the `?hours`
-	// activity window (countIf(is_buy)). Populated on the list path; 0 on
-	// the detail path.
+	// Bundled Bundled/Insiders are the audit-cell cohort flags (absent when not
+	// notable). Bundled = the sealed launch bundle cohort; Insiders = the
+	// creator distributed supply via launch-window SPL transfers. Both are
+	// at-a-glance views of the per-mint risk card's cohorts.
+	Bundled         *PulsightInternalCoreDomainAggregatorMintBundled `json:"bundled,omitempty"`
 	BuyCount        *int                                             `json:"buy_count,omitempty"`
 	Creator         *string                                          `json:"creator,omitempty"`
 	Decimals        *int                                             `json:"decimals,omitempty"`
@@ -1357,40 +1394,31 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	FirstSeenTs     *string                                          `json:"first_seen_ts,omitempty"`
 	FreezeAuthority *string                                          `json:"freeze_authority,omitempty"`
 
-	// HolderCount ── GMGN-style discovery enrichment (list path only, best-effort). ──
-	// HolderCount is the number of distinct wallets currently holding a
-	// positive balance of this mint (uniqExact over trader_token_stats).
-	// nil when the holders batch is unavailable. Best-effort: a holders
-	// hiccup decorates fewer rows, it never fails the listing.
+	// HolderCount HolderCount is the number of wallets holding a positive balance of
+	// this mint, off the sealed holder-stats family of the mint's row (pool
+	// inventory excluded by token account); nil until the family is sealed.
 	HolderCount *int `json:"holder_count,omitempty"`
 
-	// Honeypot Honeypot flags a likely sell-blocking token. Best-effort decoration;
-	// absent when no reason fires. Step 1 populates the "freezes_holders"
-	// reason from mint_safety_events (froze many holder accounts, thawed
-	// few). Future Token-2022 reasons (transfer_fee/hook/…) accrete here.
-	// The "impersonating" reason (verified ticker reused by a different
+	// Honeypot Honeypot flags a likely sell-blocking token; absent when no reason
+	// fires. The "impersonating" reason (verified ticker reused by a different
 	// mint) also rides here — badge-only, no filter arm.
 	Honeypot *PulsightInternalCoreDomainAggregatorMintHoneypot `json:"honeypot,omitempty"`
 	Insiders *PulsightInternalCoreDomainAggregatorMintInsiders `json:"insiders,omitempty"`
 
 	// IsMayhemMode IsMayhemMode flags a Pump.fun "Mayhem"-mode token (its trades route
-	// through the Mayhem custody program). Populated on BOTH list and detail
-	// from the mint_mayhem table; omitted when false.
+	// through the Mayhem custody program). Populated on BOTH list and detail;
+	// omitted when false.
 	IsMayhemMode *bool   `json:"is_mayhem_mode,omitempty"`
 	LastTradeTs  *string `json:"last_trade_ts,omitempty"`
 	LogoUri      *string `json:"logo_uri,omitempty"`
 
 	// LpBurned LpBurned reports whether ANY LP burn is on file for the mint — the same
-	// `lp_events(op='burn')` set the `lp_burned=1` listing filter uses, so the
-	// audit glyph and the filter can never disagree. Page-scoped, so it is a
-	// definite true/false for every returned row (never nil on the list path);
-	// nil on the detail path, where the batch does not run.
+	// flag the `lp_burned=1` listing filter uses, so the audit glyph and the
+	// filter can never disagree.
 	LpBurned *bool `json:"lp_burned,omitempty"`
 
-	// MarketCapUsd MarketCapUsd is PriceUsd × circulating supply. Equivalently
-	// close_sol × supply_raw × sol_usd / 1e6 (token decimals cancel), so
-	// it's populated even when decimals are unknown (unlike PriceUsd). nil
-	// when the WSOL close, supply, or SOL/USD ref is missing.
+	// MarketCapUsd MarketCapUsd is the stored latest price × supply, in USD; nil when
+	// either is unknown.
 	MarketCapUsd *float32 `json:"market_cap_usd,omitempty"`
 	MarketsCount *int     `json:"markets_count,omitempty"`
 
@@ -1406,28 +1434,16 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	MintAuthority *string `json:"mint_authority,omitempty"`
 	Name          *string `json:"name,omitempty"`
 
-	// PriceSparkline PriceSparkline is the mint's last-24h price shape: WSOL-quoted per-minute
-	// closes of the mint's DOMINANT pool (highest 24h quote volume — one pool,
-	// never a merge, so a dust side-market's prints can't flatten the line),
-	// oldest→newest, at most priceSparklineMaxPoints values. A mint that
-	// traded through the whole window is sampled evenly down to that cap
-	// (so the series still spans 24h, just coarser); one that traded for an
-	// hour carries all of it. It rides the SAME scan as PriceUsd, so it
-	// carries the same denomination caveat: WSOL-quoted only, which is why a
-	// USDC-only mint has none rather than a series in another unit (mixing
-	// quotes would draw a step that never happened). Values are raw SOL per
-	// whole token, rounded to 6 significant digits — the client normalises to
-	// its own min/max, so the unit only has to be CONSISTENT within the
-	// series, and this is a SHAPE, not a price read (use PriceUsd for that).
-	// Only minutes that actually traded appear, so the x axis is trade
-	// sequence, not wall clock. Omitted below 2 points — but a mint younger
-	// than ~10 minutes gets its points from 1-SECOND candles instead, so a
-	// fresh row draws a line as soon as it has two seconds of trading.
+	// PriceSparkline PriceSparkline is the mint's last-24h price shape: the USD closes of
+	// its dominant pool at 15-minute buckets, oldest→newest, at most
+	// priceSparklineMaxPoints values rounded to 6 significant digits. Only
+	// buckets that traded appear. It is a SHAPE (the client normalises to
+	// its own min/max), not a price read. Omitted below 2 points.
 	PriceSparkline *[]float32 `json:"price_sparkline,omitempty"`
 
-	// PriceUsd PriceUsd is the latest price per WHOLE token in USD, derived from the
-	// dominant WSOL-quoted OHLCV close × the SOL/USD reference rate. nil
-	// when there's no WSOL pool, decimals are unknown, or no SOL/USD ref.
+	// PriceUsd PriceUsd is the stored latest price per WHOLE token in USD (the
+	// reference pool's per-raw-unit stamp scaled by the mint's decimals);
+	// nil when the mint has no priced reference pool or unknown decimals.
 	PriceUsd *float32 `json:"price_usd,omitempty"`
 
 	// RiskScore RiskScore/RiskVerdict are a fast at-a-glance risk score (0..100 +
@@ -1442,91 +1458,61 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	RiskVerdict *string `json:"risk_verdict,omitempty"`
 	SellCount   *int    `json:"sell_count,omitempty"`
 
-	// Stats Windowed stats bundle keyed by window. Reuses the same
-	// MintStatsByWindow struct that GET /api/mints/:pubkey/stats
-	// returns so the frontend's ActiveMint.stats path consumes both
-	// endpoints identically.
-	//
-	// /api/mints/:pubkey/stats (FindStatsBundle) populates all four
-	// windows in one round-trip.
-	//
-	// /api/mints (ListActive) currently populates ONLY the active
-	// window's bucket — the other three windows in the per-row
-	// MintStatsByWindow stay zero-valued. The frontend's
-	// `m.stats?.[window]?.…` chain renders `—` on null, so this is
-	// safe; an N-row × 4-window fan-out would mean 3× more LATERAL
-	// joins per page and the UI only ever shows one window at a time
-	// (window switch refetches the page). If a future surface needs
-	// all four windows in the list response, extend ListActive to
-	// match FindStatsBundle's four-LATERAL pattern.
+	// Stats Windowed stats bundle keyed by window, the same MintStatsByWindow
+	// struct GET /api/mints/:pubkey/stats returns. /api/mints (ListActive)
+	// fills the requested window and the short 1m/5m/1h windows; the other
+	// windows stay zero-valued.
 	Stats *PulsightInternalCoreDomainAggregatorMintStatsByWindow `json:"stats,omitempty"`
 
-	// Supply Supply is the on-chain total supply (NUMERIC → decimal string, raw
+	// Supply Supply is the on-chain total supply (decimal string, raw
 	// smallest units); nil until the enricher has decoded the mint account.
 	// Populated on the list path to back the market-cap column.
 	Supply *string `json:"supply,omitempty"`
 
-	// SwapCount Window-bound activity aggregates over the `?hours` lookback,
-	// derived from hourly_mint_trader_activity + hourly_mint_pool_activity.
-	// All non-pointer because GROUP BY in the LATERAL produces a row even
-	// for zero swaps (we go through the activity gate first, so anything
-	// returned has at least one). SwapCount, TraderCount and MarketsCount
-	// default to 0 if the LATERAL came up empty; the frontend's `formatNum`
-	// renders 0 cleanly.
+	// SwapCount Activity counts. On the listing they count the `?hours` gate the page
+	// was filtered on, off the board row's gate counters; on the detail page
+	// SwapCount, BuyCount and SellCount are lifetime and TraderCount is 0.
+	// MarketsCount is the number of pools the mint trades in.
 	SwapCount *int    `json:"swap_count,omitempty"`
 	Symbol    *string `json:"symbol,omitempty"`
 
 	// Top10Pct Top10Pct is the top-10 holder concentration as a PERCENT of circulating
-	// supply (0..100). Already read per page by top10ConcentrationBatch to
-	// score the row — emitting it costs nothing extra and is what the listing's
-	// Distribution column leads with. nil when the accumulator has no row for
-	// the mint (fresh token, or holder balances not yet folded).
+	// supply (0..100), off the mint's holder-stats plane — the figure the
+	// listing's Distribution column leads with. nil until the plane has
+	// folded the mint's holders.
 	Top10Pct *float32 `json:"top10_pct,omitempty"`
 
-	// TopDex TopDex is the venue slug of the mint's DOMINANT pool over the activity
-	// window — the pool with the most quote volume, i.e. the venue the token
-	// actually trades on. Same vocabulary as `?dex=` and `swaps.dex`; look up
-	// the display label via DEX_LABEL. Rides fillMarketsCount's existing scan
-	// (same GROUP BY, one more aggregate), so it is free. nil when the mint had
-	// no dex_swaps row in the window.
+	// TopDex TopDex is the venue slug the token actually trades on: on the listing
+	// the mint's dominant pool's venue, on the detail page its graduation
+	// target or else its launchpad. Same vocabulary as `?dex=`; look up the
+	// display label via DEX_LABEL. nil when unknown.
 	TopDex *string `json:"top_dex,omitempty"`
 
 	// TotalFeesSol TotalFeesSol — LIFETIME network fees paid trading the mint, in
-	// lamports: tx fees (base + priority) plus MEV tips summed over its
-	// swaps (CA 000137 on mint_activity_totals; the 000064 sawtooth basis —
-	// lifetime between stats rebuilds, re-synced to the swaps 3-month
-	// retention at each healer finalize). Unlike the counts above it is NOT
-	// hours-window-bound. nil until the migration is applied or when the
-	// page decoration read fails.
+	// lamports: tx fees (base + priority) plus MEV tips over its trades.
+	// Unlike the listing's counts above it is NOT hours-window-bound. nil
+	// when the mint has no trades on file.
 	TotalFeesSol *int `json:"total_fees_sol,omitempty"`
 
-	// TotalTxCount TotalTxCount — LIFETIME swap count for the mint, from the same
-	// mint_activity_totals seek as TotalFeesSol (and on its same sawtooth
-	// basis). It is the fee figure's denominator: the bot-fee-pattern risk
-	// rule scores fees PER transaction, so the two must share a basis —
+	// TotalFeesUsd TotalFeesUsd is the same figure on the USD stamps (micro-USD).
+	TotalFeesUsd *int `json:"total_fees_usd,omitempty"`
+
+	// TotalTxCount TotalTxCount — LIFETIME trade count for the mint, on the same basis as
+	// TotalFeesSol. It is the fee figure's denominator: the bot-fee-pattern
+	// risk rule scores fees PER transaction, so the two must share a basis —
 	// the hours-window SwapCount would not. nil whenever TotalFeesSol is.
 	TotalTxCount *int `json:"total_tx_count,omitempty"`
 	TraderCount  *int `json:"trader_count,omitempty"`
 
-	// TraderQuality TraderQuality is the per-mint wallet-class fold (CA 000131) behind the
-	// ORGANIC distribution slot, the low_organic_activity risk rule and
-	// sort=organic. Best-effort list decoration; nil before the migration or
-	// when the batch read fails.
+	// TraderQuality TraderQuality is the per-mint wallet-class fold behind the ORGANIC
+	// distribution slot, the low_organic_activity risk rule and sort=organic;
+	// nil until the fold covers the mint.
 	TraderQuality *PulsightInternalCoreDomainAggregatorMintTraderQuality `json:"trader_quality,omitempty"`
 
-	// UniqueTraders UniqueTraders is the number of distinct wallets that have EVER traded
-	// this mint, folded from the insert-time uniq plane (`mint_trader_uniq`)
-	// that accumulates one `uniq` state per mint off `swaps`. Distinct from
-	// TraderCount (a WINDOWED count over the `?hours` gate, list path only):
-	// UniqueTraders is LIFETIME, so the list column and the
-	// /api/mints/:pubkey detail render the same value. Exact below ~10k
-	// distinct wallets and HLL-approximate above — a trader set only ever
-	// grows, which is what lets it be an accumulator at all (a holder set does
-	// not, and HolderCount keeps its fold). Populated on BOTH paths,
-	// best-effort: nil when the read is unavailable. A quote-registry mint
-	// (WSOL, the USD stables) never appears as `swaps.mint`, so its detail
-	// counts the distinct wallets of its last 30 days of per-leg dex_swaps
-	// instead.
+	// UniqueTraders UniqueTraders is the LIFETIME number of distinct wallets that traded
+	// this mint (the insert-time `mint_traders` plane on the detail path, the
+	// holder-stats traders on the list path), as opposed to TraderCount, the
+	// count over the `?hours` gate; nil when unavailable.
 	UniqueTraders *int `json:"unique_traders,omitempty"`
 
 	// Verified Verified marks a mint on the curated verified token list (Jupiter's,
@@ -1559,32 +1545,27 @@ type PulsightInternalCoreDomainAggregatorMintTraderQuality struct {
 
 // PulsightInternalCoreDomainAggregatorMintTraderRow defines model for pulsight_internal_core_domain_aggregator.MintTraderRow.
 type PulsightInternalCoreDomainAggregatorMintTraderRow struct {
-	// ArbTxCount Distinct is_arb transactions for this (trader, mint). Same rationale
-	// as TraderTokenPosition.ArbTxCount: shown alongside buy/sell, never
-	// subtracted, so lopsided counts on arbitrage wallets are legible.
+	// ArbTxCount ArbTxCount is the position's arbitrage-flagged trade rows, as on
+	// TraderTokenPosition.ArbTxCount: shown alongside buy/sell, never
+	// subtracted.
 	ArbTxCount        *int    `json:"arb_tx_count,omitempty"`
-	BundleSlot        *int    `json:"bundle_slot,omitempty"`
 	BuyTxCount        *int    `json:"buy_tx_count,omitempty"`
 	CostBasisLamports *string `json:"cost_basis_lamports,omitempty"`
 
-	// DirectionalBuyTxCount Directional counts EXCLUDE arbitrage rows, so the three numbers the UI
-	// shows are disjoint: directional buys / directional sells / arb txs.
-	// Overlapping them is what made an arb wallet read "11 buys / 2 sells /
-	// 11 arb" -- every one of those buys WAS one of the arbs. A pure
-	// arbitrageur now reads 0 / 0 / N, which is the truth: it never took a
-	// directional position in the token.
-	//
-	// buy_tx_count / sell_tx_count keep their original meaning (all rows,
-	// matching the trader_token_stats rollup that the leaderboard and its
-	// `f=` filters read) so nothing downstream shifts under them.
+	// CostBasisUsd The Usd twins are the position's figures on its trades' USD stamps
+	// (micro-USD); HoldingPnlUsd is the same realizable exit marked in USD.
+	CostBasisUsd *string `json:"cost_basis_usd,omitempty"`
+
+	// DirectionalBuyTxCount DirectionalBuyTxCount / DirectionalSellTxCount carry the same position
+	// counters as buy_tx_count / sell_tx_count.
 	DirectionalBuyTxCount  *int    `json:"directional_buy_tx_count,omitempty"`
 	DirectionalSellTxCount *int    `json:"directional_sell_tx_count,omitempty"`
 	FirstBuyTs             *string `json:"first_buy_ts,omitempty"`
 	HoldingPnlLamports     *int    `json:"holding_pnl_lamports,omitempty"`
+	HoldingPnlUsd          *int    `json:"holding_pnl_usd,omitempty"`
 
 	// InitialPctOfSupply InitialPctOfSupply is a bundler's net launch acquisition as % of total
-	// supply, and BundleSlot the first bundle slot it bought in. Both are set
-	// only on the bundlers path.
+	// supply, set only on the bundlers path.
 	InitialPctOfSupply *float32 `json:"initial_pct_of_supply,omitempty"`
 	IsBundler          *bool    `json:"is_bundler,omitempty"`
 	IsInsider          *bool    `json:"is_insider,omitempty"`
@@ -1597,16 +1578,19 @@ type PulsightInternalCoreDomainAggregatorMintTraderRow struct {
 	LastActiveTs *string `json:"last_active_ts,omitempty"`
 
 	// PctOfSupply PctOfSupply is the holder's % of circulating supply, set on the
-	// top-holders and cohort paths (sourced from on-chain holder_balances).
+	// top-holders and cohort paths (from the on-chain `holder_accounts`).
 	// nil on the top-traders path. IsSniper/IsBundler/IsInsider flag cohort
 	// membership on every per-mint trader list.
-	PctOfSupply    *float32 `json:"pct_of_supply,omitempty"`
-	RealizedProfit *int     `json:"realized_profit,omitempty"`
-	SellTxCount    *int     `json:"sell_tx_count,omitempty"`
-	TokenBalance   *string  `json:"token_balance,omitempty"`
-	TotalFees      *int     `json:"total_fees,omitempty"`
-	TotalInvested  *int     `json:"total_invested,omitempty"`
-	Trader         *string  `json:"trader,omitempty"`
+	PctOfSupply       *float32 `json:"pct_of_supply,omitempty"`
+	RealizedProfit    *int     `json:"realized_profit,omitempty"`
+	RealizedProfitUsd *int     `json:"realized_profit_usd,omitempty"`
+	SellTxCount       *int     `json:"sell_tx_count,omitempty"`
+	TokenBalance      *string  `json:"token_balance,omitempty"`
+	TotalFees         *int     `json:"total_fees,omitempty"`
+	TotalFeesUsd      *int     `json:"total_fees_usd,omitempty"`
+	TotalInvested     *int     `json:"total_invested,omitempty"`
+	TotalInvestedUsd  *int     `json:"total_invested_usd,omitempty"`
+	Trader            *string  `json:"trader,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintWindowStats defines model for pulsight_internal_core_domain_aggregator.MintWindowStats.
@@ -1615,12 +1599,15 @@ type PulsightInternalCoreDomainAggregatorMintWindowStats struct {
 
 	// BuyVolumeSol SOL spent buying, in lamports.
 	BuyVolumeSol *int `json:"buy_volume_sol,omitempty"`
+	BuyVolumeUsd *int `json:"buy_volume_usd,omitempty"`
 
 	// NetBuySol buy_volume_sol - sell_volume_sol, in lamports.
 	NetBuySol *int `json:"net_buy_sol,omitempty"`
+	NetBuyUsd *int `json:"net_buy_usd,omitempty"`
 
-	// PoolSol Most recent virtual_sol (pool size) observed in the window, in lamports.
+	// PoolSol The reference pool's latest quote-side depth, in lamports.
 	PoolSol *int `json:"pool_sol,omitempty"`
+	PoolUsd *int `json:"pool_usd,omitempty"`
 
 	// PriceChangePct (close - open) / open × 100 over the window.
 	PriceChangePct *float32 `json:"price_change_pct,omitempty"`
@@ -1628,16 +1615,20 @@ type PulsightInternalCoreDomainAggregatorMintWindowStats struct {
 
 	// SellVolumeSol SOL received from sells, in lamports.
 	SellVolumeSol *int `json:"sell_volume_sol,omitempty"`
+	SellVolumeUsd *int `json:"sell_volume_usd,omitempty"`
 	SwapCount     *int `json:"swap_count,omitempty"`
 
 	// TotalFeesSol Total network fees paid trading the mint in the window, in lamports:
-	// tx fees (base + priority) plus MEV tips, summed over its swaps.
-	// Populated by the per-mint stats endpoint only; the listing endpoint
-	// (/api/mints) leaves it nil (the OHLCV planes carry no fee data).
+	// tx fees (base + priority) plus MEV tips over its trades.
 	TotalFeesSol *int `json:"total_fees_sol,omitempty"`
+	TotalFeesUsd *int `json:"total_fees_usd,omitempty"`
 
 	// VolumeSol Total SOL traded (buy + sell), in lamports.
 	VolumeSol *int `json:"volume_sol,omitempty"`
+
+	// VolumeUsd The Usd twins are the same figures on the trades' USD stamps
+	// (micro-USD), never lamports converted by a later rate.
+	VolumeUsd *int `json:"volume_usd,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintWindowStatsBundle defines model for pulsight_internal_core_domain_aggregator.MintWindowStatsBundle.
@@ -1647,18 +1638,26 @@ type PulsightInternalCoreDomainAggregatorMintWindowStatsBundle struct {
 	Stats *PulsightInternalCoreDomainAggregatorMintStatsByWindow `json:"stats,omitempty"`
 
 	// TotalFeesLifetimeSol TotalFeesLifetimeSol — LIFETIME network fees paid trading the mint,
-	// in lamports (same basis and plane as MintRow.TotalFeesSol on the
-	// listing: CA 000137's `fees` on mint_activity_totals, NOT bound to any
-	// window). Feeds the token detail page's header bar. nil until the
-	// migration is applied or when the best-effort read fails.
+	// in lamports (`mint_activity_totals`, NOT bound to any window). Feeds
+	// the token detail page's header bar. nil when the best-effort read
+	// fails.
 	TotalFeesLifetimeSol *int `json:"total_fees_lifetime_sol,omitempty"`
 
-	// TotalTxCountLifetime TotalTxCountLifetime — LIFETIME swap count for the mint, from the same
-	// mint_activity_totals seek as TotalFeesLifetimeSol and on its same basis.
+	// TotalFeesLifetimeUsd TotalFeesLifetimeUsd is the same figure on the USD stamps (micro-USD).
+	TotalFeesLifetimeUsd *int `json:"total_fees_lifetime_usd,omitempty"`
+
+	// TotalTxCountLifetime TotalTxCountLifetime — LIFETIME trade count for the mint, from the same
+	// `mint_activity_totals` read as TotalFeesLifetimeSol.
 	// It is the denominator a windowless token-metric gate reads, and pairing
 	// the two keeps a per-transaction fee figure on one basis. nil whenever
 	// TotalFeesLifetimeSol is.
 	TotalTxCountLifetime *int `json:"total_tx_count_lifetime,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorMoney defines model for pulsight_internal_core_domain_aggregator.Money.
+type PulsightInternalCoreDomainAggregatorMoney struct {
+	Sol *int `json:"sol,omitempty"`
+	Usd *int `json:"usd,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorProgramBoardCounts defines model for pulsight_internal_core_domain_aggregator.ProgramBoardCounts.
@@ -1914,6 +1913,53 @@ type PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint struct {
 	TipSumLamports *int     `json:"tip_sum_lamports,omitempty"`
 }
 
+// PulsightInternalCoreDomainAggregatorTrade defines model for pulsight_internal_core_domain_aggregator.Trade.
+type PulsightInternalCoreDomainAggregatorTrade struct {
+	Arb              *PulsightInternalCoreDomainAggregatorArb   `json:"arb,omitempty"`
+	Attribution      *string                                    `json:"attribution,omitempty"`
+	CarryBasis       *PulsightInternalCoreDomainAggregatorMoney `json:"carry_basis,omitempty"`
+	CarryFromMint    *string                                    `json:"carry_from_mint,omitempty"`
+	CarryFromMintId  *int                                       `json:"carry_from_mint_id,omitempty"`
+	CarryToMint      *string                                    `json:"carry_to_mint,omitempty"`
+	CarryToMintId    *int                                       `json:"carry_to_mint_id,omitempty"`
+	CashbackAccrued  *PulsightInternalCoreDomainAggregatorMoney `json:"cashback_accrued,omitempty"`
+	Costs            *PulsightInternalCoreDomainAggregatorCosts `json:"costs,omitempty"`
+	CounterAmount    *int                                       `json:"counter_amount,omitempty"`
+	CounterDecimals  *int                                       `json:"counter_decimals,omitempty"`
+	CounterMint      *string                                    `json:"counter_mint,omitempty"`
+	CounterMintId    *int                                       `json:"counter_mint_id,omitempty"`
+	CounterSymbol    *string                                    `json:"counter_symbol,omitempty"`
+	Decimals         *int                                       `json:"decimals,omitempty"`
+	Dex              *string                                    `json:"dex,omitempty"`
+	Fees             *PulsightInternalCoreDomainAggregatorMoney `json:"fees,omitempty"`
+	Flags            *int                                       `json:"flags,omitempty"`
+	IsArb            *bool                                      `json:"is_arb,omitempty"`
+	Key              *string                                    `json:"key,omitempty"`
+	Kind             *string                                    `json:"kind,omitempty"`
+	Label            *string                                    `json:"label,omitempty"`
+	LabelType        *string                                    `json:"label_type,omitempty"`
+	Late             *bool                                      `json:"late,omitempty"`
+	Mint             *string                                    `json:"mint,omitempty"`
+	MintId           *int                                       `json:"mint_id,omitempty"`
+	PriceAgeMs       *int                                       `json:"price_age_ms,omitempty"`
+	PriceSource      *string                                    `json:"price_source,omitempty"`
+	PrimaryPool      *string                                    `json:"primary_pool,omitempty"`
+	PrimaryPoolId    *int                                       `json:"primary_pool_id,omitempty"`
+	Qty              *string                                    `json:"qty,omitempty"`
+	Realized         *PulsightInternalCoreDomainAggregatorMoney `json:"realized,omitempty"`
+	Route            *[]PulsightInternalCoreDomainAggregatorHop `json:"route,omitempty"`
+	Signature        *string                                    `json:"signature,omitempty"`
+	Slot             *int                                       `json:"slot,omitempty"`
+	SolPostLamports  *int                                       `json:"sol_post_lamports,omitempty"`
+	SolUsd           *float32                                   `json:"sol_usd,omitempty"`
+	Trader           *string                                    `json:"trader,omitempty"`
+	TsMs             *int                                       `json:"ts_ms,omitempty"`
+	TxIndex          *int                                       `json:"tx_index,omitempty"`
+	VSource          *string                                    `json:"v_source,omitempty"`
+	Value            *PulsightInternalCoreDomainAggregatorMoney `json:"value,omitempty"`
+	WsolPostLamports *int                                       `json:"wsol_post_lamports,omitempty"`
+}
+
 // PulsightInternalCoreDomainAggregatorTraderBehavioralStats defines model for pulsight_internal_core_domain_aggregator.TraderBehavioralStats.
 type PulsightInternalCoreDomainAggregatorTraderBehavioralStats struct {
 	ActiveHoursCount    *int     `json:"active_hours_count,omitempty"`
@@ -1928,6 +1974,7 @@ type PulsightInternalCoreDomainAggregatorTraderBehavioralStats struct {
 	// outcome, and zeros would drag the median toward it. The pair is the
 	// per-window twin of the leaderboard's Avg RP / Med RP columns.
 	AvgRealizedProfitLamports *float32 `json:"avg_realized_profit_lamports,omitempty"`
+	AvgRealizedProfitUsd      *float32 `json:"avg_realized_profit_usd,omitempty"`
 	AvgSellCountPerToken      *float32 `json:"avg_sell_count_per_token,omitempty"`
 
 	// AvgTradeSizeLamports AvgTradeSizeLamports is TotalVolumeLamports over the window's swap
@@ -1935,22 +1982,27 @@ type PulsightInternalCoreDomainAggregatorTraderBehavioralStats struct {
 	// figures legible: impact is size against pool depth, so the two are
 	// read together.
 	AvgTradeSizeLamports         *float32 `json:"avg_trade_size_lamports,omitempty"`
+	AvgTradeSizeUsd              *float32 `json:"avg_trade_size_usd,omitempty"`
 	MedianBuyCountPerToken       *float32 `json:"median_buy_count_per_token,omitempty"`
 	MedianHoldingTimeSecs        *float32 `json:"median_holding_time_secs,omitempty"`
 	MedianReactivitySecs         *float32 `json:"median_reactivity_secs,omitempty"`
 	MedianRealizedProfitLamports *float32 `json:"median_realized_profit_lamports,omitempty"`
+	MedianRealizedProfitUsd      *float32 `json:"median_realized_profit_usd,omitempty"`
 	MedianSellCountPerToken      *float32 `json:"median_sell_count_per_token,omitempty"`
 	OldestTradeAt                *string  `json:"oldest_trade_at,omitempty"`
 	ProfitPerTradeLamports       *float32 `json:"profit_per_trade_lamports,omitempty"`
+	ProfitPerTradeUsd            *float32 `json:"profit_per_trade_usd,omitempty"`
 	Pubkey                       *string  `json:"pubkey,omitempty"`
 	RebalancingRatio             *float32 `json:"rebalancing_ratio,omitempty"`
 
-	// TotalVolumeLamports TotalVolumeLamports is the window's traded value, both sides, read as
-	// the QUOTE side of each row — see the adapter's swapQuoteSideExpr for
-	// why a plain `sum(amount_in)` is not that, and for the one case it is
-	// still approximate (non-WSOL quotes count in their own units).
-	TotalVolumeLamports *int                                        `json:"total_volume_lamports,omitempty"`
-	Window              *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
+	// TotalVolumeLamports TotalVolumeLamports is the window's traded value, buys and sells,
+	// stamped in SOL at execution.
+	TotalVolumeLamports *int `json:"total_volume_lamports,omitempty"`
+
+	// TotalVolumeUsd The Usd twins are the same figures on the trades' USD stamps
+	// (micro-USD).
+	TotalVolumeUsd *int                                        `json:"total_volume_usd,omitempty"`
+	Window         *PulsightInternalCoreDomainAggregatorWindow `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTraderCashbackStats defines model for pulsight_internal_core_domain_aggregator.TraderCashbackStats.
@@ -1964,57 +2016,62 @@ type PulsightInternalCoreDomainAggregatorTraderCashbackStats struct {
 	// basis points (nil when no cashback volume) — the effective rebate
 	// rate, which is per-coin on-chain (30 and 90 bps both live).
 	CashbackVolumeLamports *int `json:"cashback_volume_lamports,omitempty"`
+	CashbackVolumeUsd      *int `json:"cashback_volume_usd,omitempty"`
 
 	// ClaimCount Claim cadence, lifetime, all quote denominations.
 	ClaimCount *int `json:"claim_count,omitempty"`
 
 	// ClaimableLamports ClaimableLamports is the unclaimed balance sitting in the wallet's
-	// accumulators: cashback accrued SINCE its last claim. A claim sweeps
-	// the accumulator in full, so the balance at that moment is 0 and
-	// everything after it is unclaimed — which makes this immune both to
-	// the claim ledger's TTL and to history that predates our ingest, since
-	// only a timestamp comes from the claim side. Wallets that never claimed
-	// report everything we have observed them earn. Reads LOW, never high
-	// (see cashbackAccruedSince for the two bounded undercounts).
+	// accumulators: cashback accrued SINCE its last claim. A claim sweeps the
+	// accumulator in full, so the balance at that moment is 0 and everything
+	// after it is unclaimed; the accrual is counted from the hour after the
+	// claim, so the figure reads low, never high. Wallets that never claimed
+	// report everything they have been observed to earn.
 	ClaimableLamports *int `json:"claimable_lamports,omitempty"`
+	ClaimableUsd      *int `json:"claimable_usd,omitempty"`
 
 	// ClaimedLamports ClaimedLamports — WSOL cashback swept by claim_cashback in the window.
 	// This is the cash-basis component net PnL ADDS (page, series, board —
 	// all three fold the same claimed numbers, #c22).
 	ClaimedLamports *int `json:"claimed_lamports,omitempty"`
+	ClaimedUsd      *int `json:"claimed_usd,omitempty"`
 
 	// EarnedLamports EarnedLamports — cashback ACCRUED by the window's swaps (the exact
 	// per-swap amounts from the pump trade events, WSOL-quoted markets
 	// only). Informational: the net-PnL formulas fold CLAIMED, not this.
-	EarnedLamports      *int `json:"earned_lamports,omitempty"`
+	EarnedLamports *int `json:"earned_lamports,omitempty"`
+
+	// EarnedUsd The Usd twins are the same figures on the events' USD stamps
+	// (micro-USD).
+	EarnedUsd           *int `json:"earned_usd,omitempty"`
 	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
 
-	// HolderRewardsLamports The holder-reward half of the same panel (CA 000220). pump PUSHES
-	// these, so there is no accrued/claimed pair and nothing to claim:
-	// HolderRewardsLamports is already a receipt, and the payout count is
-	// the cadence figure ClaimCount is for cashback. Lifetime is exact —
-	// the receipt ledger carries no TTL — but both lamport figures count
-	// only payouts whose quote could be priced in SOL, because a coin
-	// paired with another token pays in that token (CA r89).
+	// HolderRewardsLamports The holder-reward half of the same panel. pump PUSHES these, so there
+	// is no accrued/claimed pair and nothing to claim: HolderRewardsLamports
+	// is already a receipt, and the payout count is the cadence figure
+	// ClaimCount is for cashback. Lifetime is exact, but both lamport figures
+	// count only payouts whose quote could be priced in SOL, because a coin
+	// paired with another token pays in that token.
 	HolderRewardsLamports   *int    `json:"holder_rewards_lamports,omitempty"`
+	HolderRewardsUsd        *int    `json:"holder_rewards_usd,omitempty"`
 	LastClaimAt             *string `json:"last_claim_at,omitempty"`
 	LifetimeClaimedLamports *int    `json:"lifetime_claimed_lamports,omitempty"`
+	LifetimeClaimedUsd      *int    `json:"lifetime_claimed_usd,omitempty"`
 
-	// LifetimeEarnedLamports LifetimeEarnedLamports is exact: it comes from `trader_stats.cashback`,
-	// which is untimed, WSOL-only by construction and rebuildable from
-	// `swaps`. LifetimeClaimedLamports is bounded by the raw claim ledger's
-	// 75-day retention (CA 000098) — the same compromise reliability's "all"
-	// window makes, undercounting rather than inventing. ProgramTotals below
-	// carries the program's own all-time figures beside it.
+	// LifetimeEarnedLamports LifetimeEarnedLamports and LifetimeClaimedLamports are the lifetime
+	// families of the wallet's board row. ProgramTotals below carries the
+	// program's own all-time figures beside them.
 	LifetimeEarnedLamports        *int `json:"lifetime_earned_lamports,omitempty"`
+	LifetimeEarnedUsd             *int `json:"lifetime_earned_usd,omitempty"`
 	LifetimeHolderRewardPayouts   *int `json:"lifetime_holder_reward_payouts,omitempty"`
 	LifetimeHolderRewardsLamports *int `json:"lifetime_holder_rewards_lamports,omitempty"`
+	LifetimeHolderRewardsUsd      *int `json:"lifetime_holder_rewards_usd,omitempty"`
 
 	// ProgramTotals ProgramTotals — the lifetime running totals the pump program itself
 	// stamped on the wallet's LATEST claim event, one row per program
 	// (pumpfun = bonding curve, pumpswap = AMM), read from
-	// `cashback_claim_anchors` so they outlive the raw ledger's TTL. They
-	// cover history from before our ingest and are surfaced verbatim as
+	// `cashback_claim_anchors`. They cover history from before the ledger
+	// began and are surfaced verbatim as
 	// "program-reported" — DISPLAY ONLY. Never fold them into a lamport
 	// figure: the on-chain counter is one u64 per accumulator and cashback
 	// is not SOL-only (~7% of sampled claims carried a USDC quote), so
@@ -2029,87 +2086,94 @@ type PulsightInternalCoreDomainAggregatorTraderCashbackStats struct {
 	// units — lamports for WSOL rows, which is nearly all of the claims.
 	RecentClaims        *[]PulsightInternalCoreDomainAggregatorCashbackClaimRow `json:"recent_claims,omitempty"`
 	TotalVolumeLamports *int                                                    `json:"total_volume_lamports,omitempty"`
+	TotalVolumeUsd      *int                                                    `json:"total_volume_usd,omitempty"`
 	VolumeShare         *float32                                                `json:"volume_share,omitempty"`
 	Window              *PulsightInternalCoreDomainAggregatorWindow             `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow defines model for pulsight_internal_core_domain_aggregator.TraderPeriodStatsRow.
 type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
-	// ArbPnlLamports ArbPnlLamports — the window's arbitrage take-home (tx-grain, CA
-	// 000158), ALREADY included in RealizedProfit and NetRealizedProfit.
-	// Exposed so the UI can show the split.
+	// ArbPnlLamports ArbPnlLamports — the window's arbitrage take-home (tx-grain), ALREADY
+	// included in RealizedProfit and NetRealizedProfit. Exposed so the UI can
+	// show the split.
 	ArbPnlLamports *int `json:"arb_pnl_lamports,omitempty"`
+	ArbPnlUsd      *int `json:"arb_pnl_usd,omitempty"`
 
-	// ArbTxRatio ArbTxRatio is the fraction (0..1) of the window's swaps that were
-	// arbitrage txs (is_arb). 0 when the window has no swaps.
+	// ArbTxRatio ArbTxRatio is the fraction (0..1) of the window's transactions that
+	// were arbitrage. 0 when the window has no trades.
 	ArbTxRatio        *float32 `json:"arb_tx_ratio,omitempty"`
 	BuyAmountLamports *int     `json:"buy_amount_lamports,omitempty"`
-	BuySellRatio      *float32 `json:"buy_sell_ratio,omitempty"`
 
-	// CashbackClaimedLamports CashbackClaimedLamports — WSOL pump cashback the wallet CLAIMED in the
-	// window (cash basis; CA 000097). The one POSITIVE cost-block component.
+	// BuyAmountUsd The Usd twins are the same money figures on the trades' USD stamps
+	// (micro-USD), with the win/loss split and winrate measured on them.
+	BuyAmountUsd *int     `json:"buy_amount_usd,omitempty"`
+	BuySellRatio *float32 `json:"buy_sell_ratio,omitempty"`
+
+	// CashbackClaimedLamports CashbackClaimedLamports — pump cashback the wallet CLAIMED and kept in
+	// the window (cash basis). A POSITIVE cost-block component.
 	CashbackClaimedLamports *int `json:"cashback_claimed_lamports,omitempty"`
+	CashbackClaimedUsd      *int `json:"cashback_claimed_usd,omitempty"`
 
-	// DidntBuySells DidntBuySells / SoldGtBoughtSells count the window's uncovered
-	// sells: countIf(sold_without_buy) and countIf(sold_more_than_bought)
-	// over `swaps`. Replaces the retired phantom proceeds split (CA
-	// migration 000018_remove_phantom_tracking).
+	// DidntBuySells DidntBuySells / SoldGtBoughtSells count the window's uncovered sells:
+	// sells of a mint with no observed buy, and sells that exceeded the
+	// observed bought balance.
 	DidntBuySells *int `json:"didnt_buy_sells,omitempty"`
 
 	// FailedCostLamports FailedCostLamports — fees burned on failed venue-mentioning txs plus
-	// the fees+tips of landed no-CPI arb probes, from the failed-tx rollups
-	// (CA 000094). 0 when the ledger isn't populated for the window.
+	// the fees+tips of landed no-CPI arb probes. 0 when none were recorded.
 	FailedCostLamports *int `json:"failed_cost_lamports,omitempty"`
+	FailedCostUsd      *int `json:"failed_cost_usd,omitempty"`
 	LossProfit         *int `json:"loss_profit,omitempty"`
+	LossProfitUsd      *int `json:"loss_profit_usd,omitempty"`
 	LossSells          *int `json:"loss_sells,omitempty"`
+	LossSellsUsd       *int `json:"loss_sells_usd,omitempty"`
 
-	// NetRealizedProfit NetRealizedProfit = RealizedProfit − TotalFees − TotalTips −
-	// FailedCostLamports + CashbackClaimedLamports: what the wallet
-	// actually kept. This is the HEADLINE PnL; RealizedProfit is the
-	// pre-cost component (accrual + arb take-home). Mirrors
-	// rollupWindowAgg.netPnl and boardWindowExpr (#c22).
-	NetRealizedProfit *int `json:"net_realized_profit,omitempty"`
+	// NetRealizedProfit NetRealizedProfit is the board row's net PnL: RealizedProfit minus
+	// TotalFees, TotalTips and FailedCostLamports, plus the kept cashback and
+	// the holder rewards received — what the wallet actually kept. This is the
+	// HEADLINE PnL; RealizedProfit is the pre-cost component (accrual + arb
+	// take-home).
+	NetRealizedProfit    *int `json:"net_realized_profit,omitempty"`
+	NetRealizedProfitUsd *int `json:"net_realized_profit_usd,omitempty"`
 
 	// RealizedProfit RealizedProfit is the window's PnL: accrual realized profit PLUS the
-	// arbitrage take-home (ArbPnlLamports). The two are disjoint upstream
-	// (arb round-trip rows book zero realized, r71), so the sum is exact.
+	// arbitrage take-home (ArbPnlLamports). The two are disjoint (an arb round
+	// trip books zero realized), so the sum is exact.
 	RealizedProfit     *int `json:"realized_profit,omitempty"`
+	RealizedProfitUsd  *int `json:"realized_profit_usd,omitempty"`
 	SellAmountLamports *int `json:"sell_amount_lamports,omitempty"`
+	SellAmountUsd      *int `json:"sell_amount_usd,omitempty"`
 	SoldGtBoughtSells  *int `json:"sold_gt_bought_sells,omitempty"`
 	SwapCount          *int `json:"swap_count,omitempty"`
 	TokenNum           *int `json:"token_num,omitempty"`
+	TotalBuys          *int `json:"total_buys,omitempty"`
 
-	// TotalBuys Count fields are int64, not int: periodStatsOne casts them with
-	// toInt64() in SQL, and clickhouse-go scans an Int64 column only into
-	// *int64 (it rejects *int with code-typed "try using *int64"). JSON
-	// serialisation is identical either way.
-	TotalBuys *int `json:"total_buys,omitempty"`
-
-	// TotalFees TotalFees is the window's tx fees (base + priority) counted ONCE PER
-	// TRANSACTION: sum(priority_fee_lamports) + 5000 × uniq(signature).
-	// `swaps.fee` itself is stamped on every trade row of a tx, so the old
-	// sumIf(fee) double-counted multi-trade (arb) txs; priority/tips are
-	// first-row-only stamped, so their plain sums are exact and only the
-	// 5000-lamport base rides the (near-exact) uniq count.
-	TotalFees  *int `json:"total_fees,omitempty"`
-	TotalSells *int `json:"total_sells,omitempty"`
+	// TotalFees TotalFees is the window's execution costs other than tips: network fees
+	// (base + priority) counted once per transaction, plus venue, platform and
+	// cashback-on-top fees.
+	TotalFees    *int `json:"total_fees,omitempty"`
+	TotalFeesUsd *int `json:"total_fees_usd,omitempty"`
+	TotalSells   *int `json:"total_sells,omitempty"`
 
 	// TotalTips TotalTips — builder/MEV tips paid on the window's successful txs.
-	TotalTips   *int     `json:"total_tips,omitempty"`
-	Trader      *string  `json:"trader,omitempty"`
-	WinProfit   *int     `json:"win_profit,omitempty"`
-	WinSells    *int     `json:"win_sells,omitempty"`
-	WindowLabel *string  `json:"window_label,omitempty"`
-	Winrate     *float32 `json:"winrate,omitempty"`
+	TotalTips    *int     `json:"total_tips,omitempty"`
+	TotalTipsUsd *int     `json:"total_tips_usd,omitempty"`
+	Trader       *string  `json:"trader,omitempty"`
+	WinProfit    *int     `json:"win_profit,omitempty"`
+	WinProfitUsd *int     `json:"win_profit_usd,omitempty"`
+	WinSells     *int     `json:"win_sells,omitempty"`
+	WinSellsUsd  *int     `json:"win_sells_usd,omitempty"`
+	WindowLabel  *string  `json:"window_label,omitempty"`
+	Winrate      *float32 `json:"winrate,omitempty"`
+	WinrateUsd   *float32 `json:"winrate_usd,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTraderPriceImpactStats defines model for pulsight_internal_core_domain_aggregator.TraderPriceImpactStats.
 type PulsightInternalCoreDomainAggregatorTraderPriceImpactStats struct {
-	// AvgPriceImpactBps AvgBps is the mean and MedianBps the p50 over the measurable legs of the
-	// wallet's most recent fills in the window (a bounded sample, up to 3000
-	// fills). Both are reported because the population is heavy-tailed — a
-	// handful of large fills into thin curves dominate the mean while the
-	// median describes the wallet's ordinary fill.
+	// AvgPriceImpactBps AvgBps is the mean and MedianBps the p50 over the wallet's measurable
+	// legs in the window. Both are reported because the population is
+	// heavy-tailed — a handful of large fills into thin curves dominate the
+	// mean while the median describes the wallet's ordinary fill.
 	//
 	// POINTERS, because 0 bps is a REAL answer (a wallet trading tiny size
 	// into deep pools) and "we could not measure it" must not read as it.
@@ -2129,29 +2193,35 @@ type PulsightInternalCoreDomainAggregatorTraderPriceImpactStats struct {
 type PulsightInternalCoreDomainAggregatorTraderReliabilityStats struct {
 	FailedArbs *int `json:"failed_arbs,omitempty"`
 
-	// FailedFeeLamports Lamports burned on failed txs (base + priority fee) vs on landed
-	// no-CPI probes, plus tips the probes paid.
+	// FailedFeeLamports FailedFeeLamports is the network fee (base plus priority) the wallet
+	// burned on its reverted transactions and landed no-CPI arb probes in the
+	// window; NoCpiTipLamports is the tips those transactions paid;
+	// NoCpiFeeLamports is unused (the fee of a no-CPI probe is in
+	// FailedFeeLamports).
 	FailedFeeLamports *int `json:"failed_fee_lamports,omitempty"`
-	FailedOther       *int `json:"failed_other,omitempty"`
-	FailedSwaps       *int `json:"failed_swaps,omitempty"`
+
+	// FailedFeeUsd FailedFeeUsd / NoCpiTipUsd are the two cost lines on their USD
+	// stamps (micro-USD).
+	FailedFeeUsd *int `json:"failed_fee_usd,omitempty"`
+	FailedOther  *int `json:"failed_other,omitempty"`
+	FailedSwaps  *int `json:"failed_swaps,omitempty"`
 
 	// FailedTxs = FailedSwaps + FailedArbs + FailedOther
 	FailedTxs *int `json:"failed_txs,omitempty"`
 
-	// LandedTxs LandedTxs is uniqExact(signature) over the wallet's `swaps` rows in
-	// the window — successful swap TRANSACTIONS, not legs or trades.
+	// LandedTxs LandedTxs counts the wallet's distinct landed transactions in the
+	// window — transactions, not legs or trades.
 	LandedTxs        *int `json:"landed_txs,omitempty"`
 	NoCpiFeeLamports *int `json:"no_cpi_fee_lamports,omitempty"`
 	NoCpiTipLamports *int `json:"no_cpi_tip_lamports,omitempty"`
+	NoCpiTipUsd      *int `json:"no_cpi_tip_usd,omitempty"`
 	NoCpiTxs         *int `json:"no_cpi_txs,omitempty"`
 
-	// ObservedLandedTxs ObservedLandedTxs is LandedTxs narrowed to the hours the failed-tx
-	// stream was actually running. Failed transactions are only recorded for
-	// those hours — a historical backfill drops them at the fetch layer, and
-	// nothing observed them before the feature shipped — so this is the only
-	// landed count the rates below may divide by. It equals LandedTxs once a
-	// window is fully observed; the gap is how much of the window is
-	// un-scored.
+	// ObservedLandedTxs ObservedLandedTxs is LandedTxs narrowed to the hours in which failed
+	// transactions were recorded (`observed_hours`). Failed transactions exist
+	// only for those hours, so this is the only landed count the rates below
+	// may divide by. It equals LandedTxs once a window is fully observed; the
+	// gap is how much of the window is un-scored.
 	ObservedLandedTxs *int     `json:"observed_landed_txs,omitempty"`
 	Pubkey            *string  `json:"pubkey,omitempty"`
 	SpamRate          *float32 `json:"spam_rate,omitempty"`
@@ -2304,23 +2374,6 @@ type PulsightInternalCoreDomainTokenviewFilter struct {
 	UserId    *string                 `json:"user_id,omitempty"`
 }
 
-// PulsightInternalCoreDomainTraderDailyProfit defines model for pulsight_internal_core_domain_trader.DailyProfit.
-type PulsightInternalCoreDomainTraderDailyProfit struct {
-	BuyAmountUsd  *float32 `json:"buy_amount_usd,omitempty"`
-	CreatedAt     *string  `json:"created_at,omitempty"`
-	Date          *string  `json:"date,omitempty"`
-	Id            *string  `json:"id,omitempty"`
-	LossProfit    *float32 `json:"loss_profit,omitempty"`
-	LossSells     *int     `json:"loss_sells,omitempty"`
-	SellAmountUsd *float32 `json:"sell_amount_usd,omitempty"`
-	TotalBuys     *int     `json:"total_buys,omitempty"`
-	TotalProfit   *float32 `json:"total_profit,omitempty"`
-	TotalSells    *int     `json:"total_sells,omitempty"`
-	TraderId      *string  `json:"trader_id,omitempty"`
-	WinProfit     *float32 `json:"win_profit,omitempty"`
-	WinSells      *int     `json:"win_sells,omitempty"`
-}
-
 // PulsightInternalCoreDomainTraderFilter defines model for pulsight_internal_core_domain_trader.Filter.
 type PulsightInternalCoreDomainTraderFilter struct {
 	CreatedAt *string                 `json:"created_at,omitempty"`
@@ -2332,57 +2385,12 @@ type PulsightInternalCoreDomainTraderFilter struct {
 	UserId    *string                 `json:"user_id,omitempty"`
 }
 
-// PulsightInternalCoreDomainTraderPnl defines model for pulsight_internal_core_domain_trader.Pnl.
-type PulsightInternalCoreDomainTraderPnl struct {
-	// Balance Position
-	Balance *float32 `json:"balance,omitempty"`
-
-	// BuyTxCount Activity
-	BuyTxCount          *int    `json:"buy_tx_count,omitempty"`
-	CreatedAt           *string `json:"created_at,omitempty"`
-	Id                  *string `json:"id,omitempty"`
-	LastActiveTimestamp *int    `json:"last_active_timestamp,omitempty"`
-
-	// OpenTimestamp Timing
-	OpenTimestamp  *int     `json:"open_timestamp,omitempty"`
-	RealizedProfit *float32 `json:"realized_profit,omitempty"`
-	SellTxCount    *int     `json:"sell_tx_count,omitempty"`
-	StartHoldingAt *int     `json:"start_holding_at,omitempty"`
-
-	// TokenAddress Token info
-	TokenAddress     *string  `json:"token_address,omitempty"`
-	TokenLogo        *string  `json:"token_logo,omitempty"`
-	TokenName        *string  `json:"token_name,omitempty"`
-	TokenPrice       *float32 `json:"token_price,omitempty"`
-	TokenSymbol      *string  `json:"token_symbol,omitempty"`
-	TotalProfit      *float32 `json:"total_profit,omitempty"`
-	TotalProfitPnl   *float32 `json:"total_profit_pnl,omitempty"`
-	TraderId         *string  `json:"trader_id,omitempty"`
-	UnrealizedProfit *float32 `json:"unrealized_profit,omitempty"`
-	UpdatedAt        *string  `json:"updated_at,omitempty"`
-	UsdValue         *float32 `json:"usd_value,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderTag defines model for pulsight_internal_core_domain_trader.Tag.
-type PulsightInternalCoreDomainTraderTag struct {
-	CreatedAt   *string                                    `json:"created_at,omitempty"`
-	Description *string                                    `json:"description,omitempty"`
-	Id          *string                                    `json:"id,omitempty"`
-	Name        *string                                    `json:"name,omitempty"`
-	Source      *PulsightInternalCoreDomainTraderTagSource `json:"source,omitempty"`
-}
-
-// PulsightInternalCoreDomainTraderTagSource defines model for pulsight_internal_core_domain_trader.TagSource.
-type PulsightInternalCoreDomainTraderTagSource string
-
 // PulsightInternalCoreDomainTraderTrader defines model for pulsight_internal_core_domain_trader.Trader.
 type PulsightInternalCoreDomainTraderTrader struct {
-	ActiveHoursCount *int     `json:"active_hours_count,omitempty"`
-	ArbTxRatio1d     *float32 `json:"arb_tx_ratio_1d,omitempty"`
-	ArbTxRatio30d    *float32 `json:"arb_tx_ratio_30d,omitempty"`
-	ArbTxRatio7d     *float32 `json:"arb_tx_ratio_7d,omitempty"`
-	ArbTxRatioAll    *float32 `json:"arb_tx_ratio_all,omitempty"`
-	Avatar           *string  `json:"avatar,omitempty"`
+	ArbTxRatio1d  *float32 `json:"arb_tx_ratio_1d,omitempty"`
+	ArbTxRatio30d *float32 `json:"arb_tx_ratio_30d,omitempty"`
+	ArbTxRatio7d  *float32 `json:"arb_tx_ratio_7d,omitempty"`
+	ArbTxRatioAll *float32 `json:"arb_tx_ratio_all,omitempty"`
 
 	// AvgBuyCountPerToken Per-token buy/sell counts
 	AvgBuyCountPerToken *float32 `json:"avg_buy_count_per_token,omitempty"`
@@ -2391,57 +2399,65 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	AvgFirstBuyReactivity *float32 `json:"avg_first_buy_reactivity,omitempty"`
 
 	// AvgHoldingTime Holding time (seconds)
-	AvgHoldingTime       *float32 `json:"avg_holding_time,omitempty"`
-	AvgRealizedProfit1d  *float32 `json:"avg_realized_profit_1d,omitempty"`
-	AvgRealizedProfit30d *float32 `json:"avg_realized_profit_30d,omitempty"`
-	AvgRealizedProfit7d  *float32 `json:"avg_realized_profit_7d,omitempty"`
-	AvgRealizedProfitAll *float32 `json:"avg_realized_profit_all,omitempty"`
-	AvgSellCountPerToken *float32 `json:"avg_sell_count_per_token,omitempty"`
-	Buy1d                *int     `json:"buy_1d,omitempty"`
-	Buy30d               *int     `json:"buy_30d,omitempty"`
-	Buy7d                *int     `json:"buy_7d,omitempty"`
-	BuyAll               *int     `json:"buy_all,omitempty"`
-	BuySellRatio1d       *float32 `json:"buy_sell_ratio_1d,omitempty"`
-	BuySellRatio30d      *float32 `json:"buy_sell_ratio_30d,omitempty"`
+	AvgHoldingTime          *float32 `json:"avg_holding_time,omitempty"`
+	AvgRealizedProfit1d     *float32 `json:"avg_realized_profit_1d,omitempty"`
+	AvgRealizedProfit1dUsd  *float32 `json:"avg_realized_profit_1d_usd,omitempty"`
+	AvgRealizedProfit30d    *float32 `json:"avg_realized_profit_30d,omitempty"`
+	AvgRealizedProfit30dUsd *float32 `json:"avg_realized_profit_30d_usd,omitempty"`
+	AvgRealizedProfit7d     *float32 `json:"avg_realized_profit_7d,omitempty"`
+	AvgRealizedProfit7dUsd  *float32 `json:"avg_realized_profit_7d_usd,omitempty"`
+	AvgRealizedProfitAll    *float32 `json:"avg_realized_profit_all,omitempty"`
+	AvgRealizedProfitAllUsd *float32 `json:"avg_realized_profit_all_usd,omitempty"`
+	AvgSellCountPerToken    *float32 `json:"avg_sell_count_per_token,omitempty"`
+	Buy1d                   *int     `json:"buy_1d,omitempty"`
+	Buy30d                  *int     `json:"buy_30d,omitempty"`
+	Buy7d                   *int     `json:"buy_7d,omitempty"`
+	BuyAll                  *int     `json:"buy_all,omitempty"`
+	BuySellRatio1d          *float32 `json:"buy_sell_ratio_1d,omitempty"`
+	BuySellRatio30d         *float32 `json:"buy_sell_ratio_30d,omitempty"`
 
 	// BuySellRatio7d Computed ratios
 	BuySellRatio7d  *float32 `json:"buy_sell_ratio_7d,omitempty"`
 	BuySellRatioAll *float32 `json:"buy_sell_ratio_all,omitempty"`
-	BuySizeCv       *float32 `json:"buy_size_cv,omitempty"`
 	Cashback1d      *float32 `json:"cashback_1d,omitempty"`
+	Cashback1dUsd   *float32 `json:"cashback_1d_usd,omitempty"`
 	Cashback30d     *float32 `json:"cashback_30d,omitempty"`
+	Cashback30dUsd  *float32 `json:"cashback_30d_usd,omitempty"`
 
 	// Cashback7d Pump cashback, lamports. `Cashback*` is what ACCRUED in the window
 	// (the screening signal); `CashbackClaimed*` is what was swept, and is
 	// the component already folded into NetProfit* — do not add it again.
 	Cashback7d            *float32 `json:"cashback_7d,omitempty"`
+	Cashback7dUsd         *float32 `json:"cashback_7d_usd,omitempty"`
 	CashbackAll           *float32 `json:"cashback_all,omitempty"`
+	CashbackAllUsd        *float32 `json:"cashback_all_usd,omitempty"`
 	CashbackClaimCount1d  *int     `json:"cashback_claim_count_1d,omitempty"`
 	CashbackClaimCount30d *int     `json:"cashback_claim_count_30d,omitempty"`
 	CashbackClaimCount7d  *int     `json:"cashback_claim_count_7d,omitempty"`
 	CashbackClaimCountAll *int     `json:"cashback_claim_count_all,omitempty"`
 	CashbackClaimed1d     *float32 `json:"cashback_claimed_1d,omitempty"`
+	CashbackClaimed1dUsd  *float32 `json:"cashback_claimed_1d_usd,omitempty"`
 	CashbackClaimed30d    *float32 `json:"cashback_claimed_30d,omitempty"`
+	CashbackClaimed30dUsd *float32 `json:"cashback_claimed_30d_usd,omitempty"`
 	CashbackClaimed7d     *float32 `json:"cashback_claimed_7d,omitempty"`
+	CashbackClaimed7dUsd  *float32 `json:"cashback_claimed_7d_usd,omitempty"`
 	CashbackClaimedAll    *float32 `json:"cashback_claimed_all,omitempty"`
+	CashbackClaimedAllUsd *float32 `json:"cashback_claimed_all_usd,omitempty"`
 	CashbackShare1d       *float32 `json:"cashback_share_1d,omitempty"`
 	CashbackShare30d      *float32 `json:"cashback_share_30d,omitempty"`
 	CashbackShare7d       *float32 `json:"cashback_share_7d,omitempty"`
 	CashbackShareAll      *float32 `json:"cashback_share_all,omitempty"`
 
 	// Chain "sol" | "eth"
-	Chain            *string                                        `json:"chain,omitempty"`
-	CreatedAt        *string                                        `json:"created_at,omitempty"`
-	DailyProfits     *[]PulsightInternalCoreDomainTraderDailyProfit `json:"daily_profits,omitempty"`
-	DidntBuySells1d  *int                                           `json:"didnt_buy_sells_1d,omitempty"`
-	DidntBuySells30d *int                                           `json:"didnt_buy_sells_30d,omitempty"`
+	Chain            *string `json:"chain,omitempty"`
+	CreatedAt        *string `json:"created_at,omitempty"`
+	DidntBuySells1d  *int    `json:"didnt_buy_sells_1d,omitempty"`
+	DidntBuySells30d *int    `json:"didnt_buy_sells_30d,omitempty"`
 
-	// DidntBuySells7d Uncovered-sell counters for the window (CA migration 000018):
-	// sells with no observed buy of the mint / sells exceeding the
-	// observed bought balance.
+	// DidntBuySells7d Uncovered-sell counters for the window: sells with no observed buy of
+	// the mint / sells exceeding the observed bought balance.
 	DidntBuySells7d        *int     `json:"didnt_buy_sells_7d,omitempty"`
 	DidntBuySellsAll       *int     `json:"didnt_buy_sells_all,omitempty"`
-	DustTxRatio            *float32 `json:"dust_tx_ratio,omitempty"`
 	FailedTxs1d            *int     `json:"failed_txs_1d,omitempty"`
 	FailedTxs30d           *int     `json:"failed_txs_30d,omitempty"`
 	FailedTxs7d            *int     `json:"failed_txs_7d,omitempty"`
@@ -2451,11 +2467,14 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	HolderRewardPayouts7d  *int     `json:"holder_reward_payouts_7d,omitempty"`
 	HolderRewardPayoutsAll *int     `json:"holder_reward_payouts_all,omitempty"`
 	HolderRewards1d        *float32 `json:"holder_rewards_1d,omitempty"`
+	HolderRewards1dUsd     *float32 `json:"holder_rewards_1d_usd,omitempty"`
 	HolderRewards30d       *float32 `json:"holder_rewards_30d,omitempty"`
+	HolderRewards30dUsd    *float32 `json:"holder_rewards_30d_usd,omitempty"`
 	HolderRewards7d        *float32 `json:"holder_rewards_7d,omitempty"`
+	HolderRewards7dUsd     *float32 `json:"holder_rewards_7d_usd,omitempty"`
 	HolderRewardsAll       *float32 `json:"holder_rewards_all,omitempty"`
+	HolderRewardsAllUsd    *float32 `json:"holder_rewards_all_usd,omitempty"`
 	Id                     *string  `json:"id,omitempty"`
-	IsFavorite             *bool    `json:"is_favorite,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/KOL/...) from the
 	// known_addresses registry; empty when the wallet isn't labelled.
@@ -2467,101 +2486,86 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	LandedTxsAll *int    `json:"landed_txs_all,omitempty"`
 
 	// LastActiveTimestamp Activity
-	LastActiveTimestamp      *int     `json:"last_active_timestamp,omitempty"`
-	MedianBuyCountPerToken   *float32 `json:"median_buy_count_per_token,omitempty"`
-	MedianFirstBuyReactivity *float32 `json:"median_first_buy_reactivity,omitempty"`
-	MedianHoldingTime        *float32 `json:"median_holding_time,omitempty"`
-	MedianRealizedProfit1d   *float32 `json:"median_realized_profit_1d,omitempty"`
-	MedianRealizedProfit30d  *float32 `json:"median_realized_profit_30d,omitempty"`
-	MedianRealizedProfit7d   *float32 `json:"median_realized_profit_7d,omitempty"`
-	MedianRealizedProfitAll  *float32 `json:"median_realized_profit_all,omitempty"`
-	MedianSellCountPerToken  *float32 `json:"median_sell_count_per_token,omitempty"`
-	MmScore                  *int     `json:"mm_score,omitempty"`
+	LastActiveTimestamp        *int     `json:"last_active_timestamp,omitempty"`
+	MedianBuyCountPerToken     *float32 `json:"median_buy_count_per_token,omitempty"`
+	MedianFirstBuyReactivity   *float32 `json:"median_first_buy_reactivity,omitempty"`
+	MedianHoldingTime          *float32 `json:"median_holding_time,omitempty"`
+	MedianRealizedProfit1d     *float32 `json:"median_realized_profit_1d,omitempty"`
+	MedianRealizedProfit1dUsd  *float32 `json:"median_realized_profit_1d_usd,omitempty"`
+	MedianRealizedProfit30d    *float32 `json:"median_realized_profit_30d,omitempty"`
+	MedianRealizedProfit30dUsd *float32 `json:"median_realized_profit_30d_usd,omitempty"`
+	MedianRealizedProfit7d     *float32 `json:"median_realized_profit_7d,omitempty"`
+	MedianRealizedProfit7dUsd  *float32 `json:"median_realized_profit_7d_usd,omitempty"`
+	MedianRealizedProfitAll    *float32 `json:"median_realized_profit_all,omitempty"`
+	MedianRealizedProfitAllUsd *float32 `json:"median_realized_profit_all_usd,omitempty"`
+	MedianSellCountPerToken    *float32 `json:"median_sell_count_per_token,omitempty"`
+	NetProfit1d                *float32 `json:"net_profit_1d,omitempty"`
+	NetProfit1dUsd             *float32 `json:"net_profit_1d_usd,omitempty"`
+	NetProfit30d               *float32 `json:"net_profit_30d,omitempty"`
+	NetProfit30dUsd            *float32 `json:"net_profit_30d_usd,omitempty"`
 
-	// Name Identifiers / social
-	Name         *string  `json:"name,omitempty"`
-	NetProfit1d  *float32 `json:"net_profit_1d,omitempty"`
-	NetProfit30d *float32 `json:"net_profit_30d,omitempty"`
+	// NetProfit7d Net-of-costs windowed figures, lamports. NetProfit is realized PnL
+	// minus tips, per-transaction fees and the fees burned on failed / no-CPI
+	// transactions — what the wallet actually kept. The gross figure stays on
+	// RealizedProfit*d so both are readable. SuccessRate / SpamRate are nil
+	// when the window observed no transactions at all (0 would read as
+	// "never lands").
+	NetProfit7d     *float32 `json:"net_profit_7d,omitempty"`
+	NetProfit7dUsd  *float32 `json:"net_profit_7d_usd,omitempty"`
+	NetProfitAll    *float32 `json:"net_profit_all,omitempty"`
+	NetProfitAllUsd *float32 `json:"net_profit_all_usd,omitempty"`
+	OldestTradeAt   *int     `json:"oldest_trade_at,omitempty"`
 
-	// NetProfit7d Realized profit per-mint averages / medians. UNIT: lamports
-	// (frontend FormattedSol divides by 1e9 on display).
-	// Net-of-costs windowed figures (CA migration 000095). NetProfit is
-	// realized PnL minus tips, per-transaction fees and the fees burned on
-	// failed / no-CPI transactions — what the wallet actually kept. The
-	// gross figure stays on RealizedProfit*d so both are readable.
-	// SuccessRate / SpamRate are nil when the window observed no
-	// transactions at all (0 would read as "never lands").
-	NetProfit7d   *float32 `json:"net_profit_7d,omitempty"`
-	NetProfitAll  *float32 `json:"net_profit_all,omitempty"`
-	OldestTradeAt *int     `json:"oldest_trade_at,omitempty"`
-	Pnl0x2xNum30d *int     `json:"pnl_0x2x_num_30d,omitempty"`
-
-	// Pnl0x2xNum7d 0x to 2x
-	Pnl0x2xNum7d  *int `json:"pnl_0x2x_num_7d,omitempty"`
-	Pnl2x5xNum30d *int `json:"pnl_2x5x_num_30d,omitempty"`
-
-	// Pnl2x5xNum7d 2x to 5x
-	Pnl2x5xNum7d  *int `json:"pnl_2x5x_num_7d,omitempty"`
-	PnlGt5xNum30d *int `json:"pnl_gt5x_num_30d,omitempty"`
-
-	// PnlGt5xNum7d > 5x
-	PnlGt5xNum7d *int `json:"pnl_gt5x_num_7d,omitempty"`
-
-	// PnlLtNd5Num30d PnL distribution buckets — 30d
-	PnlLtNd5Num30d *int `json:"pnl_lt_nd5_num_30d,omitempty"`
-
-	// PnlLtNd5Num7d PnL distribution buckets — 7d
-	PnlLtNd5Num7d  *int `json:"pnl_lt_nd5_num_7d,omitempty"`
-	PnlNd50xNum30d *int `json:"pnl_nd50x_num_30d,omitempty"`
-
-	// PnlNd50xNum7d -5x to 0x
-	PnlNd50xNum7d  *int                                   `json:"pnl_nd50x_num_7d,omitempty"`
-	Pnls           *[]PulsightInternalCoreDomainTraderPnl `json:"pnls,omitempty"`
-	ProfitPerTrade *float32                               `json:"profit_per_trade,omitempty"`
-	RealizedProfit *float32                               `json:"realized_profit,omitempty"`
+	// RealizedProfit RealizedProfit is the lifetime realized PnL in lamports.
+	RealizedProfit *float32 `json:"realized_profit,omitempty"`
 
 	// RealizedProfit1d 1-day window. Same measures and same derivations as the 7d/30d
 	// blocks, hydrated per page rather than read off the board — so these
 	// are DISPLAY-only: neither sorting nor an `f=` clause can address them.
-	RealizedProfit1d *float32 `json:"realized_profit_1d,omitempty"`
+	RealizedProfit1d    *float32 `json:"realized_profit_1d,omitempty"`
+	RealizedProfit1dUsd *float32 `json:"realized_profit_1d_usd,omitempty"`
 
 	// RealizedProfit30d 30-day period
-	RealizedProfit30d *float32 `json:"realized_profit_30d,omitempty"`
+	RealizedProfit30d    *float32 `json:"realized_profit_30d,omitempty"`
+	RealizedProfit30dUsd *float32 `json:"realized_profit_30d_usd,omitempty"`
 
-	// RealizedProfit7d 7-day period. UNIT for realized_profit_*: lamports.
+	// RealizedProfit7d 7-day period. Money figures are lamports; TotalProfit7d and
+	// TotalProfitPnl7d repeat the realized PnL and ROI.
 	RealizedProfit7d     *float32 `json:"realized_profit_7d,omitempty"`
+	RealizedProfit7dUsd  *float32 `json:"realized_profit_7d_usd,omitempty"`
+	RealizedProfitAllUsd *float32 `json:"realized_profit_all_usd,omitempty"`
 	RealizedProfitPnl30d *float32 `json:"realized_profit_pnl_30d,omitempty"`
 	RealizedProfitPnl7d  *float32 `json:"realized_profit_pnl_7d,omitempty"`
-	RebalancingRatio     *float32 `json:"rebalancing_ratio,omitempty"`
 	RewardsTotal1d       *float32 `json:"rewards_total_1d,omitempty"`
+	RewardsTotal1dUsd    *float32 `json:"rewards_total_1d_usd,omitempty"`
 	RewardsTotal30d      *float32 `json:"rewards_total_30d,omitempty"`
+	RewardsTotal30dUsd   *float32 `json:"rewards_total_30d_usd,omitempty"`
 
 	// RewardsTotal7d Pump holder rewards, lamports. Pushed rather than claimed, so the one
 	// figure is already a receipt and is what net PnL folds; the payout count
 	// counts every payout, including one on a coin whose quote could not be
 	// priced in SOL and therefore adds no lamports.
-	RewardsTotal7d  *float32 `json:"rewards_total_7d,omitempty"`
-	RewardsTotalAll *float32 `json:"rewards_total_all,omitempty"`
-	RiskLevel       *string  `json:"risk_level,omitempty"`
-
-	// RiskScore Risk assessment
-	RiskScore *int     `json:"risk_score,omitempty"`
-	Roi1d     *float32 `json:"roi_1d,omitempty"`
+	RewardsTotal7d     *float32 `json:"rewards_total_7d,omitempty"`
+	RewardsTotal7dUsd  *float32 `json:"rewards_total_7d_usd,omitempty"`
+	RewardsTotalAll    *float32 `json:"rewards_total_all,omitempty"`
+	RewardsTotalAllUsd *float32 `json:"rewards_total_all_usd,omitempty"`
+	Roi1d              *float32 `json:"roi_1d,omitempty"`
+	Roi1dUsd           *float32 `json:"roi_1d_usd,omitempty"`
+	Roi30dUsd          *float32 `json:"roi_30d_usd,omitempty"`
+	Roi7dUsd           *float32 `json:"roi_7d_usd,omitempty"`
 
 	// RoiAll Lifetime window, also DISPLAY-only. The gross figure is RealizedProfit
 	// above. There is deliberately no lifetime failure record: the failed-tx
 	// planes are TTL-bounded to three months while the landed side is not,
 	// so a lifetime success or spam rate would be structurally flattering.
-	RoiAll  *float32 `json:"roi_all,omitempty"`
-	Sell1d  *int     `json:"sell_1d,omitempty"`
-	Sell30d *int     `json:"sell_30d,omitempty"`
-	Sell7d  *int     `json:"sell_7d,omitempty"`
-	SellAll *int     `json:"sell_all,omitempty"`
+	RoiAll    *float32 `json:"roi_all,omitempty"`
+	RoiAllUsd *float32 `json:"roi_all_usd,omitempty"`
+	Sell1d    *int     `json:"sell_1d,omitempty"`
+	Sell30d   *int     `json:"sell_30d,omitempty"`
+	Sell7d    *int     `json:"sell_7d,omitempty"`
+	SellAll   *int     `json:"sell_all,omitempty"`
 
-	// SolBalance Balances. UNIT: lamports (BIGINT, held as *float64 for wire
-	// compatibility). The field name says "Sol" for historical reasons;
-	// the wire convention is lamports because the frontend's
-	// FormattedSol component divides by 1e9 itself.
+	// SolBalance SolBalance is the wallet's SOL balance in lamports.
 	SolBalance           *float32 `json:"sol_balance,omitempty"`
 	SoldGtBoughtSells1d  *int     `json:"sold_gt_bought_sells_1d,omitempty"`
 	SoldGtBoughtSells30d *int     `json:"sold_gt_bought_sells_30d,omitempty"`
@@ -2574,41 +2578,34 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	SuccessRate30d       *float32 `json:"success_rate_30d,omitempty"`
 	SuccessRate7d        *float32 `json:"success_rate_7d,omitempty"`
 
-	// Tags Relations (loaded on demand)
-	Tags          *[]PulsightInternalCoreDomainTraderTag `json:"tags,omitempty"`
-	TokenNum1d    *int                                   `json:"token_num_1d,omitempty"`
-	TokenNum30d   *int                                   `json:"token_num_30d,omitempty"`
-	TokenNum7d    *int                                   `json:"token_num_7d,omitempty"`
-	TokenNumAll   *int                                   `json:"token_num_all,omitempty"`
-	TotalCosts1d  *float32                               `json:"total_costs_1d,omitempty"`
-	TotalCosts30d *float32                               `json:"total_costs_30d,omitempty"`
-	TotalCosts7d  *float32                               `json:"total_costs_7d,omitempty"`
-	TotalCostsAll *float32                               `json:"total_costs_all,omitempty"`
-
-	// TotalProfit Profit stats (all-time). UNIT: lamports (see SolBalance note).
-	TotalProfit       *float32 `json:"total_profit,omitempty"`
-	TotalProfit30d    *float32 `json:"total_profit_30d,omitempty"`
-	TotalProfit7d     *float32 `json:"total_profit_7d,omitempty"`
-	TotalProfitPnl30d *float32 `json:"total_profit_pnl_30d,omitempty"`
-	TotalProfitPnl7d  *float32 `json:"total_profit_pnl_7d,omitempty"`
-	TotalValue        *float32 `json:"total_value,omitempty"`
-	TotalVolumeUsd    *float32 `json:"total_volume_usd,omitempty"`
-	TradeIntervalCv   *float32 `json:"trade_interval_cv,omitempty"`
-
-	// TradeIntervalMean Market-maker detection
-	TradeIntervalMean      *float32 `json:"trade_interval_mean,omitempty"`
-	TwitterUsername        *string  `json:"twitter_username,omitempty"`
-	UnrealizedProfit       *float32 `json:"unrealized_profit,omitempty"`
-	UnrealizedProfit30d    *float32 `json:"unrealized_profit_30d,omitempty"`
-	UnrealizedProfit7d     *float32 `json:"unrealized_profit_7d,omitempty"`
-	UnrealizedProfitPnl30d *float32 `json:"unrealized_profit_pnl_30d,omitempty"`
-	UnrealizedProfitPnl7d  *float32 `json:"unrealized_profit_pnl_7d,omitempty"`
-	UpdatedAt              *string  `json:"updated_at,omitempty"`
-	WalletAddress          *string  `json:"wallet_address,omitempty"`
-	Winrate1d              *float32 `json:"winrate_1d,omitempty"`
-	Winrate30d             *float32 `json:"winrate_30d,omitempty"`
-	Winrate7d              *float32 `json:"winrate_7d,omitempty"`
-	WinrateAll             *float32 `json:"winrate_all,omitempty"`
+	// Tags Tags are derived from the ledger at read time (deriveTags).
+	Tags              *[]string `json:"tags,omitempty"`
+	TokenNum1d        *int      `json:"token_num_1d,omitempty"`
+	TokenNum30d       *int      `json:"token_num_30d,omitempty"`
+	TokenNum7d        *int      `json:"token_num_7d,omitempty"`
+	TokenNumAll       *int      `json:"token_num_all,omitempty"`
+	TotalCosts1d      *float32  `json:"total_costs_1d,omitempty"`
+	TotalCosts1dUsd   *float32  `json:"total_costs_1d_usd,omitempty"`
+	TotalCosts30d     *float32  `json:"total_costs_30d,omitempty"`
+	TotalCosts30dUsd  *float32  `json:"total_costs_30d_usd,omitempty"`
+	TotalCosts7d      *float32  `json:"total_costs_7d,omitempty"`
+	TotalCosts7dUsd   *float32  `json:"total_costs_7d_usd,omitempty"`
+	TotalCostsAll     *float32  `json:"total_costs_all,omitempty"`
+	TotalCostsAllUsd  *float32  `json:"total_costs_all_usd,omitempty"`
+	TotalProfit30d    *float32  `json:"total_profit_30d,omitempty"`
+	TotalProfit7d     *float32  `json:"total_profit_7d,omitempty"`
+	TotalProfitPnl30d *float32  `json:"total_profit_pnl_30d,omitempty"`
+	TotalProfitPnl7d  *float32  `json:"total_profit_pnl_7d,omitempty"`
+	UpdatedAt         *string   `json:"updated_at,omitempty"`
+	WalletAddress     *string   `json:"wallet_address,omitempty"`
+	Winrate1d         *float32  `json:"winrate_1d,omitempty"`
+	Winrate1dUsd      *float32  `json:"winrate_1d_usd,omitempty"`
+	Winrate30d        *float32  `json:"winrate_30d,omitempty"`
+	Winrate30dUsd     *float32  `json:"winrate_30d_usd,omitempty"`
+	Winrate7d         *float32  `json:"winrate_7d,omitempty"`
+	Winrate7dUsd      *float32  `json:"winrate_7d_usd,omitempty"`
+	WinrateAll        *float32  `json:"winrate_all,omitempty"`
+	WinrateAllUsd     *float32  `json:"winrate_all_usd,omitempty"`
 }
 
 // PulsightInternalCoreDomainWebhookNotifier defines model for pulsight_internal_core_domain_webhook.Notifier.
@@ -3119,48 +3116,20 @@ type PulsightInternalCoreUsecasesBacktestTokenScopeKind string
 // PulsightInternalCoreUsecasesBacktestTradeSource defines model for pulsight_internal_core_usecases_backtest.TradeSource.
 type PulsightInternalCoreUsecasesBacktestTradeSource string
 
-// PulsightInternalCoreUsecasesTraderDailyProfitEntry defines model for pulsight_internal_core_usecases_trader.DailyProfitEntry.
-type PulsightInternalCoreUsecasesTraderDailyProfitEntry struct {
-	Date        *string  `json:"date,omitempty"`
-	TotalProfit *float32 `json:"total_profit,omitempty"`
-}
-
-// PulsightInternalCoreUsecasesTraderDailyProfitListItem defines model for pulsight_internal_core_usecases_trader.DailyProfitListItem.
-type PulsightInternalCoreUsecasesTraderDailyProfitListItem struct {
-	BuyAmountUsd  *float32 `json:"buy_amount_usd,omitempty"`
-	CreatedAt     *string  `json:"created_at,omitempty"`
-	Date          *string  `json:"date,omitempty"`
-	Id            *string  `json:"id,omitempty"`
-	LossProfit    *float32 `json:"loss_profit,omitempty"`
-	LossSells     *int     `json:"loss_sells,omitempty"`
-	SellAmountUsd *float32 `json:"sell_amount_usd,omitempty"`
-	TotalBuys     *int     `json:"total_buys,omitempty"`
-	TotalProfit   *float32 `json:"total_profit,omitempty"`
-	TotalSells    *int     `json:"total_sells,omitempty"`
-	TraderId      *string  `json:"trader_id,omitempty"`
-	WinProfit     *float32 `json:"win_profit,omitempty"`
-	WinSells      *int     `json:"win_sells,omitempty"`
-}
-
-// PulsightInternalCoreUsecasesTraderDailyProfitsResult defines model for pulsight_internal_core_usecases_trader.DailyProfitsResult.
-type PulsightInternalCoreUsecasesTraderDailyProfitsResult struct {
-	Items  *[]PulsightInternalCoreUsecasesTraderDailyProfitListItem `json:"items,omitempty"`
-	Limit  *int                                                     `json:"limit,omitempty"`
-	Offset *int                                                     `json:"offset,omitempty"`
-	Total  *int                                                     `json:"total,omitempty"`
-}
-
 // PulsightInternalCoreUsecasesTraderPnlSeriesPoint defines model for pulsight_internal_core_usecases_trader.PnlSeriesPoint.
 type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
-	// ArbPnl ArbPnl is the day's arbitrage take-home (tx-grain, CA 000158). It is
+	// ArbPnl ArbPnl is the day's arbitrage take-home (tx-grain). It is
 	// ALREADY included in Profit and Net — exposed separately so the UI can
 	// show the split. Arb round-trip rows book zero realized PnL upstream,
 	// so the inclusion never double-counts.
-	ArbPnl     *int    `json:"arb_pnl,omitempty"`
-	Cashback   *int    `json:"cashback,omitempty"`
-	Day        *string `json:"day,omitempty"`
-	FailedCost *int    `json:"failed_cost,omitempty"`
-	FailedTxs  *int    `json:"failed_txs,omitempty"`
+	ArbPnl        *int    `json:"arb_pnl,omitempty"`
+	ArbPnlUsd     *int    `json:"arb_pnl_usd,omitempty"`
+	Cashback      *int    `json:"cashback,omitempty"`
+	CashbackUsd   *int    `json:"cashback_usd,omitempty"`
+	Day           *string `json:"day,omitempty"`
+	FailedCost    *int    `json:"failed_cost,omitempty"`
+	FailedCostUsd *int    `json:"failed_cost_usd,omitempty"`
+	FailedTxs     *int    `json:"failed_txs,omitempty"`
 
 	// Fees Costs of the day (lamports): per-tx fees, tips, and failed-tx burn,
 	// against what pump paid the wallet that day — cashback CLAIMED and
@@ -3169,23 +3138,31 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
 	// includes the arbitrage take-home). The charts plot NET as the headline
 	// series; `profit` stays as the flat/gross component.
 	Fees                *int `json:"fees,omitempty"`
+	FeesUsd             *int `json:"fees_usd,omitempty"`
 	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
 
 	// HolderRewards HolderRewards is the day's holder-reward payouts valued in SOL, and
 	// HolderRewardPayouts how many payouts there were. A payout in a quote
 	// we cannot price in SOL adds nothing to the value but still counts, so
 	// a day can carry payouts with zero lamports.
-	HolderRewards *int     `json:"holder_rewards,omitempty"`
-	Net           *int     `json:"net,omitempty"`
-	Profit        *int     `json:"profit,omitempty"`
-	SuccessRate   *float32 `json:"success_rate,omitempty"`
-	Tips          *int     `json:"tips,omitempty"`
+	HolderRewards    *int `json:"holder_rewards,omitempty"`
+	HolderRewardsUsd *int `json:"holder_rewards_usd,omitempty"`
+	Net              *int `json:"net,omitempty"`
+	NetUsd           *int `json:"net_usd,omitempty"`
+	Profit           *int `json:"profit,omitempty"`
+
+	// ProfitUsd The Usd twins are the same day's figures on the trades' USD stamps
+	// (micro-USD).
+	ProfitUsd   *int     `json:"profit_usd,omitempty"`
+	SuccessRate *float32 `json:"success_rate,omitempty"`
+	Tips        *int     `json:"tips,omitempty"`
+	TipsUsd     *int     `json:"tips_usd,omitempty"`
 
 	// Txs Txs is the day's landed transaction count; FailedTxs the failed-tx
 	// ledger's failed swaps+arbs+other. SuccessRate divides the OBSERVED
-	// landed count (failed-tx-watched hours only, CA 000096) by
-	// observed+failed — nil when no hour of the day was observed, so
-	// pre-ledger history reads "not measured" rather than a fake 100%.
+	// landed count (the `observed_hours` only) by observed+failed — nil
+	// when no hour of the day was observed, so unobserved history reads
+	// "not measured" rather than a fake 100%.
 	Txs *int `json:"txs,omitempty"`
 }
 
@@ -3197,19 +3174,22 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesResult struct {
 
 // PulsightInternalCoreUsecasesTraderTraderListItem defines model for pulsight_internal_core_usecases_trader.TraderListItem.
 type PulsightInternalCoreUsecasesTraderTraderListItem struct {
-	ActiveHoursCount      *int     `json:"active_hours_count,omitempty"`
-	ArbTxRatio1d          *float32 `json:"arb_tx_ratio_1d,omitempty"`
-	ArbTxRatio30d         *float32 `json:"arb_tx_ratio_30d,omitempty"`
-	ArbTxRatio7d          *float32 `json:"arb_tx_ratio_7d,omitempty"`
-	ArbTxRatioAll         *float32 `json:"arb_tx_ratio_all,omitempty"`
-	AvgBuyCountPerToken   *float32 `json:"avg_buy_count_per_token,omitempty"`
-	AvgFirstBuyReactivity *float32 `json:"avg_first_buy_reactivity,omitempty"`
-	AvgHoldingTime        *float32 `json:"avg_holding_time,omitempty"`
-	AvgRealizedProfit1d   *float32 `json:"avg_realized_profit_1d,omitempty"`
-	AvgRealizedProfit30d  *float32 `json:"avg_realized_profit_30d,omitempty"`
-	AvgRealizedProfit7d   *float32 `json:"avg_realized_profit_7d,omitempty"`
-	AvgRealizedProfitAll  *float32 `json:"avg_realized_profit_all,omitempty"`
-	AvgSellCountPerToken  *float32 `json:"avg_sell_count_per_token,omitempty"`
+	ArbTxRatio1d            *float32 `json:"arb_tx_ratio_1d,omitempty"`
+	ArbTxRatio30d           *float32 `json:"arb_tx_ratio_30d,omitempty"`
+	ArbTxRatio7d            *float32 `json:"arb_tx_ratio_7d,omitempty"`
+	ArbTxRatioAll           *float32 `json:"arb_tx_ratio_all,omitempty"`
+	AvgBuyCountPerToken     *float32 `json:"avg_buy_count_per_token,omitempty"`
+	AvgFirstBuyReactivity   *float32 `json:"avg_first_buy_reactivity,omitempty"`
+	AvgHoldingTime          *float32 `json:"avg_holding_time,omitempty"`
+	AvgRealizedProfit1d     *float32 `json:"avg_realized_profit_1d,omitempty"`
+	AvgRealizedProfit1dUsd  *float32 `json:"avg_realized_profit_1d_usd,omitempty"`
+	AvgRealizedProfit30d    *float32 `json:"avg_realized_profit_30d,omitempty"`
+	AvgRealizedProfit30dUsd *float32 `json:"avg_realized_profit_30d_usd,omitempty"`
+	AvgRealizedProfit7d     *float32 `json:"avg_realized_profit_7d,omitempty"`
+	AvgRealizedProfit7dUsd  *float32 `json:"avg_realized_profit_7d_usd,omitempty"`
+	AvgRealizedProfitAll    *float32 `json:"avg_realized_profit_all,omitempty"`
+	AvgRealizedProfitAllUsd *float32 `json:"avg_realized_profit_all_usd,omitempty"`
+	AvgSellCountPerToken    *float32 `json:"avg_sell_count_per_token,omitempty"`
 
 	// Behavioral1d Behavioral1d/7d/30d/All are the rows the "Behavioural" panel
 	// toggles between. nil → panel renders its empty state for that
@@ -3226,105 +3206,119 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	BuySellRatio30d *float32                                                   `json:"buy_sell_ratio_30d,omitempty"`
 	BuySellRatio7d  *float32                                                   `json:"buy_sell_ratio_7d,omitempty"`
 	BuySellRatioAll *float32                                                   `json:"buy_sell_ratio_all,omitempty"`
-	BuySizeCv       *float32                                                   `json:"buy_size_cv,omitempty"`
 	Cashback1d      *float32                                                   `json:"cashback_1d,omitempty"`
+	Cashback1dUsd   *float32                                                   `json:"cashback_1d_usd,omitempty"`
 	Cashback30d     *float32                                                   `json:"cashback_30d,omitempty"`
+	Cashback30dUsd  *float32                                                   `json:"cashback_30d_usd,omitempty"`
 
 	// Cashback7d Pump cashback: accrued in the window (the screening signal) and
 	// swept. Claimed is ALREADY inside NetProfit7d — never add it on top.
-	Cashback7d            *float32                                              `json:"cashback_7d,omitempty"`
-	CashbackAll           *float32                                              `json:"cashback_all,omitempty"`
-	CashbackClaimCount1d  *int                                                  `json:"cashback_claim_count_1d,omitempty"`
-	CashbackClaimCount30d *int                                                  `json:"cashback_claim_count_30d,omitempty"`
-	CashbackClaimCount7d  *int                                                  `json:"cashback_claim_count_7d,omitempty"`
-	CashbackClaimCountAll *int                                                  `json:"cashback_claim_count_all,omitempty"`
-	CashbackClaimed1d     *float32                                              `json:"cashback_claimed_1d,omitempty"`
-	CashbackClaimed30d    *float32                                              `json:"cashback_claimed_30d,omitempty"`
-	CashbackClaimed7d     *float32                                              `json:"cashback_claimed_7d,omitempty"`
-	CashbackClaimedAll    *float32                                              `json:"cashback_claimed_all,omitempty"`
-	CashbackShare1d       *float32                                              `json:"cashback_share_1d,omitempty"`
-	CashbackShare30d      *float32                                              `json:"cashback_share_30d,omitempty"`
-	CashbackShare7d       *float32                                              `json:"cashback_share_7d,omitempty"`
-	CashbackShareAll      *float32                                              `json:"cashback_share_all,omitempty"`
-	Chain                 *string                                               `json:"chain,omitempty"`
-	CreatedAt             *string                                               `json:"created_at,omitempty"`
-	DailyProfit30d        *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry `json:"daily_profit_30d,omitempty"`
-	DailyProfit7d         *[]PulsightInternalCoreUsecasesTraderDailyProfitEntry `json:"daily_profit_7d,omitempty"`
-	DidntBuySells1d       *int                                                  `json:"didnt_buy_sells_1d,omitempty"`
-	DidntBuySells30d      *int                                                  `json:"didnt_buy_sells_30d,omitempty"`
+	Cashback7d            *float32 `json:"cashback_7d,omitempty"`
+	Cashback7dUsd         *float32 `json:"cashback_7d_usd,omitempty"`
+	CashbackAll           *float32 `json:"cashback_all,omitempty"`
+	CashbackAllUsd        *float32 `json:"cashback_all_usd,omitempty"`
+	CashbackClaimCount1d  *int     `json:"cashback_claim_count_1d,omitempty"`
+	CashbackClaimCount30d *int     `json:"cashback_claim_count_30d,omitempty"`
+	CashbackClaimCount7d  *int     `json:"cashback_claim_count_7d,omitempty"`
+	CashbackClaimCountAll *int     `json:"cashback_claim_count_all,omitempty"`
+	CashbackClaimed1d     *float32 `json:"cashback_claimed_1d,omitempty"`
+	CashbackClaimed1dUsd  *float32 `json:"cashback_claimed_1d_usd,omitempty"`
+	CashbackClaimed30d    *float32 `json:"cashback_claimed_30d,omitempty"`
+	CashbackClaimed30dUsd *float32 `json:"cashback_claimed_30d_usd,omitempty"`
+	CashbackClaimed7d     *float32 `json:"cashback_claimed_7d,omitempty"`
+	CashbackClaimed7dUsd  *float32 `json:"cashback_claimed_7d_usd,omitempty"`
+	CashbackClaimedAll    *float32 `json:"cashback_claimed_all,omitempty"`
+	CashbackClaimedAllUsd *float32 `json:"cashback_claimed_all_usd,omitempty"`
+	CashbackShare1d       *float32 `json:"cashback_share_1d,omitempty"`
+	CashbackShare30d      *float32 `json:"cashback_share_30d,omitempty"`
+	CashbackShare7d       *float32 `json:"cashback_share_7d,omitempty"`
+	CashbackShareAll      *float32 `json:"cashback_share_all,omitempty"`
+	Chain                 *string  `json:"chain,omitempty"`
+	CreatedAt             *string  `json:"created_at,omitempty"`
+	DidntBuySells1d       *int     `json:"didnt_buy_sells_1d,omitempty"`
+	DidntBuySells30d      *int     `json:"didnt_buy_sells_30d,omitempty"`
 
-	// DidntBuySells7d Uncovered-sell counters (CA migration 000018): sells with no
-	// observed buy of the mint / sells exceeding the observed bought
-	// balance, scoped to the window.
-	DidntBuySells7d  *int     `json:"didnt_buy_sells_7d,omitempty"`
-	DidntBuySellsAll *int     `json:"didnt_buy_sells_all,omitempty"`
-	DustTxRatio      *float32 `json:"dust_tx_ratio,omitempty"`
-	FailedTxs1d      *int     `json:"failed_txs_1d,omitempty"`
-	FailedTxs30d     *int     `json:"failed_txs_30d,omitempty"`
-	FailedTxs7d      *int     `json:"failed_txs_7d,omitempty"`
+	// DidntBuySells7d Uncovered-sell counters: sells with no observed buy of the mint /
+	// sells exceeding the observed bought balance, scoped to the window.
+	DidntBuySells7d  *int `json:"didnt_buy_sells_7d,omitempty"`
+	DidntBuySellsAll *int `json:"didnt_buy_sells_all,omitempty"`
+	FailedTxs1d      *int `json:"failed_txs_1d,omitempty"`
+	FailedTxs30d     *int `json:"failed_txs_30d,omitempty"`
+	FailedTxs7d      *int `json:"failed_txs_7d,omitempty"`
 
 	// FailedTxsAll There is deliberately no lifetime success/spam rate here: their
 	// denominator is the one read that cannot prune by partition, so it is
 	// not paid per listing page. The trader-detail reliability panel serves
 	// them per wallet.
 	FailedTxsAll           *int     `json:"failed_txs_all,omitempty"`
-	HasAvatar              *bool    `json:"has_avatar,omitempty"`
 	HolderRewardPayouts1d  *int     `json:"holder_reward_payouts_1d,omitempty"`
 	HolderRewardPayouts30d *int     `json:"holder_reward_payouts_30d,omitempty"`
 	HolderRewardPayouts7d  *int     `json:"holder_reward_payouts_7d,omitempty"`
 	HolderRewardPayoutsAll *int     `json:"holder_reward_payouts_all,omitempty"`
 	HolderRewards1d        *float32 `json:"holder_rewards_1d,omitempty"`
+	HolderRewards1dUsd     *float32 `json:"holder_rewards_1d_usd,omitempty"`
 	HolderRewards30d       *float32 `json:"holder_rewards_30d,omitempty"`
+	HolderRewards30dUsd    *float32 `json:"holder_rewards_30d_usd,omitempty"`
 	HolderRewards7d        *float32 `json:"holder_rewards_7d,omitempty"`
+	HolderRewards7dUsd     *float32 `json:"holder_rewards_7d_usd,omitempty"`
 	HolderRewardsAll       *float32 `json:"holder_rewards_all,omitempty"`
+	HolderRewardsAllUsd    *float32 `json:"holder_rewards_all_usd,omitempty"`
 
 	// HoldingPnlLamports HoldingPnlLamports is the wallet's current unrealised PnL across
-	// all open positions, in lamports. Nil when CA has no live price
-	// quote for any of the held mints.
+	// all open positions, in lamports, off its board row. Nil when no held
+	// position carries a mark.
 	HoldingPnlLamports *float32 `json:"holding_pnl_lamports,omitempty"`
-	Id                 *string  `json:"id,omitempty"`
-	IsFavorite         *bool    `json:"is_favorite,omitempty"`
+
+	// HoldingPnlUsd HoldingPnlUsd, PnlDistributionUsd and PnlSparkline7dUsd are the USD
+	// twins of the three snapshot figures below (micro-USD, stamped at
+	// execution), and TraderUsd carries the twin of every windowed money
+	// figure on the row.
+	HoldingPnlUsd *float32 `json:"holding_pnl_usd,omitempty"`
+	Id            *string  `json:"id,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/KOL/...) from the
 	// known_addresses registry; empty when the wallet isn't labelled.
-	Label                    *string  `json:"label,omitempty"`
-	LabelType                *string  `json:"label_type,omitempty"`
-	LandedTxs1d              *int     `json:"landed_txs_1d,omitempty"`
-	LandedTxs30d             *int     `json:"landed_txs_30d,omitempty"`
-	LandedTxs7d              *int     `json:"landed_txs_7d,omitempty"`
-	LandedTxsAll             *int     `json:"landed_txs_all,omitempty"`
-	LastActiveTimestamp      *int     `json:"last_active_timestamp,omitempty"`
-	MedianBuyCountPerToken   *float32 `json:"median_buy_count_per_token,omitempty"`
-	MedianFirstBuyReactivity *float32 `json:"median_first_buy_reactivity,omitempty"`
-	MedianHoldingTime        *float32 `json:"median_holding_time,omitempty"`
-	MedianRealizedProfit1d   *float32 `json:"median_realized_profit_1d,omitempty"`
-	MedianRealizedProfit30d  *float32 `json:"median_realized_profit_30d,omitempty"`
-	MedianRealizedProfit7d   *float32 `json:"median_realized_profit_7d,omitempty"`
-	MedianRealizedProfitAll  *float32 `json:"median_realized_profit_all,omitempty"`
-	MedianSellCountPerToken  *float32 `json:"median_sell_count_per_token,omitempty"`
-	MmScore                  *int     `json:"mm_score,omitempty"`
-	Name                     *string  `json:"name,omitempty"`
-	NetProfit1d              *float32 `json:"net_profit_1d,omitempty"`
-	NetProfit30d             *float32 `json:"net_profit_30d,omitempty"`
+	Label                      *string  `json:"label,omitempty"`
+	LabelType                  *string  `json:"label_type,omitempty"`
+	LandedTxs1d                *int     `json:"landed_txs_1d,omitempty"`
+	LandedTxs30d               *int     `json:"landed_txs_30d,omitempty"`
+	LandedTxs7d                *int     `json:"landed_txs_7d,omitempty"`
+	LandedTxsAll               *int     `json:"landed_txs_all,omitempty"`
+	LastActiveTimestamp        *int     `json:"last_active_timestamp,omitempty"`
+	MedianBuyCountPerToken     *float32 `json:"median_buy_count_per_token,omitempty"`
+	MedianFirstBuyReactivity   *float32 `json:"median_first_buy_reactivity,omitempty"`
+	MedianHoldingTime          *float32 `json:"median_holding_time,omitempty"`
+	MedianRealizedProfit1d     *float32 `json:"median_realized_profit_1d,omitempty"`
+	MedianRealizedProfit1dUsd  *float32 `json:"median_realized_profit_1d_usd,omitempty"`
+	MedianRealizedProfit30d    *float32 `json:"median_realized_profit_30d,omitempty"`
+	MedianRealizedProfit30dUsd *float32 `json:"median_realized_profit_30d_usd,omitempty"`
+	MedianRealizedProfit7d     *float32 `json:"median_realized_profit_7d,omitempty"`
+	MedianRealizedProfit7dUsd  *float32 `json:"median_realized_profit_7d_usd,omitempty"`
+	MedianRealizedProfitAll    *float32 `json:"median_realized_profit_all,omitempty"`
+	MedianRealizedProfitAllUsd *float32 `json:"median_realized_profit_all_usd,omitempty"`
+	MedianSellCountPerToken    *float32 `json:"median_sell_count_per_token,omitempty"`
+	NetProfit1d                *float32 `json:"net_profit_1d,omitempty"`
+	NetProfit1dUsd             *float32 `json:"net_profit_1d_usd,omitempty"`
+	NetProfit30d               *float32 `json:"net_profit_30d,omitempty"`
+	NetProfit30dUsd            *float32 `json:"net_profit_30d_usd,omitempty"`
 
 	// NetProfit7d Net-of-costs figures — see trader.Trader for the definitions.
-	NetProfit7d   *float32 `json:"net_profit_7d,omitempty"`
-	NetProfitAll  *float32 `json:"net_profit_all,omitempty"`
-	OldestTradeAt *int     `json:"oldest_trade_at,omitempty"`
+	NetProfit7d     *float32 `json:"net_profit_7d,omitempty"`
+	NetProfit7dUsd  *float32 `json:"net_profit_7d_usd,omitempty"`
+	NetProfitAll    *float32 `json:"net_profit_all,omitempty"`
+	NetProfitAllUsd *float32 `json:"net_profit_all_usd,omitempty"`
+	OldestTradeAt   *int     `json:"oldest_trade_at,omitempty"`
 
-	// Periods Periods is one row per canonical UTC-aligned window (1d, 7d, 30d,
-	// all) from CA's `trader_period_stats_for`. Drives the
-	// "Calendar-based UTC windows" panel on the trader-detail page.
-	Periods       *[]PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow `json:"periods,omitempty"`
-	Pnl0x2xNum30d *int                                                        `json:"pnl_0x_2x_num_30d,omitempty"`
-	Pnl0x2xNum7d  *int                                                        `json:"pnl_0x_2x_num_7d,omitempty"`
-	Pnl2x5xNum30d *int                                                        `json:"pnl_2x_5x_num_30d,omitempty"`
-	Pnl2x5xNum7d  *int                                                        `json:"pnl_2x_5x_num_7d,omitempty"`
+	// Periods Periods is one row per canonical window (1d, 7d, 30d, all) off the
+	// wallet's board row. Drives the period stats panel on the
+	// trader-detail page.
+	Periods *[]PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow `json:"periods,omitempty"`
 
 	// PnlDistribution PnlDistribution is the 5-bucket realised-PnL distribution for
 	// the request window: [<-50%, -50–0%, 0–2×, 2–5×, >5×]. Nil when
 	// the snapshot wasn't inlined.
-	PnlDistribution *[]int `json:"pnl_distribution,omitempty"`
+	PnlDistribution    *[]int `json:"pnl_distribution,omitempty"`
+	PnlDistributionUsd *[]int `json:"pnl_distribution_usd,omitempty"`
 
 	// PnlDistributions PnlDistributions is one 5-bucket realised-PnL distribution row per
 	// canonical window (1d, 7d, 30d, all), windowed for real — unlike the
@@ -3332,43 +3326,45 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// leaderboard's all-time buckets. Drives the trader-detail "PnL
 	// distribution" chips and their window toggle.
 	PnlDistributions *[]PulsightInternalCoreUsecasesTraderTraderPnlDistributionRow `json:"pnl_distributions,omitempty"`
-	PnlGt5xNum30d    *int                                                          `json:"pnl_gt_5x_num_30d,omitempty"`
-	PnlGt5xNum7d     *int                                                          `json:"pnl_gt_5x_num_7d,omitempty"`
-	PnlLtNd5Num30d   *int                                                          `json:"pnl_lt_nd5_num_30d,omitempty"`
-	PnlLtNd5Num7d    *int                                                          `json:"pnl_lt_nd5_num_7d,omitempty"`
-	PnlNd50xNum30d   *int                                                          `json:"pnl_nd5_0x_num_30d,omitempty"`
-	PnlNd50xNum7d    *int                                                          `json:"pnl_nd5_0x_num_7d,omitempty"`
 
 	// PnlSparkline7d PnlSparkline7d is the 7-day realised-PnL series, oldest first,
-	// expressed in lamports per day on the wire (matches CA's BIGINT
-	// storage and the FormattedSol contract elsewhere). Nil when the
-	// snapshot wasn't inlined.
-	PnlSparkline7d *[]float32 `json:"pnl_sparkline_7d,omitempty"`
-	ProfitPerTrade *float32   `json:"profit_per_trade,omitempty"`
-	RealizedProfit *float32   `json:"realized_profit,omitempty"`
+	// expressed in lamports per day on the wire (the FormattedSol
+	// contract). Nil when the snapshot wasn't inlined.
+	PnlSparkline7d    *[]float32 `json:"pnl_sparkline_7d,omitempty"`
+	PnlSparkline7dUsd *[]float32 `json:"pnl_sparkline_7d_usd,omitempty"`
+	RealizedProfit    *float32   `json:"realized_profit,omitempty"`
 
 	// RealizedProfit1d 1-day window. Same measures and derivations as the 7d/30d blocks,
 	// hydrated per page instead of read off the leaderboard — DISPLAY-only,
 	// so neither `sort` nor an `f=` clause can address these.
 	RealizedProfit1d     *float32 `json:"realized_profit_1d,omitempty"`
+	RealizedProfit1dUsd  *float32 `json:"realized_profit_1d_usd,omitempty"`
 	RealizedProfit30d    *float32 `json:"realized_profit_30d,omitempty"`
+	RealizedProfit30dUsd *float32 `json:"realized_profit_30d_usd,omitempty"`
 	RealizedProfit7d     *float32 `json:"realized_profit_7d,omitempty"`
+	RealizedProfit7dUsd  *float32 `json:"realized_profit_7d_usd,omitempty"`
+	RealizedProfitAllUsd *float32 `json:"realized_profit_all_usd,omitempty"`
 	RealizedProfitPnl30d *float32 `json:"realized_profit_pnl_30d,omitempty"`
 	RealizedProfitPnl7d  *float32 `json:"realized_profit_pnl_7d,omitempty"`
-	RebalancingRatio     *float32 `json:"rebalancing_ratio,omitempty"`
 	RewardsTotal1d       *float32 `json:"rewards_total_1d,omitempty"`
+	RewardsTotal1dUsd    *float32 `json:"rewards_total_1d_usd,omitempty"`
 	RewardsTotal30d      *float32 `json:"rewards_total_30d,omitempty"`
+	RewardsTotal30dUsd   *float32 `json:"rewards_total_30d_usd,omitempty"`
 	RewardsTotal7d       *float32 `json:"rewards_total_7d,omitempty"`
+	RewardsTotal7dUsd    *float32 `json:"rewards_total_7d_usd,omitempty"`
 	RewardsTotalAll      *float32 `json:"rewards_total_all,omitempty"`
-	RiskLevel            *string  `json:"risk_level,omitempty"`
-	RiskScore            *int     `json:"risk_score,omitempty"`
+	RewardsTotalAllUsd   *float32 `json:"rewards_total_all_usd,omitempty"`
 	Roi1d                *float32 `json:"roi_1d,omitempty"`
+	Roi1dUsd             *float32 `json:"roi_1d_usd,omitempty"`
+	Roi30dUsd            *float32 `json:"roi_30d_usd,omitempty"`
+	Roi7dUsd             *float32 `json:"roi_7d_usd,omitempty"`
 
 	// RoiAll Lifetime window, also DISPLAY-only; the gross figure is
 	// RealizedProfit. No lifetime failure record is served: the failed-tx
 	// planes are TTL-bounded to three months while the landed side is not,
 	// so a lifetime success or spam rate would be structurally flattering.
 	RoiAll               *float32  `json:"roi_all,omitempty"`
+	RoiAllUsd            *float32  `json:"roi_all_usd,omitempty"`
 	Sell1d               *int      `json:"sell_1d,omitempty"`
 	Sell30d              *int      `json:"sell_30d,omitempty"`
 	Sell7d               *int      `json:"sell_7d,omitempty"`
@@ -3394,33 +3390,30 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// creator-token counts (distinct mints created, and the subset that
 	// graduated). Inlined from the folded snapshot; nil when the snapshot
 	// wasn't inlined. Mirror the creator_tokens_* leaderboard filters.
-	TokensCreated          *int     `json:"tokens_created,omitempty"`
-	TokensGraduated        *int     `json:"tokens_graduated,omitempty"`
-	TotalCosts1d           *float32 `json:"total_costs_1d,omitempty"`
-	TotalCosts30d          *float32 `json:"total_costs_30d,omitempty"`
-	TotalCosts7d           *float32 `json:"total_costs_7d,omitempty"`
-	TotalCostsAll          *float32 `json:"total_costs_all,omitempty"`
-	TotalProfit            *float32 `json:"total_profit,omitempty"`
-	TotalProfit30d         *float32 `json:"total_profit_30d,omitempty"`
-	TotalProfit7d          *float32 `json:"total_profit_7d,omitempty"`
-	TotalProfitPnl30d      *float32 `json:"total_profit_pnl_30d,omitempty"`
-	TotalProfitPnl7d       *float32 `json:"total_profit_pnl_7d,omitempty"`
-	TotalValue             *float32 `json:"total_value,omitempty"`
-	TotalVolumeUsd         *float32 `json:"total_volume_usd,omitempty"`
-	TradeIntervalCv        *float32 `json:"trade_interval_cv,omitempty"`
-	TradeIntervalMean      *float32 `json:"trade_interval_mean,omitempty"`
-	TwitterUsername        *string  `json:"twitter_username,omitempty"`
-	UnrealizedProfit       *float32 `json:"unrealized_profit,omitempty"`
-	UnrealizedProfit30d    *float32 `json:"unrealized_profit_30d,omitempty"`
-	UnrealizedProfit7d     *float32 `json:"unrealized_profit_7d,omitempty"`
-	UnrealizedProfitPnl30d *float32 `json:"unrealized_profit_pnl_30d,omitempty"`
-	UnrealizedProfitPnl7d  *float32 `json:"unrealized_profit_pnl_7d,omitempty"`
-	UpdatedAt              *string  `json:"updated_at,omitempty"`
-	WalletAddress          *string  `json:"wallet_address,omitempty"`
-	Winrate1d              *float32 `json:"winrate_1d,omitempty"`
-	Winrate30d             *float32 `json:"winrate_30d,omitempty"`
-	Winrate7d              *float32 `json:"winrate_7d,omitempty"`
-	WinrateAll             *float32 `json:"winrate_all,omitempty"`
+	TokensCreated     *int     `json:"tokens_created,omitempty"`
+	TokensGraduated   *int     `json:"tokens_graduated,omitempty"`
+	TotalCosts1d      *float32 `json:"total_costs_1d,omitempty"`
+	TotalCosts1dUsd   *float32 `json:"total_costs_1d_usd,omitempty"`
+	TotalCosts30d     *float32 `json:"total_costs_30d,omitempty"`
+	TotalCosts30dUsd  *float32 `json:"total_costs_30d_usd,omitempty"`
+	TotalCosts7d      *float32 `json:"total_costs_7d,omitempty"`
+	TotalCosts7dUsd   *float32 `json:"total_costs_7d_usd,omitempty"`
+	TotalCostsAll     *float32 `json:"total_costs_all,omitempty"`
+	TotalCostsAllUsd  *float32 `json:"total_costs_all_usd,omitempty"`
+	TotalProfit30d    *float32 `json:"total_profit_30d,omitempty"`
+	TotalProfit7d     *float32 `json:"total_profit_7d,omitempty"`
+	TotalProfitPnl30d *float32 `json:"total_profit_pnl_30d,omitempty"`
+	TotalProfitPnl7d  *float32 `json:"total_profit_pnl_7d,omitempty"`
+	UpdatedAt         *string  `json:"updated_at,omitempty"`
+	WalletAddress     *string  `json:"wallet_address,omitempty"`
+	Winrate1d         *float32 `json:"winrate_1d,omitempty"`
+	Winrate1dUsd      *float32 `json:"winrate_1d_usd,omitempty"`
+	Winrate30d        *float32 `json:"winrate_30d,omitempty"`
+	Winrate30dUsd     *float32 `json:"winrate_30d_usd,omitempty"`
+	Winrate7d         *float32 `json:"winrate_7d,omitempty"`
+	Winrate7dUsd      *float32 `json:"winrate_7d_usd,omitempty"`
+	WinrateAll        *float32 `json:"winrate_all,omitempty"`
+	WinrateAllUsd     *float32 `json:"winrate_all_usd,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesTraderTraderListResult defines model for pulsight_internal_core_usecases_trader.TraderListResult.
@@ -3431,6 +3424,10 @@ type PulsightInternalCoreUsecasesTraderTraderListResult struct {
 	NextCursorValue  *float32                                            `json:"next_cursor_value,omitempty"`
 	Offset           *int                                                `json:"offset,omitempty"`
 	Total            *int                                                `json:"total,omitempty"`
+
+	// Unit Unit is the currency the page was ranked, filtered and cursored in
+	// (sol|usd); every row carries both currencies regardless.
+	Unit *string `json:"unit,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesTraderTraderPnlDistributionRow defines model for pulsight_internal_core_usecases_trader.TraderPnlDistributionRow.
@@ -3478,6 +3475,9 @@ type GetBacktestsByIdTradesParams struct {
 type GetCashbackLeaderboardParams struct {
 	// Window 1d|7d|30d|all (default 7d)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
+
+	// Unit Currency the board is ranked and filtered in: sol (lamports) or usd (micro-USD stamped at execution); money clause values are whole units of it. Every row carries both currencies (`_usd` twins).
+	Unit *string `form:"unit,omitempty" json:"unit,omitempty"`
 
 	// SortBy rewards_total|holder_rewards|holder_reward_payouts|cashback|cashback_claimed|cashback_share|cashback_claim_count|cashback_volume (default rewards_total)
 	SortBy *string `form:"sort_by,omitempty" json:"sort_by,omitempty"`
@@ -3533,13 +3533,34 @@ type GetMintsParams struct {
 	// Hours Activity-gate lookback hours (1, 6 or 24; default 24)
 	Hours *GetMintsParamsHours `form:"hours,omitempty" json:"hours,omitempty"`
 
-	// MinPoolSol Min window pool quote-reserves (liquidity), WSOL lamports. Omitted ⇒ a default ~1 SOL floor hides dust on untargeted browse; pass 0 to disable, or any value to override.
+	// Unit Currency every money floor and money sort is read in: sol or usd. Each row carries both currencies (`_usd` twins) whatever the unit.
+	Unit *string `form:"unit,omitempty" json:"unit,omitempty"`
+
+	// MinVolume Min window volume, in whole units of `unit` (SOL or USD, the row's stored figure).
+	MinVolume *float32 `form:"min_volume,omitempty" json:"min_volume,omitempty"`
+
+	// MinBuyVolume Min window buy volume, whole units of `unit`.
+	MinBuyVolume *float32 `form:"min_buy_volume,omitempty" json:"min_buy_volume,omitempty"`
+
+	// MinSellVolume Min window sell volume, whole units of `unit`.
+	MinSellVolume *float32 `form:"min_sell_volume,omitempty" json:"min_sell_volume,omitempty"`
+
+	// MinNetBuy Min window net buy (buys − sells), whole units of `unit`.
+	MinNetBuy *float32 `form:"min_net_buy,omitempty" json:"min_net_buy,omitempty"`
+
+	// MinPool Min reference-pool depth (liquidity), whole units of `unit`. Omitted ⇒ a default dust floor (1 SOL / 200 USD) on untargeted browse; pass 0 to disable.
+	MinPool *float32 `form:"min_pool,omitempty" json:"min_pool,omitempty"`
+
+	// MinFees Min LIFETIME network fees paid trading the mint (tx fees + tips), whole units of `unit` — the basis of each row's total_fees.
+	MinFees *float32 `form:"min_fees,omitempty" json:"min_fees,omitempty"`
+
+	// MinPoolSol Lamport alias of min_pool, accepted only with unit=sol.
 	MinPoolSol *float32 `form:"min_pool_sol,omitempty" json:"min_pool_sol,omitempty"`
 
 	// MinMarketCapUsd Min market cap in USD (price × circulating supply). Mints with no computable market cap are excluded. Omitted ⇒ no floor.
 	MinMarketCapUsd *float32 `form:"min_market_cap_usd,omitempty" json:"min_market_cap_usd,omitempty"`
 
-	// MinFeesSol Min LIFETIME total network fees paid trading the mint (tx fees + MEV tips), in lamports — the same basis as each row's total_fees_sol. Omitted ⇒ no floor.
+	// MinFeesSol Lamport alias of min_fees, accepted only with unit=sol.
 	MinFeesSol *float32 `form:"min_fees_sol,omitempty" json:"min_fees_sol,omitempty"`
 
 	// MaxAgeSecs Only mints first seen within the last N seconds (launched < N ago). Mints with no observed first_seen are excluded.
@@ -3791,7 +3812,7 @@ type GetSwapsParams struct {
 	// Trader Trader pubkey; repeatable or comma-separated (optional; combinable with mint)
 	Trader *string `form:"trader,omitempty" json:"trader,omitempty"`
 
-	// Pool Market (pool pubkey) to scope swaps to; repeatable or comma-separated, OR-combined (optional)
+	// Pool Market (pool pubkey) to scope trades to; repeatable or comma-separated, OR-combined (optional)
 	Pool *string `form:"pool,omitempty" json:"pool,omitempty"`
 
 	// From Start of window (RFC3339)
@@ -3806,7 +3827,7 @@ type GetSwapsParams struct {
 	// ToTs End of window (Unix epoch seconds, exclusive)
 	ToTs *int `form:"to_ts,omitempty" json:"to_ts,omitempty"`
 
-	// BeforeTs Cursor: return the latest swaps strictly before this Unix epoch timestamp (no lower bound)
+	// BeforeTs Cursor: return the latest rows strictly before this Unix epoch timestamp (no lower bound)
 	BeforeTs *int `form:"before_ts,omitempty" json:"before_ts,omitempty"`
 
 	// Limit Max rows (default 100, max 1000)
@@ -3860,7 +3881,7 @@ type GetTradersParams struct {
 	// Offset Offset
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
-	// SortBy Sort By field
+	// SortBy Sort key: realized_profit, winrate or last_active_ts
 	SortBy *string `form:"sort_by,omitempty" json:"sort_by,omitempty"`
 
 	// Direction Sort Direction
@@ -3869,8 +3890,11 @@ type GetTradersParams struct {
 	// FavoritesOnly Restrict to the caller's favorited traders (authenticated only)
 	FavoritesOnly *bool `form:"favorites_only,omitempty" json:"favorites_only,omitempty"`
 
-	// ExtraWindows Comma list of DISPLAY-only window families to hydrate: 1d, all. Costs one extra query per page; sorting is unaffected (it reads 7d/30d board columns) and f= filters read 1d/7d/30d board columns.
+	// ExtraWindows Comma list of DISPLAY-only window families to include: 1d, all. They ride the same board row; sorting is unaffected (it reads 7d/30d board columns) and f= filters read 1d/7d/30d board columns.
 	ExtraWindows *string `form:"extra_windows,omitempty" json:"extra_windows,omitempty"`
+
+	// Unit Currency the page is ranked, filtered and cursored in: sol (lamports) or usd (micro-USD stamped at execution). Money clause values are whole units of that currency. Every row carries both currencies (`_usd` twins) whatever the unit.
+	Unit *string `form:"unit,omitempty" json:"unit,omitempty"`
 }
 
 // GetTradersSearchParams defines parameters for GetTradersSearch.
@@ -3878,7 +3902,7 @@ type GetTradersSearchParams struct {
 	// Q Search query
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 
-	// Chain Blockchain filter — only 'sol' is accepted post roadmap subtask 2.6 (BSC removed). Empty defaults to 'sol'.
+	// Chain Blockchain filter — only 'sol' is accepted. Empty defaults to 'sol'.
 	Chain *string `form:"chain,omitempty" json:"chain,omitempty"`
 
 	// Limit Limit
@@ -3892,45 +3916,6 @@ type GetTradersSnapshotParams struct {
 
 	// Window Window label (7d|30d)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
-}
-
-// GetTradersByTraderIDDailyProfitsParams defines parameters for GetTradersByTraderIDDailyProfits.
-type GetTradersByTraderIDDailyProfitsParams struct {
-	// Limit Limit (1..200)
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-
-	// Offset Offset
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
-
-	// FromDate Inclusive lower bound, YYYY-MM-DD
-	FromDate *string `form:"from_date,omitempty" json:"from_date,omitempty"`
-
-	// ToDate Inclusive upper bound, YYYY-MM-DD
-	ToDate *string `form:"to_date,omitempty" json:"to_date,omitempty"`
-
-	// SortBy Sort column
-	SortBy *string `form:"sort_by,omitempty" json:"sort_by,omitempty"`
-
-	// Direction asc | desc
-	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
-}
-
-// GetTradersByTraderIDPnlsParams defines parameters for GetTradersByTraderIDPnls.
-type GetTradersByTraderIDPnlsParams struct {
-	// TokenSearch Search by token address or symbol
-	TokenSearch *string `form:"token_search,omitempty" json:"token_search,omitempty"`
-
-	// Limit Limit
-	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
-
-	// Offset Offset
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
-
-	// SortBy Sort By field
-	SortBy *string `form:"sort_by,omitempty" json:"sort_by,omitempty"`
-
-	// Direction Sort Direction
-	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
 }
 
 // GetTradersByWalletAddressCashbackParams defines parameters for GetTradersByWalletAddressCashback.
@@ -4195,14 +4180,14 @@ type ClientInterface interface {
 
 	// GetCashbackLeaderboard Pump rewards leaderboard
 	//
-	// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+	// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts.
 	//
 	// Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
 	GetCashbackLeaderboard(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetCashbackSummary Pump rewards board summary
 	//
-	// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
+	// Pool totals across both programs, the median wallet and the top earner for a window.
 	//
 	// Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
 	GetCashbackSummary(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4237,14 +4222,14 @@ type ClientInterface interface {
 
 	// GetMints List Active Mints
 	//
-	// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+	// Returns the active-mint catalog with windowed stats: one page of the `mint_board` rows that traded inside the `hours` activity gate, ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool`. Money floors and money sorts are read in `unit`; every row carries both currencies.
 	//
 	// Corresponds with GET /api/mints (the `GetMints` operationId).
 	GetMints(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkey Get Mint
 	//
-	// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) from the CA catalog. 404 when the pubkey is not present — the enricher may not have seen this mint yet.
+	// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) with its `mint_wide` decorations. 404 when the mint is in neither the mint catalog nor the metadata catalog.
 	//
 	// Corresponds with GET /api/mints/{pubkey} (the `GetMintsByPubkey` operationId).
 	GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4258,14 +4243,14 @@ type ClientInterface interface {
 
 	// GetMintsByPubkeyBundlers List Mint Bundlers
 	//
-	// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply). sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Corresponds with GET /api/mints/{pubkey}/bundlers (the `GetMintsByPubkeyBundlers` operationId).
 	GetMintsByPubkeyBundlers(ctx context.Context, pubkey string, params *GetMintsByPubkeyBundlersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyInsiders List Mint Insiders
 	//
-	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
 	GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4321,35 +4306,35 @@ type ClientInterface interface {
 
 	// GetMintsByPubkeySnipers List Mint Snipers
 	//
-	// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, and the position's PnL and first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Corresponds with GET /api/mints/{pubkey}/snipers (the `GetMintsByPubkeySnipers` operationId).
 	GetMintsByPubkeySnipers(ctx context.Context, pubkey string, params *GetMintsByPubkeySnipersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyStats Find Mint Stats Bundle
 	//
-	// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for all four windows (1m/5m/1h/24h) in one response.
+	// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for every window (1m/5m/30m/1h/6h/12h/24h) in one response.
 	//
 	// Corresponds with GET /api/mints/{pubkey}/stats (the `GetMintsByPubkeyStats` operationId).
 	GetMintsByPubkeyStats(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyTopHolders List Mint Top Holders
 	//
-	// Current holders (token_balance > 0) of one mint from `trader_token_stats`. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
+	// Current holders of one mint by on-chain balance (`holder_accounts`, pool inventory excluded), each with its position figures. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
 	//
 	// Corresponds with GET /api/mints/{pubkey}/top-holders (the `GetMintsByPubkeyTopHolders` operationId).
 	GetMintsByPubkeyTopHolders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyTopTraders List Mint Top Traders
 	//
-	// Per-(trader) leaderboard for one mint from `trader_token_stats` (all positions). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
+	// Per-(trader) leaderboard for one mint off its `trader_positions` rows (all positions, closed ones included). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
 	//
 	// Corresponds with GET /api/mints/{pubkey}/top-traders (the `GetMintsByPubkeyTopTraders` operationId).
 	GetMintsByPubkeyTopTraders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMintsByPubkeyTradersByTrader Get Mint Trader Stats
 	//
-	// Single per-(trader, mint) stats row (same shape as a top-traders row) from `trader_token_stats`. 404 when the trader never traded the mint.
+	// Single per-(trader, mint) stats row (same shape as a top-traders row). 404 when the trader neither traded nor holds the mint.
 	//
 	// Corresponds with GET /api/mints/{pubkey}/traders/{trader} (the `GetMintsByPubkeyTradersByTrader` operationId).
 	GetMintsByPubkeyTradersByTrader(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4484,7 +4469,7 @@ type ClientInterface interface {
 
 	// GetSwaps List Swaps
 	//
-	// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+	// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 	//
 	// Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 	GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4640,13 +4625,6 @@ type ClientInterface interface {
 	// Corresponds with GET /api/traders (the `GetTraders` operationId).
 	GetTraders(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTradersByIdByTraderID Get Trader by ID
-	//
-	// Retrieves a trader's aggregated statistics by internal UUID.
-	//
-	// Corresponds with GET /api/traders/by-id/{traderID} (the `GetTradersByIdByTraderID` operationId).
-	GetTradersByIdByTraderID(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetTradersByWalletByWalletAddress Get Trader by Wallet
 	//
 	// Retrieves a trader's aggregated statistics by their wallet address.
@@ -4666,20 +4644,6 @@ type ClientInterface interface {
 	// Corresponds with GET /api/traders/snapshot (the `GetTradersSnapshot` operationId).
 	GetTradersSnapshot(ctx context.Context, params *GetTradersSnapshotParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTradersByTraderIDDailyProfits List Trader Daily Profits
-	//
-	// Retrieves aggregated daily profits for a specific trader.
-	//
-	// Corresponds with GET /api/traders/{traderID}/daily-profits (the `GetTradersByTraderIDDailyProfits` operationId).
-	GetTradersByTraderIDDailyProfits(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetTradersByTraderIDPnls List Trader PnLs
-	//
-	// Retrieves per-token PnL statistics for a specific trader.
-	//
-	// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
-	GetTradersByTraderIDPnls(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetTradersByWalletAddressCashback Pump rewards of a wallet
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
@@ -4687,7 +4651,7 @@ type ClientInterface interface {
 
 	// GetTradersByWalletAddressCashbackClaims Reward history of a wallet
 	//
-	// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
+	// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the `cashback_claims` and `holder_reward_payouts` ledgers. `amount` is in the event's quote-mint base units, `amount_lamports` and `amount_usd` are its value stamped at execution, and `amount_lamports` is zero on an event whose quote could not be priced in SOL — `priced` says which.
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
 	GetTradersByWalletAddressCashbackClaims(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4706,7 +4670,7 @@ type ClientInterface interface {
 
 	// GetTradersByWalletAddressPnlSeries Get Trader Daily PnL Series
 	//
-	// Returns daily realised PnL points (oldest first) for a trader, sourced from the aggregator's `trader_daily_pnl_series` SQL function.
+	// Returns daily realised PnL points (oldest first) for a trader, folded from its `trader_hourly` rows: realized PnL with the arb take-home, the cost lines, the rewards, net PnL and the transaction record, in both currencies.
 	//
 	// Corresponds with GET /api/traders/{walletAddress}/pnl-series (the `GetTradersByWalletAddressPnlSeries` operationId).
 	GetTradersByWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4956,7 +4920,7 @@ func (c *Client) GetBacktestsByIdTrades(ctx context.Context, id string, params *
 
 // GetCashbackLeaderboard Pump rewards leaderboard
 //
-// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts.
 //
 // Corresponds with GET /api/cashback/leaderboard (the `GetCashbackLeaderboard` operationId).
 func (c *Client) GetCashbackLeaderboard(ctx context.Context, params *GetCashbackLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -4973,7 +4937,7 @@ func (c *Client) GetCashbackLeaderboard(ctx context.Context, params *GetCashback
 
 // GetCashbackSummary Pump rewards board summary
 //
-// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
+// Pool totals across both programs, the median wallet and the top earner for a window.
 //
 // Corresponds with GET /api/cashback/summary (the `GetCashbackSummary` operationId).
 func (c *Client) GetCashbackSummary(ctx context.Context, params *GetCashbackSummaryParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5058,7 +5022,7 @@ func (c *Client) GetMeCreditsLedger(ctx context.Context, params *GetMeCreditsLed
 
 // GetMints List Active Mints
 //
-// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+// Returns the active-mint catalog with windowed stats: one page of the `mint_board` rows that traded inside the `hours` activity gate, ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool`. Money floors and money sorts are read in `unit`; every row carries both currencies.
 //
 // Corresponds with GET /api/mints (the `GetMints` operationId).
 func (c *Client) GetMints(ctx context.Context, params *GetMintsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5075,7 +5039,7 @@ func (c *Client) GetMints(ctx context.Context, params *GetMintsParams, reqEditor
 
 // GetMintsByPubkey Get Mint
 //
-// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) from the CA catalog. 404 when the pubkey is not present — the enricher may not have seen this mint yet.
+// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) with its `mint_wide` decorations. 404 when the mint is in neither the mint catalog nor the metadata catalog.
 //
 // Corresponds with GET /api/mints/{pubkey} (the `GetMintsByPubkey` operationId).
 func (c *Client) GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5109,7 +5073,7 @@ func (c *Client) GetMintsByPubkeyActivity(ctx context.Context, pubkey string, pa
 
 // GetMintsByPubkeyBundlers List Mint Bundlers
 //
-// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply). sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Corresponds with GET /api/mints/{pubkey}/bundlers (the `GetMintsByPubkeyBundlers` operationId).
 func (c *Client) GetMintsByPubkeyBundlers(ctx context.Context, pubkey string, params *GetMintsByPubkeyBundlersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5126,7 +5090,7 @@ func (c *Client) GetMintsByPubkeyBundlers(ctx context.Context, pubkey string, pa
 
 // GetMintsByPubkeyInsiders List Mint Insiders
 //
-// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
 func (c *Client) GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5262,7 +5226,7 @@ func (c *Client) GetMintsByPubkeySafetyEvents(ctx context.Context, pubkey string
 
 // GetMintsByPubkeySnipers List Mint Snipers
 //
-// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, and the position's PnL and first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Corresponds with GET /api/mints/{pubkey}/snipers (the `GetMintsByPubkeySnipers` operationId).
 func (c *Client) GetMintsByPubkeySnipers(ctx context.Context, pubkey string, params *GetMintsByPubkeySnipersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5279,7 +5243,7 @@ func (c *Client) GetMintsByPubkeySnipers(ctx context.Context, pubkey string, par
 
 // GetMintsByPubkeyStats Find Mint Stats Bundle
 //
-// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for all four windows (1m/5m/1h/24h) in one response.
+// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for every window (1m/5m/30m/1h/6h/12h/24h) in one response.
 //
 // Corresponds with GET /api/mints/{pubkey}/stats (the `GetMintsByPubkeyStats` operationId).
 func (c *Client) GetMintsByPubkeyStats(ctx context.Context, pubkey string, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5296,7 +5260,7 @@ func (c *Client) GetMintsByPubkeyStats(ctx context.Context, pubkey string, reqEd
 
 // GetMintsByPubkeyTopHolders List Mint Top Holders
 //
-// Current holders (token_balance > 0) of one mint from `trader_token_stats`. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
+// Current holders of one mint by on-chain balance (`holder_accounts`, pool inventory excluded), each with its position figures. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
 //
 // Corresponds with GET /api/mints/{pubkey}/top-holders (the `GetMintsByPubkeyTopHolders` operationId).
 func (c *Client) GetMintsByPubkeyTopHolders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5313,7 +5277,7 @@ func (c *Client) GetMintsByPubkeyTopHolders(ctx context.Context, pubkey string, 
 
 // GetMintsByPubkeyTopTraders List Mint Top Traders
 //
-// Per-(trader) leaderboard for one mint from `trader_token_stats` (all positions). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
+// Per-(trader) leaderboard for one mint off its `trader_positions` rows (all positions, closed ones included). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
 //
 // Corresponds with GET /api/mints/{pubkey}/top-traders (the `GetMintsByPubkeyTopTraders` operationId).
 func (c *Client) GetMintsByPubkeyTopTraders(ctx context.Context, pubkey string, params *GetMintsByPubkeyTopTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5330,7 +5294,7 @@ func (c *Client) GetMintsByPubkeyTopTraders(ctx context.Context, pubkey string, 
 
 // GetMintsByPubkeyTradersByTrader Get Mint Trader Stats
 //
-// Single per-(trader, mint) stats row (same shape as a top-traders row) from `trader_token_stats`. 404 when the trader never traded the mint.
+// Single per-(trader, mint) stats row (same shape as a top-traders row). 404 when the trader neither traded nor holds the mint.
 //
 // Corresponds with GET /api/mints/{pubkey}/traders/{trader} (the `GetMintsByPubkeyTradersByTrader` operationId).
 func (c *Client) GetMintsByPubkeyTradersByTrader(ctx context.Context, pubkey string, trader string, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5675,7 +5639,7 @@ func (c *Client) GetSubscriptionsMe(ctx context.Context, reqEditors ...RequestEd
 
 // GetSwaps List Swaps
 //
-// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 //
 // Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 func (c *Client) GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -6051,23 +6015,6 @@ func (c *Client) GetTraders(ctx context.Context, params *GetTradersParams, reqEd
 	return c.Client.Do(req)
 }
 
-// GetTradersByIdByTraderID Get Trader by ID
-//
-// Retrieves a trader's aggregated statistics by internal UUID.
-//
-// Corresponds with GET /api/traders/by-id/{traderID} (the `GetTradersByIdByTraderID` operationId).
-func (c *Client) GetTradersByIdByTraderID(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTradersByIdByTraderIDRequest(c.Server, traderID)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // GetTradersByWalletByWalletAddress Get Trader by Wallet
 //
 // Retrieves a trader's aggregated statistics by their wallet address.
@@ -6117,40 +6064,6 @@ func (c *Client) GetTradersSnapshot(ctx context.Context, params *GetTradersSnaps
 	return c.Client.Do(req)
 }
 
-// GetTradersByTraderIDDailyProfits List Trader Daily Profits
-//
-// Retrieves aggregated daily profits for a specific trader.
-//
-// Corresponds with GET /api/traders/{traderID}/daily-profits (the `GetTradersByTraderIDDailyProfits` operationId).
-func (c *Client) GetTradersByTraderIDDailyProfits(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTradersByTraderIDDailyProfitsRequest(c.Server, traderID, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GetTradersByTraderIDPnls List Trader PnLs
-//
-// Retrieves per-token PnL statistics for a specific trader.
-//
-// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
-func (c *Client) GetTradersByTraderIDPnls(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTradersByTraderIDPnlsRequest(c.Server, traderID, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // GetTradersByWalletAddressCashback Pump rewards of a wallet
 //
 // Corresponds with GET /api/traders/{walletAddress}/cashback (the `GetTradersByWalletAddressCashback` operationId).
@@ -6168,7 +6081,7 @@ func (c *Client) GetTradersByWalletAddressCashback(ctx context.Context, walletAd
 
 // GetTradersByWalletAddressCashbackClaims Reward history of a wallet
 //
-// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
+// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the `cashback_claims` and `holder_reward_payouts` ledgers. `amount` is in the event's quote-mint base units, `amount_lamports` and `amount_usd` are its value stamped at execution, and `amount_lamports` is zero on an event whose quote could not be priced in SOL — `priced` says which.
 //
 // Corresponds with GET /api/traders/{walletAddress}/cashback/claims (the `GetTradersByWalletAddressCashbackClaims` operationId).
 func (c *Client) GetTradersByWalletAddressCashbackClaims(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressCashbackClaimsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -6217,7 +6130,7 @@ func (c *Client) GetTradersByWalletAddressNeighbours(ctx context.Context, wallet
 
 // GetTradersByWalletAddressPnlSeries Get Trader Daily PnL Series
 //
-// Returns daily realised PnL points (oldest first) for a trader, sourced from the aggregator's `trader_daily_pnl_series` SQL function.
+// Returns daily realised PnL points (oldest first) for a trader, folded from its `trader_hourly` rows: realized PnL with the arb take-home, the cost lines, the rewards, net PnL and the transaction record, in both currencies.
 //
 // Corresponds with GET /api/traders/{walletAddress}/pnl-series (the `GetTradersByWalletAddressPnlSeries` operationId).
 func (c *Client) GetTradersByWalletAddressPnlSeries(ctx context.Context, walletAddress string, params *GetTradersByWalletAddressPnlSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -6864,6 +6777,18 @@ func NewGetCashbackLeaderboardRequest(server string, params *GetCashbackLeaderbo
 
 		}
 
+		if params.Unit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "unit", *params.Unit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.SortBy != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort_by", *params.SortBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
@@ -7238,6 +7163,90 @@ func NewGetMintsRequest(server string, params *GetMintsParams) (*http.Request, e
 		if params.Hours != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "hours", *params.Hours, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Unit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "unit", *params.Unit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinVolume != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_volume", *params.MinVolume, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinBuyVolume != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_buy_volume", *params.MinBuyVolume, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinSellVolume != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_sell_volume", *params.MinSellVolume, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinNetBuy != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_net_buy", *params.MinNetBuy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinPool != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_pool", *params.MinPool, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinFees != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_fees", *params.MinFees, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -10290,44 +10299,22 @@ func NewGetTradersRequest(server string, params *GetTradersParams) (*http.Reques
 
 		}
 
+		if params.Unit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "unit", *params.Unit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if encoded := queryValues.Encode(); encoded != "" {
 			rawQueryFragments = append(rawQueryFragments, encoded)
 		}
 		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetTradersByIdByTraderIDRequest constructs an http.Request for the GetTradersByIdByTraderID method
-func NewGetTradersByIdByTraderIDRequest(server string, traderID string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "traderID", traderID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/traders/by-id/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
@@ -10489,236 +10476,6 @@ func NewGetTradersSnapshotRequest(server string, params *GetTradersSnapshotParam
 		if params.Window != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetTradersByTraderIDDailyProfitsRequest constructs an http.Request for the GetTradersByTraderIDDailyProfits method
-func NewGetTradersByTraderIDDailyProfitsRequest(server string, traderID string, params *GetTradersByTraderIDDailyProfitsParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "traderID", traderID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/traders/%s/daily-profits", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Limit != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Offset != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.FromDate != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from_date", *params.FromDate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.ToDate != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to_date", *params.ToDate, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.SortBy != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort_by", *params.SortBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Direction != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "direction", *params.Direction, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetTradersByTraderIDPnlsRequest constructs an http.Request for the GetTradersByTraderIDPnls method
-func NewGetTradersByTraderIDPnlsRequest(server string, traderID string, params *GetTradersByTraderIDPnlsParams) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "traderID", traderID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/traders/%s/pnls", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.TokenSearch != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "token_search", *params.TokenSearch, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Limit != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Offset != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.SortBy != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sort_by", *params.SortBy, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.Direction != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "direction", *params.Direction, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -11760,7 +11517,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetCashbackLeaderboardWithResponse Pump rewards leaderboard
 	//
-	// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+	// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11769,7 +11526,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetCashbackSummaryWithResponse Pump rewards board summary
 	//
-	// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
+	// Pool totals across both programs, the median wallet and the top earner for a window.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11814,7 +11571,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsWithResponse List Active Mints
 	//
-	// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+	// Returns the active-mint catalog with windowed stats: one page of the `mint_board` rows that traded inside the `hours` activity gate, ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool`. Money floors and money sorts are read in `unit`; every row carries both currencies.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11823,7 +11580,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyWithResponse Get Mint
 	//
-	// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) from the CA catalog. 404 when the pubkey is not present — the enricher may not have seen this mint yet.
+	// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) with its `mint_wide` decorations. 404 when the mint is in neither the mint catalog nor the metadata catalog.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11841,7 +11598,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyBundlersWithResponse List Mint Bundlers
 	//
-	// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply). sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11850,7 +11607,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyInsidersWithResponse List Mint Insiders
 	//
-	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11922,7 +11679,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeySnipersWithResponse List Mint Snipers
 	//
-	// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, and the position's PnL and first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11931,7 +11688,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyStatsWithResponse Find Mint Stats Bundle
 	//
-	// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for all four windows (1m/5m/1h/24h) in one response.
+	// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for every window (1m/5m/30m/1h/6h/12h/24h) in one response.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11940,7 +11697,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyTopHoldersWithResponse List Mint Top Holders
 	//
-	// Current holders (token_balance > 0) of one mint from `trader_token_stats`. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
+	// Current holders of one mint by on-chain balance (`holder_accounts`, pool inventory excluded), each with its position figures. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11949,7 +11706,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyTopTradersWithResponse List Mint Top Traders
 	//
-	// Per-(trader) leaderboard for one mint from `trader_token_stats` (all positions). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
+	// Per-(trader) leaderboard for one mint off its `trader_positions` rows (all positions, closed ones included). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11958,7 +11715,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyTradersByTraderWithResponse Get Mint Trader Stats
 	//
-	// Single per-(trader, mint) stats row (same shape as a top-traders row) from `trader_token_stats`. 404 when the trader never traded the mint.
+	// Single per-(trader, mint) stats row (same shape as a top-traders row). 404 when the trader neither traded nor holds the mint.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12119,7 +11876,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetSwapsWithResponse List Swaps
 	//
-	// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+	// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12303,15 +12060,6 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/traders (the `GetTraders` operationId).
 	GetTradersWithResponse(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*GetTradersResponse, error)
 
-	// GetTradersByIdByTraderIDWithResponse Get Trader by ID
-	//
-	// Retrieves a trader's aggregated statistics by internal UUID.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/traders/by-id/{traderID} (the `GetTradersByIdByTraderID` operationId).
-	GetTradersByIdByTraderIDWithResponse(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*GetTradersByIdByTraderIDResponse, error)
-
 	// GetTradersByWalletByWalletAddressWithResponse Get Trader by Wallet
 	//
 	// Retrieves a trader's aggregated statistics by their wallet address.
@@ -12337,24 +12085,6 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/traders/snapshot (the `GetTradersSnapshot` operationId).
 	GetTradersSnapshotWithResponse(ctx context.Context, params *GetTradersSnapshotParams, reqEditors ...RequestEditorFn) (*GetTradersSnapshotResponse, error)
 
-	// GetTradersByTraderIDDailyProfitsWithResponse List Trader Daily Profits
-	//
-	// Retrieves aggregated daily profits for a specific trader.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/traders/{traderID}/daily-profits (the `GetTradersByTraderIDDailyProfits` operationId).
-	GetTradersByTraderIDDailyProfitsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDDailyProfitsResponse, error)
-
-	// GetTradersByTraderIDPnlsWithResponse List Trader PnLs
-	//
-	// Retrieves per-token PnL statistics for a specific trader.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
-	GetTradersByTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDPnlsResponse, error)
-
 	// GetTradersByWalletAddressCashbackWithResponse Pump rewards of a wallet
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -12364,7 +12094,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetTradersByWalletAddressCashbackClaimsWithResponse Reward history of a wallet
 	//
-	// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
+	// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the `cashback_claims` and `holder_reward_payouts` ledgers. `amount` is in the event's quote-mint base units, `amount_lamports` and `amount_usd` are its value stamped at execution, and `amount_lamports` is zero on an event whose quote could not be priced in SOL — `priced` says which.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12389,7 +12119,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetTradersByWalletAddressPnlSeriesWithResponse Get Trader Daily PnL Series
 	//
-	// Returns daily realised PnL points (oldest first) for a trader, sourced from the aggregator's `trader_daily_pnl_series` SQL function.
+	// Returns daily realised PnL points (oldest first) for a trader, folded from its `trader_hourly` rows: realized PnL with the arb take-home, the cost lines, the rewards, net PnL and the transaction record, in both currencies.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -14965,7 +14695,7 @@ type GetSwapsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]InternalAdaptersPrimaryHttpHandlerSwapEventRow
+	JSON200 *[]PulsightInternalCoreDomainAggregatorTrade
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON402 the response for an HTTP 402 `application/json` response
@@ -14975,7 +14705,7 @@ type GetSwapsResponse struct {
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetSwapsResponse) GetJSON200() *[]InternalAdaptersPrimaryHttpHandlerSwapEventRow {
+func (r GetSwapsResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorTrade {
 	return r.JSON200
 }
 
@@ -16042,89 +15772,6 @@ func (r GetTradersResponse) ContentType() string {
 	return ""
 }
 
-type GetTradersByIdByTraderIDResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *PulsightInternalCoreUsecasesTraderTraderListItem
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON401 the response for an HTTP 401 `application/json` response
-	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON404 the response for an HTTP 404 `application/json` response
-	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON500 the response for an HTTP 500 `application/json` response
-	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON503 the response for an HTTP 503 `application/json` response
-	JSON503 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON504 the response for an HTTP 504 `application/json` response
-	JSON504 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTradersByIdByTraderIDResponse) GetJSON200() *PulsightInternalCoreUsecasesTraderTraderListItem {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTradersByIdByTraderIDResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetJSON401 returns the response for an HTTP 401 `application/json` response
-func (r GetTradersByIdByTraderIDResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON401
-}
-
-// GetJSON404 returns the response for an HTTP 404 `application/json` response
-func (r GetTradersByIdByTraderIDResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON404
-}
-
-// GetJSON500 returns the response for an HTTP 500 `application/json` response
-func (r GetTradersByIdByTraderIDResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON500
-}
-
-// GetJSON503 returns the response for an HTTP 503 `application/json` response
-func (r GetTradersByIdByTraderIDResponse) GetJSON503() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON503
-}
-
-// GetJSON504 returns the response for an HTTP 504 `application/json` response
-func (r GetTradersByIdByTraderIDResponse) GetJSON504() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON504
-}
-
-// GetBody returns the raw response body bytes
-func (r GetTradersByIdByTraderIDResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTradersByIdByTraderIDResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTradersByIdByTraderIDResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTradersByIdByTraderIDResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 type GetTradersByWalletByWalletAddressResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -16305,123 +15952,6 @@ func (r GetTradersSnapshotResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetTradersSnapshotResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetTradersByTraderIDDailyProfitsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *PulsightInternalCoreUsecasesTraderDailyProfitsResult
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON404 the response for an HTTP 404 `application/json` response
-	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON500 the response for an HTTP 500 `application/json` response
-	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTradersByTraderIDDailyProfitsResponse) GetJSON200() *PulsightInternalCoreUsecasesTraderDailyProfitsResult {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTradersByTraderIDDailyProfitsResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetJSON404 returns the response for an HTTP 404 `application/json` response
-func (r GetTradersByTraderIDDailyProfitsResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON404
-}
-
-// GetJSON500 returns the response for an HTTP 500 `application/json` response
-func (r GetTradersByTraderIDDailyProfitsResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON500
-}
-
-// GetBody returns the raw response body bytes
-func (r GetTradersByTraderIDDailyProfitsResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTradersByTraderIDDailyProfitsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTradersByTraderIDDailyProfitsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTradersByTraderIDDailyProfitsResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetTradersByTraderIDPnlsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *InternalAdaptersPrimaryHttpHandlerPaginatedPnls
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-	// JSON500 the response for an HTTP 500 `application/json` response
-	JSON500 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTradersByTraderIDPnlsResponse) GetJSON200() *InternalAdaptersPrimaryHttpHandlerPaginatedPnls {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTradersByTraderIDPnlsResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetJSON500 returns the response for an HTTP 500 `application/json` response
-func (r GetTradersByTraderIDPnlsResponse) GetJSON500() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON500
-}
-
-// GetBody returns the raw response body bytes
-func (r GetTradersByTraderIDPnlsResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTradersByTraderIDPnlsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTradersByTraderIDPnlsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTradersByTraderIDPnlsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17408,7 +16938,7 @@ func (c *ClientWithResponses) GetBacktestsByIdTradesWithResponse(ctx context.Con
 
 // GetCashbackLeaderboardWithResponse Pump rewards leaderboard
 //
-// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts. Lifetime claimed figures are retention-bounded sums over the 75-day claim ledger (they undercount once rows age out, never invent).
+// Wallets ranked by what pump paid them over a window, across both programs: holder rewards received and cashback claimed. The default rank is their sum, both cash basis — never cashback earned, which is an accrual of the same money. Accepts the same composable `f=` filter clauses as /api/traders (repeated `f=key|op|value`), plus the rewards sorts.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17423,7 +16953,7 @@ func (c *ClientWithResponses) GetCashbackLeaderboardWithResponse(ctx context.Con
 
 // GetCashbackSummaryWithResponse Pump rewards board summary
 //
-// Pool totals across both programs, the median wallet and the top earner for a window. Lifetime claimed and received figures are retention-bounded sums over the 75-day ledgers.
+// Pool totals across both programs, the median wallet and the top earner for a window.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17498,7 +17028,7 @@ func (c *ClientWithResponses) GetMeCreditsLedgerWithResponse(ctx context.Context
 
 // GetMintsWithResponse List Active Mints
 //
-// Returns the active-mint catalog with windowed stats. The activity gate is `hourly_mint_trader_activity`; rows ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool_sol`.
+// Returns the active-mint catalog with windowed stats: one page of the `mint_board` rows that traded inside the `hours` activity gate, ordered by distinct traders desc (the wash-resistant default — pass `sort=trades` for raw swap-count order). By default the list hides low-liquidity (dust / drained-pool) mints — see `min_pool`. Money floors and money sorts are read in `unit`; every row carries both currencies.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17513,7 +17043,7 @@ func (c *ClientWithResponses) GetMintsWithResponse(ctx context.Context, params *
 
 // GetMintsByPubkeyWithResponse Get Mint
 //
-// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) from the CA catalog. 404 when the pubkey is not present — the enricher may not have seen this mint yet.
+// Returns the mint's identity row (symbol, name, logo_uri, decimals, creator) with its `mint_wide` decorations. 404 when the mint is in neither the mint catalog nor the metadata catalog.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17543,7 +17073,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyActivityWithResponse(ctx context.C
 
 // GetMintsByPubkeyBundlersWithResponse List Mint Bundlers
 //
-// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply) and `bundle_slot`. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Launch bundlers of one mint (wallets that bought in a same-slot cluster of ≥3 buyers taking ≥5% of supply within 300s of the first observed swap) — the SAME set `/risk` counts — in the top-traders row shape plus `initial_pct_of_supply` (net launch acquisition as % of total supply). sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17558,7 +17088,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyBundlersWithResponse(ctx context.C
 
 // GetMintsByPubkeyInsidersWithResponse List Mint Insiders
 //
-// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the mint's first fold when token-program capture has no transfers for it. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17678,7 +17208,7 @@ func (c *ClientWithResponses) GetMintsByPubkeySafetyEventsWithResponse(ctx conte
 
 // GetMintsByPubkeySnipersWithResponse List Mint Snipers
 //
-// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, `trader_token_stats` PnL columns, swaps-derived first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Launch snipers of one mint (wallets whose first buy is within 30s of the mint's first observed swap) — the SAME set `/risk` counts — in the top-traders row shape: on-chain balance and % of circulating supply, and the position's PnL and first buy. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17693,7 +17223,7 @@ func (c *ClientWithResponses) GetMintsByPubkeySnipersWithResponse(ctx context.Co
 
 // GetMintsByPubkeyStatsWithResponse Find Mint Stats Bundle
 //
-// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for all four windows (1m/5m/1h/24h) in one response.
+// Returns per-mint windowed stats (volume, price_change, swap_count, buy/sell split) for every window (1m/5m/30m/1h/6h/12h/24h) in one response.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17708,7 +17238,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyStatsWithResponse(ctx context.Cont
 
 // GetMintsByPubkeyTopHoldersWithResponse List Mint Top Holders
 //
-// Current holders (token_balance > 0) of one mint from `trader_token_stats`. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
+// Current holders of one mint by on-chain balance (`holder_accounts`, pool inventory excluded), each with its position figures. sort ∈ {balance,holding_pnl,recent} (default balance). Paged via offset.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17723,7 +17253,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyTopHoldersWithResponse(ctx context
 
 // GetMintsByPubkeyTopTradersWithResponse List Mint Top Traders
 //
-// Per-(trader) leaderboard for one mint from `trader_token_stats` (all positions). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
+// Per-(trader) leaderboard for one mint off its `trader_positions` rows (all positions, closed ones included). sort ∈ {pnl,volume,swaps,recent} (default pnl). Paged via offset.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17738,7 +17268,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyTopTradersWithResponse(ctx context
 
 // GetMintsByPubkeyTradersByTraderWithResponse Get Mint Trader Stats
 //
-// Single per-(trader, mint) stats row (same shape as a top-traders row) from `trader_token_stats`. 404 when the trader never traded the mint.
+// Single per-(trader, mint) stats row (same shape as a top-traders row). 404 when the trader neither traded nor holds the mint.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -18025,7 +17555,7 @@ func (c *ClientWithResponses) GetSubscriptionsMeWithResponse(ctx context.Context
 
 // GetSwapsWithResponse List Swaps
 //
-// Returns swaps filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). All time params are optional; with none supplied the latest swaps are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest swaps strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -18341,21 +17871,6 @@ func (c *ClientWithResponses) GetTradersWithResponse(ctx context.Context, params
 	return ParseGetTradersResponse(rsp)
 }
 
-// GetTradersByIdByTraderIDWithResponse Get Trader by ID
-//
-// Retrieves a trader's aggregated statistics by internal UUID.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/traders/by-id/{traderID} (the `GetTradersByIdByTraderID` operationId).
-func (c *ClientWithResponses) GetTradersByIdByTraderIDWithResponse(ctx context.Context, traderID string, reqEditors ...RequestEditorFn) (*GetTradersByIdByTraderIDResponse, error) {
-	rsp, err := c.GetTradersByIdByTraderID(ctx, traderID, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTradersByIdByTraderIDResponse(rsp)
-}
-
 // GetTradersByWalletByWalletAddressWithResponse Get Trader by Wallet
 //
 // Retrieves a trader's aggregated statistics by their wallet address.
@@ -18399,36 +17914,6 @@ func (c *ClientWithResponses) GetTradersSnapshotWithResponse(ctx context.Context
 	return ParseGetTradersSnapshotResponse(rsp)
 }
 
-// GetTradersByTraderIDDailyProfitsWithResponse List Trader Daily Profits
-//
-// Retrieves aggregated daily profits for a specific trader.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/traders/{traderID}/daily-profits (the `GetTradersByTraderIDDailyProfits` operationId).
-func (c *ClientWithResponses) GetTradersByTraderIDDailyProfitsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDDailyProfitsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDDailyProfitsResponse, error) {
-	rsp, err := c.GetTradersByTraderIDDailyProfits(ctx, traderID, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTradersByTraderIDDailyProfitsResponse(rsp)
-}
-
-// GetTradersByTraderIDPnlsWithResponse List Trader PnLs
-//
-// Retrieves per-token PnL statistics for a specific trader.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/traders/{traderID}/pnls (the `GetTradersByTraderIDPnls` operationId).
-func (c *ClientWithResponses) GetTradersByTraderIDPnlsWithResponse(ctx context.Context, traderID string, params *GetTradersByTraderIDPnlsParams, reqEditors ...RequestEditorFn) (*GetTradersByTraderIDPnlsResponse, error) {
-	rsp, err := c.GetTradersByTraderIDPnls(ctx, traderID, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTradersByTraderIDPnlsResponse(rsp)
-}
-
 // GetTradersByWalletAddressCashbackWithResponse Pump rewards of a wallet
 //
 // Returns a wrapper object for the known response body format(s).
@@ -18444,7 +17929,7 @@ func (c *ClientWithResponses) GetTradersByWalletAddressCashbackWithResponse(ctx 
 
 // GetTradersByWalletAddressCashbackClaimsWithResponse Reward history of a wallet
 //
-// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the raw ledgers (75-day retention): older events have aged out; the program-reported anchors on the rewards panel carry the true all-time totals. Amounts are in the event's quote-mint base units (lamports for WSOL rows, which is nearly all of them), and `amount_lamports` is zero on a payout whose quote could not be priced in SOL — `priced` says which.
+// One wallet's reward events, newest first, paged: both its claim_cashback executions and the holder-reward payouts pushed to it, interleaved in one timestamp order and told apart by `kind`. A claim carries the pump program it swept; a payout carries the coin that paid it. Read from the `cashback_claims` and `holder_reward_payouts` ledgers. `amount` is in the event's quote-mint base units, `amount_lamports` and `amount_usd` are its value stamped at execution, and `amount_lamports` is zero on an event whose quote could not be priced in SOL — `priced` says which.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -18487,7 +17972,7 @@ func (c *ClientWithResponses) GetTradersByWalletAddressNeighboursWithResponse(ct
 
 // GetTradersByWalletAddressPnlSeriesWithResponse Get Trader Daily PnL Series
 //
-// Returns daily realised PnL points (oldest first) for a trader, sourced from the aggregator's `trader_daily_pnl_series` SQL function.
+// Returns daily realised PnL points (oldest first) for a trader, folded from its `trader_hourly` rows: realized PnL with the arb take-home, the cost lines, the rewards, net PnL and the transaction record, in both currencies.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -20437,7 +19922,7 @@ func ParseGetSwapsResponse(rsp *http.Response) (*GetSwapsResponse, error) {
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []InternalAdaptersPrimaryHttpHandlerSwapEventRow
+		var dest []PulsightInternalCoreDomainAggregatorTrade
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -21239,74 +20724,6 @@ func ParseGetTradersResponse(rsp *http.Response) (*GetTradersResponse, error) {
 	return response, nil
 }
 
-// ParseGetTradersByIdByTraderIDResponse parses an HTTP response from a GetTradersByIdByTraderIDWithResponse call
-func ParseGetTradersByIdByTraderIDResponse(rsp *http.Response) (*GetTradersByIdByTraderIDResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTradersByIdByTraderIDResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PulsightInternalCoreUsecasesTraderTraderListItem
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON401 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON503 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 504:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON504 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetTradersByWalletByWalletAddressResponse parses an HTTP response from a GetTradersByWalletByWalletAddressWithResponse call
 func ParseGetTradersByWalletByWalletAddressResponse(rsp *http.Response) (*GetTradersByWalletByWalletAddressResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -21442,93 +20859,6 @@ func ParseGetTradersSnapshotResponse(rsp *http.Response) (*GetTradersSnapshotRes
 			return nil, err
 		}
 		response.JSON401 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTradersByTraderIDDailyProfitsResponse parses an HTTP response from a GetTradersByTraderIDDailyProfitsWithResponse call
-func ParseGetTradersByTraderIDDailyProfitsResponse(rsp *http.Response) (*GetTradersByTraderIDDailyProfitsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTradersByTraderIDDailyProfitsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PulsightInternalCoreUsecasesTraderDailyProfitsResult
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON404 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTradersByTraderIDPnlsResponse parses an HTTP response from a GetTradersByTraderIDPnlsWithResponse call
-func ParseGetTradersByTraderIDPnlsResponse(rsp *http.Response) (*GetTradersByTraderIDPnlsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTradersByTraderIDPnlsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest InternalAdaptersPrimaryHttpHandlerPaginatedPnls
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON500 = &dest
 
 	}
 
