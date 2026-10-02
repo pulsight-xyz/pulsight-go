@@ -280,6 +280,8 @@ const (
 	DeclineExposureCap        PulsightInternalCoreUsecasesBacktestDeclineReason = "exposure_cap"
 	DeclineMaxBuysPerPosition PulsightInternalCoreUsecasesBacktestDeclineReason = "max_buys_per_position"
 	DeclineNoBracket          PulsightInternalCoreUsecasesBacktestDeclineReason = "no_bracket"
+	DeclineNonSolQuote        PulsightInternalCoreUsecasesBacktestDeclineReason = "non_sol_quote"
+	DeclinePoolNotSimulated   PulsightInternalCoreUsecasesBacktestDeclineReason = "pool_not_simulated"
 	DeclineRateLimited        PulsightInternalCoreUsecasesBacktestDeclineReason = "rate_limited"
 	DeclineReverted           PulsightInternalCoreUsecasesBacktestDeclineReason = "reverted"
 	DeclineSizeOutOfRange     PulsightInternalCoreUsecasesBacktestDeclineReason = "size_out_of_range"
@@ -298,6 +300,10 @@ func (e PulsightInternalCoreUsecasesBacktestDeclineReason) Valid() bool {
 	case DeclineMaxBuysPerPosition:
 		return true
 	case DeclineNoBracket:
+		return true
+	case DeclineNonSolQuote:
+		return true
+	case DeclinePoolNotSimulated:
 		return true
 	case DeclineRateLimited:
 		return true
@@ -531,8 +537,8 @@ type InternalAdaptersPrimaryHttpHandlerNeighborRowResponse struct {
 
 	// MedSlotDelta MedSlotDelta is the median signed slot gap (neighbour minus subject), so
 	// a negative value means the neighbour traded first. Real copy-trading
-	// clusters at 1-2 slots, roughly 0.3-0.6s at current block times, while
-	// coincidence scatters over tens of slots. Zero means the SAME block, the
+	// clusters at 1-2 slots, while coincidence scatters over tens of slots.
+	// Zero means the SAME block, the
 	// tightest gap this endpoint can report: the source data carries no
 	// transaction index, so which of the two went first inside that block is
 	// unknown, not absent.
@@ -668,6 +674,12 @@ type InternalAdaptersPrimaryHttpHandlerSnapshotRow struct {
 
 	// PnlDistributionUsd the buckets measured on the USD stamps
 	PnlDistributionUsd *[]int `json:"pnl_distribution_usd,omitempty"`
+
+	// PnlSparkline30d lamports per day, window=30d only
+	PnlSparkline30d *[]float32 `json:"pnl_sparkline_30d,omitempty"`
+
+	// PnlSparkline30dUsd micro-USD per day, window=30d only
+	PnlSparkline30dUsd *[]float32 `json:"pnl_sparkline_30d_usd,omitempty"`
 
 	// PnlSparkline7d lamports per day
 	PnlSparkline7d *[]float32 `json:"pnl_sparkline_7d,omitempty"`
@@ -1218,12 +1230,14 @@ type PulsightInternalCoreDomainAggregatorMevTipSharePoint struct {
 // PulsightInternalCoreDomainAggregatorMintActivityBase defines model for pulsight_internal_core_domain_aggregator.MintActivityBase.
 type PulsightInternalCoreDomainAggregatorMintActivityBase struct {
 	FeesLamports *int `json:"fees_lamports,omitempty"`
+	FeesMicroUsd *int `json:"fees_micro_usd,omitempty"`
 	Swaps        *int `json:"swaps,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintActivityPoint defines model for pulsight_internal_core_domain_aggregator.MintActivityPoint.
 type PulsightInternalCoreDomainAggregatorMintActivityPoint struct {
 	FeesLamports *int `json:"fees_lamports,omitempty"`
+	FeesMicroUsd *int `json:"fees_micro_usd,omitempty"`
 	Swaps        *int `json:"swaps,omitempty"`
 	Ts           *int `json:"ts,omitempty"`
 }
@@ -1316,9 +1330,8 @@ type PulsightInternalCoreDomainAggregatorMintLiveMetrics struct {
 
 // PulsightInternalCoreDomainAggregatorMintMarket defines model for pulsight_internal_core_domain_aggregator.MintMarket.
 type PulsightInternalCoreDomainAggregatorMintMarket struct {
-	// BaseMint BaseMint is the pool's base side as the aggregator oriented it — the
-	// page's own mint except on a money mint's page, where the mint may be
-	// the quote of the pools listed. BaseSymbol is its symbol, empty when
+	// BaseMint BaseMint is the page's own mint, whichever side of the pool the
+	// aggregator filed its legs under. BaseSymbol is its symbol, empty when
 	// unknown.
 	BaseMint   *string `json:"base_mint,omitempty"`
 	BaseSymbol *string `json:"base_symbol,omitempty"`
@@ -1335,11 +1348,11 @@ type PulsightInternalCoreDomainAggregatorMintMarket struct {
 	Pool          *string `json:"pool,omitempty"`
 	QuoteDecimals *int    `json:"quote_decimals,omitempty"`
 
-	// QuoteMint QuoteMint is the pool's quote side as the aggregator oriented it: a
-	// registry quote when one side is one (USDC > USDT > USD1 > WSOL), else
-	// the pool's own quote token. This market's native candle prices and
-	// quote amounts are denominated in it, and the live chart folds only
-	// ticks that carry the same quote.
+	// QuoteMint QuoteMint is the pool's other side: a registry quote when one side is
+	// one (the registered dollars, USDC first, then WSOL), else the counter
+	// token. This market's native candle prices and quote amounts are
+	// denominated in it, and the live chart folds only ticks that carry the
+	// same quote.
 	QuoteMint *string `json:"quote_mint,omitempty"`
 
 	// QuoteSymbol QuoteSymbol and QuoteDecimals describe the quote mint; the decimals are
@@ -1348,6 +1361,19 @@ type PulsightInternalCoreDomainAggregatorMintMarket struct {
 	SolVolumeLamports *int     `json:"sol_volume_lamports,omitempty"`
 	SolVolumeShare    *float32 `json:"sol_volume_share,omitempty"`
 	SwapCount         *int     `json:"swap_count,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorMintMatchedPool defines model for pulsight_internal_core_domain_aggregator.MintMatchedPool.
+type PulsightInternalCoreDomainAggregatorMintMatchedPool struct {
+	// Address Address is the pool's address.
+	Address *string `json:"address,omitempty"`
+
+	// Base Base is true when the row's mint is the pool's base token, the side
+	// the pool prices; false when it is the pool's quote.
+	Base *bool `json:"base,omitempty"`
+
+	// Dex Dex is the pool's venue slug, same vocabulary as `?dex=`.
+	Dex *string `json:"dex,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintMigration defines model for pulsight_internal_core_domain_aggregator.MintMigration.
@@ -1383,16 +1409,21 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 
 	// Bundled Bundled/Insiders are the audit-cell cohort flags (absent when not
 	// notable). Bundled = the sealed launch bundle cohort; Insiders = the
-	// creator distributed supply via launch-window SPL transfers. Both are
-	// at-a-glance views of the per-mint risk card's cohorts.
-	Bundled         *PulsightInternalCoreDomainAggregatorMintBundled `json:"bundled,omitempty"`
-	BuyCount        *int                                             `json:"buy_count,omitempty"`
-	Creator         *string                                          `json:"creator,omitempty"`
-	Decimals        *int                                             `json:"decimals,omitempty"`
-	DevHoldings     *PulsightInternalCoreDomainAggregatorDevHoldings `json:"dev_holdings,omitempty"`
-	FetchStatus     *string                                          `json:"fetch_status,omitempty"`
-	FirstSeenTs     *string                                          `json:"first_seen_ts,omitempty"`
-	FreezeAuthority *string                                          `json:"freeze_authority,omitempty"`
+	// creator distributed supply via SPL transfers. Both are at-a-glance
+	// views of the per-mint risk card's cohorts.
+	Bundled     *PulsightInternalCoreDomainAggregatorMintBundled `json:"bundled,omitempty"`
+	BuyCount    *int                                             `json:"buy_count,omitempty"`
+	Creator     *string                                          `json:"creator,omitempty"`
+	Decimals    *int                                             `json:"decimals,omitempty"`
+	DevHoldings *PulsightInternalCoreDomainAggregatorDevHoldings `json:"dev_holdings,omitempty"`
+
+	// DustFloat DustFloat reports that the holders' circulating float is under 0.1 % of
+	// total supply: Top10Pct and the insiders' share measure dust, and the
+	// risk score's concentration rules did not fire on them.
+	DustFloat       *bool   `json:"dust_float,omitempty"`
+	FetchStatus     *string `json:"fetch_status,omitempty"`
+	FirstSeenTs     *string `json:"first_seen_ts,omitempty"`
+	FreezeAuthority *string `json:"freeze_authority,omitempty"`
 
 	// HolderCount HolderCount is the number of wallets holding a positive balance of
 	// this mint, off the sealed holder-stats family of the mint's row (pool
@@ -1421,6 +1452,11 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// either is unknown.
 	MarketCapUsd *float32 `json:"market_cap_usd,omitempty"`
 	MarketsCount *int     `json:"markets_count,omitempty"`
+
+	// MatchedPool MatchedPool is set only on a `?search=` row the term reached through a
+	// pool address instead of the mint's own address, symbol or name: the row
+	// is one of that pool's tokens.
+	MatchedPool *PulsightInternalCoreDomainAggregatorMintMatchedPool `json:"matched_pool,omitempty"`
 
 	// MetadataUri MetadataURI/FetchStatus are detail-only identity fields the
 	// frontend's TokenIdentityCard renders (off-chain JSON link + enrich
@@ -1829,7 +1865,12 @@ type PulsightInternalCoreDomainAggregatorRiskReport struct {
 	Authorities *PulsightInternalCoreDomainAggregatorAuthorityStat `json:"authorities,omitempty"`
 	Bundlers    *PulsightInternalCoreDomainAggregatorBundlerStat   `json:"bundlers,omitempty"`
 	Dev         *PulsightInternalCoreDomainAggregatorDevStat       `json:"dev,omitempty"`
-	HolderCount *int                                               `json:"holder_count,omitempty"`
+
+	// DustFloat DustFloat reports that the holders' circulating float is under 0.1 % of
+	// total supply: Top10 and the cohorts' held shares measure dust, and the
+	// concentration rules did not fire on them.
+	DustFloat   *bool `json:"dust_float,omitempty"`
+	HolderCount *int  `json:"holder_count,omitempty"`
 
 	// Holders top few (summary)
 	Holders  *[]PulsightInternalCoreDomainAggregatorHolderEntry `json:"holders,omitempty"`
@@ -1915,49 +1956,55 @@ type PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint struct {
 
 // PulsightInternalCoreDomainAggregatorTrade defines model for pulsight_internal_core_domain_aggregator.Trade.
 type PulsightInternalCoreDomainAggregatorTrade struct {
-	Arb              *PulsightInternalCoreDomainAggregatorArb   `json:"arb,omitempty"`
-	Attribution      *string                                    `json:"attribution,omitempty"`
-	CarryBasis       *PulsightInternalCoreDomainAggregatorMoney `json:"carry_basis,omitempty"`
-	CarryFromMint    *string                                    `json:"carry_from_mint,omitempty"`
-	CarryFromMintId  *int                                       `json:"carry_from_mint_id,omitempty"`
-	CarryToMint      *string                                    `json:"carry_to_mint,omitempty"`
-	CarryToMintId    *int                                       `json:"carry_to_mint_id,omitempty"`
-	CashbackAccrued  *PulsightInternalCoreDomainAggregatorMoney `json:"cashback_accrued,omitempty"`
-	Costs            *PulsightInternalCoreDomainAggregatorCosts `json:"costs,omitempty"`
-	CounterAmount    *int                                       `json:"counter_amount,omitempty"`
-	CounterDecimals  *int                                       `json:"counter_decimals,omitempty"`
-	CounterMint      *string                                    `json:"counter_mint,omitempty"`
-	CounterMintId    *int                                       `json:"counter_mint_id,omitempty"`
-	CounterSymbol    *string                                    `json:"counter_symbol,omitempty"`
-	Decimals         *int                                       `json:"decimals,omitempty"`
-	Dex              *string                                    `json:"dex,omitempty"`
-	Fees             *PulsightInternalCoreDomainAggregatorMoney `json:"fees,omitempty"`
-	Flags            *int                                       `json:"flags,omitempty"`
-	IsArb            *bool                                      `json:"is_arb,omitempty"`
-	Key              *string                                    `json:"key,omitempty"`
-	Kind             *string                                    `json:"kind,omitempty"`
-	Label            *string                                    `json:"label,omitempty"`
-	LabelType        *string                                    `json:"label_type,omitempty"`
-	Late             *bool                                      `json:"late,omitempty"`
-	Mint             *string                                    `json:"mint,omitempty"`
-	MintId           *int                                       `json:"mint_id,omitempty"`
-	PriceAgeMs       *int                                       `json:"price_age_ms,omitempty"`
-	PriceSource      *string                                    `json:"price_source,omitempty"`
-	PrimaryPool      *string                                    `json:"primary_pool,omitempty"`
-	PrimaryPoolId    *int                                       `json:"primary_pool_id,omitempty"`
-	Qty              *string                                    `json:"qty,omitempty"`
-	Realized         *PulsightInternalCoreDomainAggregatorMoney `json:"realized,omitempty"`
-	Route            *[]PulsightInternalCoreDomainAggregatorHop `json:"route,omitempty"`
-	Signature        *string                                    `json:"signature,omitempty"`
-	Slot             *int                                       `json:"slot,omitempty"`
-	SolPostLamports  *int                                       `json:"sol_post_lamports,omitempty"`
-	SolUsd           *float32                                   `json:"sol_usd,omitempty"`
-	Trader           *string                                    `json:"trader,omitempty"`
-	TsMs             *int                                       `json:"ts_ms,omitempty"`
-	TxIndex          *int                                       `json:"tx_index,omitempty"`
-	VSource          *string                                    `json:"v_source,omitempty"`
-	Value            *PulsightInternalCoreDomainAggregatorMoney `json:"value,omitempty"`
-	WsolPostLamports *int                                       `json:"wsol_post_lamports,omitempty"`
+	Arb             *PulsightInternalCoreDomainAggregatorArb   `json:"arb,omitempty"`
+	Attribution     *string                                    `json:"attribution,omitempty"`
+	CarryBasis      *PulsightInternalCoreDomainAggregatorMoney `json:"carry_basis,omitempty"`
+	CarryFromMint   *string                                    `json:"carry_from_mint,omitempty"`
+	CarryFromMintId *int                                       `json:"carry_from_mint_id,omitempty"`
+	CarryToMint     *string                                    `json:"carry_to_mint,omitempty"`
+	CarryToMintId   *int                                       `json:"carry_to_mint_id,omitempty"`
+	CashbackAccrued *PulsightInternalCoreDomainAggregatorMoney `json:"cashback_accrued,omitempty"`
+	Costs           *PulsightInternalCoreDomainAggregatorCosts `json:"costs,omitempty"`
+	CounterAmount   *int                                       `json:"counter_amount,omitempty"`
+	CounterDecimals *int                                       `json:"counter_decimals,omitempty"`
+	CounterMint     *string                                    `json:"counter_mint,omitempty"`
+	CounterMintId   *int                                       `json:"counter_mint_id,omitempty"`
+	CounterSymbol   *string                                    `json:"counter_symbol,omitempty"`
+	Decimals        *int                                       `json:"decimals,omitempty"`
+	Dex             *string                                    `json:"dex,omitempty"`
+	Fees            *PulsightInternalCoreDomainAggregatorMoney `json:"fees,omitempty"`
+	Flags           *int                                       `json:"flags,omitempty"`
+	IsArb           *bool                                      `json:"is_arb,omitempty"`
+	Key             *string                                    `json:"key,omitempty"`
+	Kind            *string                                    `json:"kind,omitempty"`
+	Label           *string                                    `json:"label,omitempty"`
+	LabelType       *string                                    `json:"label_type,omitempty"`
+	Mint            *string                                    `json:"mint,omitempty"`
+	MintId          *int                                       `json:"mint_id,omitempty"`
+	PriceAgeMs      *int                                       `json:"price_age_ms,omitempty"`
+	PriceSource     *string                                    `json:"price_source,omitempty"`
+	PrimaryPool     *string                                    `json:"primary_pool,omitempty"`
+	PrimaryPoolId   *int                                       `json:"primary_pool_id,omitempty"`
+
+	// PrimaryPoolQuoteMint PrimaryPoolQuoteMint is the primary pool's counter asset from this
+	// mint's side (its quote, or its base when the mint is the quote of a
+	// token-quoted pair) — the rule that decides whether a copy bot can
+	// execute there. REST decoration; absent when the catalog does not know
+	// the pool.
+	PrimaryPoolQuoteMint *string                                    `json:"primary_pool_quote_mint,omitempty"`
+	Qty                  *string                                    `json:"qty,omitempty"`
+	Realized             *PulsightInternalCoreDomainAggregatorMoney `json:"realized,omitempty"`
+	Route                *[]PulsightInternalCoreDomainAggregatorHop `json:"route,omitempty"`
+	Signature            *string                                    `json:"signature,omitempty"`
+	Slot                 *int                                       `json:"slot,omitempty"`
+	SolPostLamports      *int                                       `json:"sol_post_lamports,omitempty"`
+	SolUsd               *float32                                   `json:"sol_usd,omitempty"`
+	Trader               *string                                    `json:"trader,omitempty"`
+	TsMs                 *int                                       `json:"ts_ms,omitempty"`
+	TxIndex              *int                                       `json:"tx_index,omitempty"`
+	VSource              *string                                    `json:"v_source,omitempty"`
+	Value                *PulsightInternalCoreDomainAggregatorMoney `json:"value,omitempty"`
+	WsolPostLamports     *int                                       `json:"wsol_post_lamports,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTraderBehavioralStats defines model for pulsight_internal_core_domain_aggregator.TraderBehavioralStats.
@@ -2156,16 +2203,22 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	TotalSells   *int `json:"total_sells,omitempty"`
 
 	// TotalTips TotalTips — builder/MEV tips paid on the window's successful txs.
-	TotalTips    *int     `json:"total_tips,omitempty"`
-	TotalTipsUsd *int     `json:"total_tips_usd,omitempty"`
-	Trader       *string  `json:"trader,omitempty"`
-	WinProfit    *int     `json:"win_profit,omitempty"`
-	WinProfitUsd *int     `json:"win_profit_usd,omitempty"`
-	WinSells     *int     `json:"win_sells,omitempty"`
-	WinSellsUsd  *int     `json:"win_sells_usd,omitempty"`
-	WindowLabel  *string  `json:"window_label,omitempty"`
-	Winrate      *float32 `json:"winrate,omitempty"`
-	WinrateUsd   *float32 `json:"winrate_usd,omitempty"`
+	TotalTips    *int    `json:"total_tips,omitempty"`
+	TotalTipsUsd *int    `json:"total_tips_usd,omitempty"`
+	Trader       *string `json:"trader,omitempty"`
+
+	// UncoveredProceedsLamports UncoveredProceeds — proceeds of the window's sells of tokens with no
+	// known cost (received by transfer, or beyond the recorded buys). Neither
+	// RealizedProfit nor NetRealizedProfit includes them.
+	UncoveredProceedsLamports *int     `json:"uncovered_proceeds_lamports,omitempty"`
+	UncoveredProceedsUsd      *int     `json:"uncovered_proceeds_usd,omitempty"`
+	WinProfit                 *int     `json:"win_profit,omitempty"`
+	WinProfitUsd              *int     `json:"win_profit_usd,omitempty"`
+	WinSells                  *int     `json:"win_sells,omitempty"`
+	WinSellsUsd               *int     `json:"win_sells_usd,omitempty"`
+	WindowLabel               *string  `json:"window_label,omitempty"`
+	Winrate                   *float32 `json:"winrate,omitempty"`
+	WinrateUsd                *float32 `json:"winrate_usd,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTraderPriceImpactStats defines model for pulsight_internal_core_domain_aggregator.TraderPriceImpactStats.
@@ -2880,6 +2933,21 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// on latency_slots > 0 runs. Additive JSONB field — old rows decode as 0.
 	CopiesReverted *int `json:"copies_reverted,omitempty"`
 
+	// CopiesSkippedNonSolQuote CopiesSkippedNonSolQuote is the part of CopiesSkippedUnpriced whose
+	// cause is the pool's quote: the target swapped in a USDC-, USDT- or
+	// token-quoted pool whose leg carries no SOL price, so the live bot has
+	// no route to copy it and both sides skip it (`non_sol_quote`). The
+	// runtime keeps ONE counter for both causes; this breakdown exists only
+	// here. Additive JSONB field — old rows decode as 0.
+	CopiesSkippedNonSolQuote *int `json:"copies_skipped_non_sol_quote,omitempty"`
+
+	// CopiesSkippedPoolNotSimulated CopiesSkippedPoolNotSimulated counts target swaps a per-pool run saw on a
+	// market it carried no instrument for (outside the mint's top pools, or a
+	// pool the catalog does not know). They fold into the target book and are
+	// recorded once as `pool_not_simulated`; nothing fills. A per-pool
+	// artefact, not in CopiesSkippedUnpriced. Additive JSONB field.
+	CopiesSkippedPoolNotSimulated *int `json:"copies_skipped_pool_not_simulated,omitempty"`
+
 	// CopiesSkippedUnpriced CopiesSkippedUnpriced counts mirror trades that passed every rule and
 	// would have fired, but whose triggering swap could not be priced honestly
 	// — so they were NOT traded. Two causes, both data-side:
@@ -2942,6 +3010,14 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// opt-in run was.
 	PerPool *bool `json:"per_pool,omitempty"`
 
+	// PlatformFeeBps PlatformFeeBps is the platform fee rate the run charged: the account's
+	// rate when the run was submitted.
+	PlatformFeeBps *int `json:"platform_fee_bps,omitempty"`
+
+	// PlatformFeesPaidSol PlatformFeesPaidSol is the platform fee paid across every fill, folded
+	// out of realized PnL like priority fees and tips.
+	PlatformFeesPaidSol *float32 `json:"platform_fees_paid_sol,omitempty"`
+
 	// PositionsOpenedUnmarked PositionsOpenedUnmarked counts positions the run opened while it had NO
 	// price to mark them with — so for as long as that lasted, every
 	// price-based exit rule (take-profit, stop, trailing stop, max-drawdown)
@@ -2987,8 +3063,12 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	TipsPaidSol                *float32  `json:"tips_paid_sol,omitempty"`
 	TotalPnlSol                *float32  `json:"total_pnl_sol,omitempty"`
 	Trades                     *int      `json:"trades,omitempty"`
-	UnrealizedPnlSol           *float32  `json:"unrealized_pnl_sol,omitempty"`
-	Wins                       *int      `json:"wins,omitempty"`
+
+	// TransferFeesPaidSol TransferFeesPaidSol is the SOL value Token-2022 transfer fees took across
+	// every fill; it is already inside the fill prices, so it is not folded again.
+	TransferFeesPaidSol *float32 `json:"transfer_fees_paid_sol,omitempty"`
+	UnrealizedPnlSol    *float32 `json:"unrealized_pnl_sol,omitempty"`
+	Wins                *int     `json:"wins,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesBacktestBacktestTrade defines model for pulsight_internal_core_usecases_backtest.BacktestTrade.
@@ -3005,6 +3085,9 @@ type PulsightInternalCoreUsecasesBacktestBacktestTrade struct {
 	// candle-driven fills.
 	LandingDriftBps *float32 `json:"landing_drift_bps,omitempty"`
 	Mint            *string  `json:"mint,omitempty"`
+
+	// PlatformFeeSol PlatformFeeSol is the platform fee this fill pays, in SOL.
+	PlatformFeeSol *float32 `json:"platform_fee_sol,omitempty"`
 
 	// Pool Pool is the AMM market this trade executed in. For a COPY trade it's the
 	// pool the mirrored target actually swapped in (per-leg dex_swaps); for an
@@ -3025,6 +3108,9 @@ type PulsightInternalCoreUsecasesBacktestBacktestTrade struct {
 	SolAmount      *float32                                         `json:"sol_amount,omitempty"`
 	Source         *PulsightInternalCoreUsecasesBacktestTradeSource `json:"source,omitempty"`
 
+	// SwapFeeBps SwapFeeBps is the venue swap fee this fill paid, in basis points.
+	SwapFeeBps *int `json:"swap_fee_bps,omitempty"`
+
 	// TargetPriceImpactPct TargetPriceImpactPct is the MIRRORED trader's own price impact on the
 	// swap we copied — set on copy trades triggered by a target swap, measured
 	// against the reconstructed pre-swap reserve. It describes THEIR fill, so
@@ -3033,8 +3119,12 @@ type PulsightInternalCoreUsecasesBacktestBacktestTrade struct {
 	TargetPriceImpactPct *float32 `json:"target_price_impact_pct,omitempty"`
 	TipSol               *float32 `json:"tip_sol,omitempty"`
 	TokenAmount          *float32 `json:"token_amount,omitempty"`
-	TriggeringSwapSig    *string  `json:"triggering_swap_sig,omitempty"`
-	Ts                   *string  `json:"ts,omitempty"`
+
+	// TransferFeeSol TransferFeeSol is the SOL value the token's Token-2022 transfer fee took
+	// from this fill.
+	TransferFeeSol    *float32 `json:"transfer_fee_sol,omitempty"`
+	TriggeringSwapSig *string  `json:"triggering_swap_sig,omitempty"`
+	Ts                *string  `json:"ts,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesBacktestDeclineReason defines model for pulsight_internal_core_usecases_backtest.DeclineReason.
@@ -3070,6 +3160,15 @@ type PulsightInternalCoreUsecasesBacktestPreviewRequest struct {
 type PulsightInternalCoreUsecasesBacktestPreviewResponse struct {
 	Markers               *[]PulsightInternalCoreUsecasesBacktestPreviewMarker `json:"markers,omitempty"`
 	SimulationAssumptions *[]string                                            `json:"simulation_assumptions,omitempty"`
+	Skipped               *[]PulsightInternalCoreUsecasesBacktestPreviewSkip   `json:"skipped,omitempty"`
+}
+
+// PulsightInternalCoreUsecasesBacktestPreviewSkip defines model for pulsight_internal_core_usecases_backtest.PreviewSkip.
+type PulsightInternalCoreUsecasesBacktestPreviewSkip struct {
+	Reason    *PulsightInternalCoreUsecasesBacktestDeclineReason `json:"reason,omitempty"`
+	Side      *PulsightInternalCoreUsecasesBacktestSide          `json:"side,omitempty"`
+	Signature *string                                            `json:"signature,omitempty"`
+	Ts        *int                                               `json:"ts,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesBacktestSide defines model for pulsight_internal_core_usecases_backtest.Side.
@@ -3269,10 +3368,10 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// position carries a mark.
 	HoldingPnlLamports *float32 `json:"holding_pnl_lamports,omitempty"`
 
-	// HoldingPnlUsd HoldingPnlUsd, PnlDistributionUsd and PnlSparkline7dUsd are the USD
-	// twins of the three snapshot figures below (micro-USD, stamped at
-	// execution), and TraderUsd carries the twin of every windowed money
-	// figure on the row.
+	// HoldingPnlUsd HoldingPnlUsd, PnlDistributionUsd, PnlSparkline7dUsd and
+	// PnlSparkline30dUsd are the USD twins of the four snapshot figures below
+	// (micro-USD, stamped at execution), and TraderUsd carries the twin of
+	// every windowed money figure on the row.
 	HoldingPnlUsd *float32 `json:"holding_pnl_usd,omitempty"`
 	Id            *string  `json:"id,omitempty"`
 
@@ -3327,9 +3426,16 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// distribution" chips and their window toggle.
 	PnlDistributions *[]PulsightInternalCoreUsecasesTraderTraderPnlDistributionRow `json:"pnl_distributions,omitempty"`
 
-	// PnlSparkline7d PnlSparkline7d is the 7-day realised-PnL series, oldest first,
-	// expressed in lamports per day on the wire (the FormattedSol
-	// contract). Nil when the snapshot wasn't inlined.
+	// PnlSparkline30d PnlSparkline30d is the net-PnL series over the last 30 UTC days,
+	// one point per day, oldest first, in lamports per day. Only a 30d page
+	// carries it.
+	PnlSparkline30d    *[]float32 `json:"pnl_sparkline_30d,omitempty"`
+	PnlSparkline30dUsd *[]float32 `json:"pnl_sparkline_30d_usd,omitempty"`
+
+	// PnlSparkline7d PnlSparkline7d is the 7-day net-PnL series (NetProfit7d's measure,
+	// one point per UTC day), oldest first, expressed in lamports per day
+	// on the wire (the FormattedSol contract). Nil when the snapshot wasn't
+	// inlined.
 	PnlSparkline7d    *[]float32 `json:"pnl_sparkline_7d,omitempty"`
 	PnlSparkline7dUsd *[]float32 `json:"pnl_sparkline_7d_usd,omitempty"`
 	RealizedProfit    *float32   `json:"realized_profit,omitempty"`
@@ -3521,7 +3627,7 @@ type GetMintsParams struct {
 	// Window Window (1m|5m|1h|24h)
 	Window string `form:"window" json:"window"`
 
-	// Search Mint pubkey prefix or case-insensitive symbol/name substring (lifts the default liquidity floor)
+	// Search Mint pubkey prefix, case-insensitive symbol/name substring, or a pool address, which returns the pool's tokens first with `matched_pool` set (lifts the default liquidity floor)
 	Search *string `form:"search,omitempty" json:"search,omitempty"`
 
 	// Sort trades|traders|recent|volume|buys|sells|net_buy|price_change|liquidity_usdc|age|organic (age = newest first_seen first, organic = organic-trader count)
@@ -3827,10 +3933,10 @@ type GetSwapsParams struct {
 	// ToTs End of window (Unix epoch seconds, exclusive)
 	ToTs *int `form:"to_ts,omitempty" json:"to_ts,omitempty"`
 
-	// BeforeTs Cursor: return the latest rows strictly before this Unix epoch timestamp (no lower bound)
+	// BeforeTs Cursor: return the latest rows strictly before this Unix epoch timestamp (no lower bound); pass the oldest returned row's second
 	BeforeTs *int `form:"before_ts,omitempty" json:"before_ts,omitempty"`
 
-	// Limit Max rows (default 100, max 1000)
+	// Limit Page size (default 100, max 1000); a page never ends inside a second, so it can hold fewer rows while older ones remain, and a single-second page holds that whole second (up to 5000 rows)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
@@ -3899,7 +4005,7 @@ type GetTradersParams struct {
 
 // GetTradersSearchParams defines parameters for GetTradersSearch.
 type GetTradersSearchParams struct {
-	// Q Search query
+	// Q Wallet address or address prefix
 	Q *string `form:"q,omitempty" json:"q,omitempty"`
 
 	// Chain Blockchain filter — only 'sol' is accepted. Empty defaults to 'sol'.
@@ -4236,7 +4342,7 @@ type ClientInterface interface {
 
 	// GetMintsByPubkeyActivity Mint Activity Seed
 	//
-	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
 	//
 	// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
 	GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4250,7 +4356,7 @@ type ClientInterface interface {
 
 	// GetMintsByPubkeyInsiders List Mint Insiders
 	//
-	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Insiders of one mint (wallets reached from the creator over token transfers, pool inventory and the burn address excluded, up to 500 closest to the creator first) — the SAME set `/risk` counts — in the top-traders row shape. A wallet joins within about a minute of the transfer that reaches it and never leaves. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
 	GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4374,7 +4480,7 @@ type ClientInterface interface {
 
 	// GetSolPrice Get the SOL/USD reference rate
 	//
-	// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+	// Returns USD per 1 SOL — the rate the ledger stamped on the newest landed transaction. Every stored USD figure is the stamp of its own row; this rate converts only a figure that has none. `sol_usd` is `null` when no stamped transaction exists yet; it is never `0`.
 	//
 	// Corresponds with GET /api/sol-price (the `GetSolPrice` operationId).
 	GetSolPrice(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4469,7 +4575,7 @@ type ClientInterface interface {
 
 	// GetSwaps List Swaps
 	//
-	// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+	// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL or a registered dollar) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps). A page never ends inside a second: when `limit` falls inside a second, the page stops before it and the next page returns it whole, so a page can hold fewer than `limit` rows while older rows remain, and a page that is a single second returns that whole second, up to 5000 rows. Page by passing the oldest returned row's second (`floor(ts_ms / 1000)`) as before_ts until a page comes back empty; no row is skipped or repeated.
 	//
 	// Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 	GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4634,7 +4740,7 @@ type ClientInterface interface {
 
 	// GetTradersSearch Search Traders
 	//
-	// Fuzzy searches traders by wallet address or known name.
+	// Finds leaderboard traders by wallet address: a full base58 address matches exactly, anything shorter matches as an address prefix.
 	//
 	// Corresponds with GET /api/traders/search (the `GetTradersSearch` operationId).
 	GetTradersSearch(ctx context.Context, params *GetTradersSearchParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5056,7 +5162,7 @@ func (c *Client) GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors
 
 // GetMintsByPubkeyActivity Mint Activity Seed
 //
-// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
 //
 // Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
 func (c *Client) GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5090,7 +5196,7 @@ func (c *Client) GetMintsByPubkeyBundlers(ctx context.Context, pubkey string, pa
 
 // GetMintsByPubkeyInsiders List Mint Insiders
 //
-// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Insiders of one mint (wallets reached from the creator over token transfers, pool inventory and the burn address excluded, up to 500 closest to the creator first) — the SAME set `/risk` counts — in the top-traders row shape. A wallet joins within about a minute of the transfer that reaches it and never leaves. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Corresponds with GET /api/mints/{pubkey}/insiders (the `GetMintsByPubkeyInsiders` operationId).
 func (c *Client) GetMintsByPubkeyInsiders(ctx context.Context, pubkey string, params *GetMintsByPubkeyInsidersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5394,7 +5500,7 @@ func (c *Client) GetProgramsByProgramIdDaily(ctx context.Context, programId stri
 
 // GetSolPrice Get the SOL/USD reference rate
 //
-// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+// Returns USD per 1 SOL — the rate the ledger stamped on the newest landed transaction. Every stored USD figure is the stamp of its own row; this rate converts only a figure that has none. `sol_usd` is `null` when no stamped transaction exists yet; it is never `0`.
 //
 // Corresponds with GET /api/sol-price (the `GetSolPrice` operationId).
 func (c *Client) GetSolPrice(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5639,7 +5745,7 @@ func (c *Client) GetSubscriptionsMe(ctx context.Context, reqEditors ...RequestEd
 
 // GetSwaps List Swaps
 //
-// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL or a registered dollar) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps). A page never ends inside a second: when `limit` falls inside a second, the page stops before it and the next page returns it whole, so a page can hold fewer than `limit` rows while older rows remain, and a page that is a single second returns that whole second, up to 5000 rows. Page by passing the oldest returned row's second (`floor(ts_ms / 1000)`) as before_ts until a page comes back empty; no row is skipped or repeated.
 //
 // Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 func (c *Client) GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -6034,7 +6140,7 @@ func (c *Client) GetTradersByWalletByWalletAddress(ctx context.Context, walletAd
 
 // GetTradersSearch Search Traders
 //
-// Fuzzy searches traders by wallet address or known name.
+// Finds leaderboard traders by wallet address: a full base58 address matches exactly, anything shorter matches as an address prefix.
 //
 // Corresponds with GET /api/traders/search (the `GetTradersSearch` operationId).
 func (c *Client) GetTradersSearch(ctx context.Context, params *GetTradersSearchParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -11589,7 +11695,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyActivityWithResponse Mint Activity Seed
 	//
-	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11607,7 +11713,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyInsidersWithResponse List Mint Insiders
 	//
-	// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+	// Insiders of one mint (wallets reached from the creator over token transfers, pool inventory and the burn address excluded, up to 500 closest to the creator first) — the SAME set `/risk` counts — in the top-traders row shape. A wallet joins within about a minute of the transfer that reaches it and never leaves. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11767,7 +11873,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetSolPriceWithResponse Get the SOL/USD reference rate
 	//
-	// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+	// Returns USD per 1 SOL — the rate the ledger stamped on the newest landed transaction. Every stored USD figure is the stamp of its own row; this rate converts only a figure that has none. `sol_usd` is `null` when no stamped transaction exists yet; it is never `0`.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11876,7 +11982,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetSwapsWithResponse List Swaps
 	//
-	// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+	// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL or a registered dollar) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps). A page never ends inside a second: when `limit` falls inside a second, the page stops before it and the next page returns it whole, so a page can hold fewer than `limit` rows while older rows remain, and a page that is a single second returns that whole second, up to 5000 rows. Page by passing the oldest returned row's second (`floor(ts_ms / 1000)`) as before_ts until a page comes back empty; no row is skipped or repeated.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12071,7 +12177,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetTradersSearchWithResponse Search Traders
 	//
-	// Fuzzy searches traders by wallet address or known name.
+	// Finds leaderboard traders by wallet address: a full base58 address matches exactly, anything shorter matches as an address prefix.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -14588,6 +14694,8 @@ type PutStrategiesByIdResponse struct {
 	JSON200 *PulsightInternalCoreDomainStrategyRecord
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 	// JSON404 the response for an HTTP 404 `application/json` response
 	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
@@ -14600,6 +14708,11 @@ func (r PutStrategiesByIdResponse) GetJSON200() *PulsightInternalCoreDomainStrat
 // GetJSON400 returns the response for an HTTP 400 `application/json` response
 func (r PutStrategiesByIdResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON400
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r PutStrategiesByIdResponse) GetJSON403() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON403
 }
 
 // GetJSON404 returns the response for an HTTP 404 `application/json` response
@@ -17058,7 +17171,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyWithResponse(ctx context.Context, 
 
 // GetMintsByPubkeyActivityWithResponse Mint Activity Seed
 //
-// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, lamports) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17088,7 +17201,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyBundlersWithResponse(ctx context.C
 
 // GetMintsByPubkeyInsidersWithResponse List Mint Insiders
 //
-// Insiders of one mint (wallets reached from the creator over launch-window token transfers, custodial hops excluded) — the SAME set `/risk` counts — in the top-traders row shape. Empty until the insider-stats fold has stored the mint's set. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
+// Insiders of one mint (wallets reached from the creator over token transfers, pool inventory and the burn address excluded, up to 500 closest to the creator first) — the SAME set `/risk` counts — in the top-traders row shape. A wallet joins within about a minute of the transfer that reaches it and never leaves. sort ∈ {balance,holding_pnl,pnl,volume,swaps,recent} (default balance). Paged via offset. Login required (reveals wallet addresses).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17356,7 +17469,7 @@ func (c *ClientWithResponses) GetProgramsByProgramIdDailyWithResponse(ctx contex
 
 // GetSolPriceWithResponse Get the SOL/USD reference rate
 //
-// Returns USD per 1 SOL — the same volume-weighted WSOL/USDC reference the token catalog prices market caps and USD candles with, so displayed figures agree with computed ones. `sol_usd` is `null` when the reference is unavailable (cold analytics store, or no WSOL/USDC trade in the lookback window); it is never `0`.
+// Returns USD per 1 SOL — the rate the ledger stamped on the newest landed transaction. Every stored USD figure is the stamp of its own row; this rate converts only a figure that has none. `sol_usd` is `null` when no stamped transaction exists yet; it is never `0`.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17555,7 +17668,7 @@ func (c *ClientWithResponses) GetSubscriptionsMeWithResponse(ctx context.Context
 
 // GetSwapsWithResponse List Swaps
 //
-// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL, USDC, USDT, USD1) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps).
+// Returns the ledger's trade rows filtered by `mint` and/or one-or-more `trader` params (AND-combined; at least one required). `trader` may be repeated (trader=a&trader=b) or comma-separated. `pool` narrows to one or more markets by the trade's primary pool and accepts the same repeated/comma-separated forms, OR-combined — pass the whole set when a token's market spans several pools (a graduated token's bonding curve plus the pool it migrated to). Every money field is a `{sol, usd}` pair fixed at execution (lamports and micro-USD; null = unpriced). A quote-registry mint (SOL or a registered dollar) lists the legs whose base it is, keyed by the leg, with no realized PnL. All time params are optional; with none supplied the latest rows are returned regardless of age. Supports RFC3339 from/to, Unix epoch from_ts/to_ts, and cursor-based before_ts (returns the latest rows strictly older than the cursor — no lower bound, so pagination crosses activity gaps). A page never ends inside a second: when `limit` falls inside a second, the page stops before it and the next page returns it whole, so a page can hold fewer than `limit` rows while older rows remain, and a page that is a single second returns that whole second, up to 5000 rows. Page by passing the oldest returned row's second (`floor(ts_ms / 1000)`) as before_ts until a page comes back empty; no row is skipped or repeated.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17888,7 +18001,7 @@ func (c *ClientWithResponses) GetTradersByWalletByWalletAddressWithResponse(ctx 
 
 // GetTradersSearchWithResponse Search Traders
 //
-// Fuzzy searches traders by wallet address or known name.
+// Finds leaderboard traders by wallet address: a full base58 address matches exactly, anything shorter matches as an address prefix.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -19854,6 +19967,13 @@ func ParsePutStrategiesByIdResponse(rsp *http.Response) (*PutStrategiesByIdRespo
 			return nil, err
 		}
 		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
