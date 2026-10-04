@@ -1512,6 +1512,11 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	SwapCount *int    `json:"swap_count,omitempty"`
 	Symbol    *string `json:"symbol,omitempty"`
 
+	// TippedSharePct TippedSharePct — share of the mint's trades whose transaction paid a
+	// landing tip, in percent, over every trade since tips were recorded and
+	// arbitrage excluded. nil until 20 such trades.
+	TippedSharePct *float32 `json:"tipped_share_pct,omitempty"`
+
 	// Top10Pct Top10Pct is the top-10 holder concentration as a PERCENT of circulating
 	// supply (0..100), off the mint's holder-stats plane — the figure the
 	// listing's Distribution column leads with. nil until the plane has
@@ -3668,6 +3673,12 @@ type GetMintsParams struct {
 
 	// MinFeesSol Lamport alias of min_fees, accepted only with unit=sol.
 	MinFeesSol *float32 `form:"min_fees_sol,omitempty" json:"min_fees_sol,omitempty"`
+
+	// MinFeePerSwap Min LIFETIME network fees per lifetime trade, whole units of `unit` — total_fees over total_tx_count.
+	MinFeePerSwap *float32 `form:"min_fee_per_swap,omitempty" json:"min_fee_per_swap,omitempty"`
+
+	// MinTippedShare Min share of the mint's trades whose transaction paid a landing tip, in percent — the row's tipped_share_pct. Mints without it are excluded.
+	MinTippedShare *float32 `form:"min_tipped_share,omitempty" json:"min_tipped_share,omitempty"`
 
 	// MaxAgeSecs Only mints first seen within the last N seconds (launched < N ago). Mints with no observed first_seen are excluded.
 	MaxAgeSecs *int `form:"max_age_secs,omitempty" json:"max_age_secs,omitempty"`
@@ -7389,6 +7400,30 @@ func NewGetMintsRequest(server string, params *GetMintsParams) (*http.Request, e
 		if params.MinFeesSol != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_fees_sol", *params.MinFeesSol, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinFeePerSwap != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_fee_per_swap", *params.MinFeePerSwap, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinTippedShare != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_tipped_share", *params.MinTippedShare, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
