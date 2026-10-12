@@ -856,7 +856,7 @@ type PulsightInternalCoreDomainAggregatorBundlerEntry struct {
 	InitialPctOfSupply *float32 `json:"initial_pct_of_supply,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (e.g. "Bybit"/"cex") from the
-	// admin-managed registry; empty when unknown. Same provenance as
+	// known-addresses registry; empty when unknown. Same provenance as
 	// HolderEntry.Label.
 	Label       *string  `json:"label,omitempty"`
 	LabelType   *string  `json:"label_type,omitempty"`
@@ -1157,7 +1157,7 @@ type PulsightInternalCoreDomainAggregatorHolderEntry struct {
 	IsSniper  *bool   `json:"is_sniper,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (e.g. "Bybit"/"cex",
-	// "Pump.fun Fees"/"fee") from the admin-managed registry; empty when
+	// "Pump.fun Fees"/"fee") from the known-addresses registry; empty when
 	// unknown.
 	Label     *string `json:"label,omitempty"`
 	LabelType *string `json:"label_type,omitempty"`
@@ -1613,7 +1613,7 @@ type PulsightInternalCoreDomainAggregatorMintTraderRow struct {
 	IsSniper           *bool    `json:"is_sniper,omitempty"`
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/...) from the
-	// admin-managed registry; empty when unknown.
+	// known-addresses registry; empty when unknown.
 	Label        *string `json:"label,omitempty"`
 	LabelType    *string `json:"label_type,omitempty"`
 	LastActiveTs *string `json:"last_active_ts,omitempty"`
@@ -1725,25 +1725,20 @@ type PulsightInternalCoreDomainAggregatorProgramBoardPage struct {
 type PulsightInternalCoreDomainAggregatorProgramBoardRow struct {
 	ArbTxs *int `json:"arb_txs,omitempty"`
 
-	// Category Category is the RESOLVED category: admin identity > embedded
+	// Category Category is the RESOLVED category: assigned identity > embedded
 	// program seed > 7d auto-arb rule > "unknown".
 	Category    *string `json:"category,omitempty"`
 	Censored    *bool   `json:"censored,omitempty"`
 	FailedTxs   *int    `json:"failed_txs,omitempty"`
 	FirstSeenMs *int    `json:"first_seen_ms,omitempty"`
+	LastSeenMs  *int    `json:"last_seen_ms,omitempty"`
 
-	// Hidden Hidden mirrors the admin identity's hide flag. Hidden rows never
-	// reach the public board (dropped before ranking) — only the admin
-	// listing serves them.
-	Hidden     *bool `json:"hidden,omitempty"`
-	LastSeenMs *int  `json:"last_seen_ms,omitempty"`
-
-	// LogoUri LogoURI is the admin-assigned identity logo, falling back to the
+	// LogoUri LogoURI is the program's assigned identity logo, falling back to the
 	// embedded seed's self-hosted mirror path (/program-logos/…); empty
 	// when the program has none.
 	LogoUri *string `json:"logo_uri,omitempty"`
 
-	// Name Name is the admin-assigned identity name, falling back to the
+	// Name Name is the program's assigned identity name, falling back to the
 	// embedded seed name; empty when unnamed.
 	Name        *string  `json:"name,omitempty"`
 	NonSwapRate *float32 `json:"non_swap_rate,omitempty"`
@@ -2305,7 +2300,7 @@ type PulsightInternalCoreDomainCreditReason string
 // PulsightInternalCoreDomainCreditTransaction defines model for pulsight_internal_core_domain_credit.Transaction.
 type PulsightInternalCoreDomainCreditTransaction struct {
 	// ApiKeyId APIKeyID attributes a metered consume to the api token that caused
-	// it. nil for interactive sessions, OAuth callers, admin adjustments
+	// it. nil for interactive sessions, OAuth callers, manual adjustments
 	// and period grants — and for every row written before changeset 079.
 	ApiKeyId  *string                                 `json:"api_key_id,omitempty"`
 	CreatedAt *string                                 `json:"created_at,omitempty"`
@@ -2720,7 +2715,7 @@ type PulsightInternalCorePortsInputPlanLimitsRead struct {
 	MaxFilters            *int  `json:"max_filters,omitempty"`
 
 	// MaxStrategies MaxStrategies is the strategy cap, 0 meaning UNLIMITED (see
-	// subscription.PlanLimits.MaxStrategies). It carries the admin's
+	// subscription.PlanLimits.MaxStrategies). It carries the per-tier
 	// `tier_plan_limits` override, not the compiled-in default.
 	MaxStrategies *int  `json:"max_strategies,omitempty"`
 	MaxWebhooks   *int  `json:"max_webhooks,omitempty"`
@@ -2770,7 +2765,7 @@ type PulsightInternalCorePortsInputUserPoolCredits struct {
 	// Balance total remaining = cycle balance + gift
 	Balance *int `json:"balance,omitempty"`
 
-	// Gifted Gifted is the persistent admin-gift reserve still available. It is
+	// Gifted Gifted is the persistent gifted reserve still available. It is
 	// spent down before the cycle allowance and survives tier changes.
 	// Cycle tier balance remaining = Balance − Gifted.
 	Gifted      *int                                  `json:"gifted,omitempty"`
@@ -4256,7 +4251,7 @@ type ClientInterface interface {
 
 	// GetBacktestsLimits Get Backtest Limits
 	//
-	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
+	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
 	//
 	// Corresponds with GET /api/backtests/limits (the `GetBacktestsLimits` operationId).
 	GetBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4470,7 +4465,7 @@ type ClientInterface interface {
 
 	// GetProgramsLeaderboard Programs leaderboard
 	//
-	// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+	// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (assigned identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
 	//
 	// Corresponds with GET /api/programs/leaderboard (the `GetProgramsLeaderboard` operationId).
 	GetProgramsLeaderboard(ctx context.Context, params *GetProgramsLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4926,7 +4921,7 @@ func (c *Client) PostBacktests(ctx context.Context, params *PostBacktestsParams,
 
 // GetBacktestsLimits Get Backtest Limits
 //
-// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
+// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
 //
 // Corresponds with GET /api/backtests/limits (the `GetBacktestsLimits` operationId).
 func (c *Client) GetBacktestsLimits(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5460,7 +5455,7 @@ func (c *Client) GetProgramLogosByProgramID(ctx context.Context, programID strin
 
 // GetProgramsLeaderboard Programs leaderboard
 //
-// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (assigned identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
 //
 // Corresponds with GET /api/programs/leaderboard (the `GetProgramsLeaderboard` operationId).
 func (c *Client) GetProgramsLeaderboard(ctx context.Context, params *GetProgramsLeaderboardParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -11607,7 +11602,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetBacktestsLimitsWithResponse Get Backtest Limits
 	//
-	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
+	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -11881,7 +11876,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetProgramsLeaderboardWithResponse Programs leaderboard
 	//
-	// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+	// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (assigned identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -16993,7 +16988,7 @@ func (c *ClientWithResponses) PostBacktestsWithResponse(ctx context.Context, par
 
 // GetBacktestsLimitsWithResponse Get Backtest Limits
 //
-// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited; admins are exempt.
+// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17459,7 +17454,7 @@ func (c *ClientWithResponses) GetProgramLogosByProgramIDWithResponse(ctx context
 
 // GetProgramsLeaderboardWithResponse Programs leaderboard
 //
-// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (admin identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
+// On-chain programs ranked over a window: volume (SOL-projected; venue-executed for AMM-category programs, tx-level otherwise), unique users, revenue (category-gated: net arb extraction for arbitrage programs, decoded venue fees for AMMs, 0 = not measured for routers/unknowns), landed tx count, success / spam / non-swap rates, and a resolved category (assigned identity > curated AMM seed > 7d arb-share auto-rule > unknown). Numeric filters are flat query params; SOL values in whole SOL, rates in percent.
 //
 // Returns a wrapper object for the known response body format(s).
 //
