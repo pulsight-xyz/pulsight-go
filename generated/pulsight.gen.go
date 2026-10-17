@@ -1988,7 +1988,7 @@ type PulsightInternalCoreDomainAggregatorTrade struct {
 
 	// PrimaryPoolQuoteMint PrimaryPoolQuoteMint is the primary pool's counter asset from this
 	// mint's side (its quote, or its base when the mint is the quote of a
-	// token-quoted pair) — the rule that decides whether a copy bot can
+	// token-quoted pair) — the rule that decides whether a copy can
 	// execute there. REST decoration; absent when the catalog does not know
 	// the pool.
 	PrimaryPoolQuoteMint *string                                    `json:"primary_pool_quote_mint,omitempty"`
@@ -2877,7 +2877,7 @@ type PulsightInternalCoreUsecasesBacktestBacktestRequest struct {
 	// slots after the target's swap, and the exec's slippage_bps becomes a
 	// REVERT GATE instead of a charge — the fill is rejected (tip + priority
 	// fee still paid) when the landing price drifted past the tolerance,
-	// matching how the live executor's min_out floor behaves. Only copy-style
+	// matching how a transaction's min_out floor behaves. Only copy-style
 	// fills (Copy* and Target-signal-driven Emits) are affected; candle-driven
 	// fills already price on the bucket close.
 	LatencySlots *int `json:"latency_slots,omitempty"`
@@ -2927,7 +2927,7 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// landing price had drifted past the exec's slippage_bps between the
 	// target's swap and our simulated landing. Unlike CopiesSkippedUnpriced
 	// this is an EXECUTION OUTCOME, not a coverage gap — the data was fine,
-	// the market moved, and a live bot's tx would have landed and reverted.
+	// the market moved, and a real transaction would have landed and reverted.
 	// Each revert still pays its tip + priority fee (folded into
 	// FeesPaidSol/TipsPaidSol and broken out in RevertFeesSol). Only possible
 	// on latency_slots > 0 runs. Additive JSONB field — old rows decode as 0.
@@ -2935,10 +2935,9 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 
 	// CopiesSkippedNonSolQuote CopiesSkippedNonSolQuote is the part of CopiesSkippedUnpriced whose
 	// cause is the pool's quote: the target swapped in a USDC-, USDT- or
-	// token-quoted pool whose leg carries no SOL price, so the live bot has
-	// no route to copy it and both sides skip it (`non_sol_quote`). The
-	// runtime keeps ONE counter for both causes; this breakdown exists only
-	// here. Additive JSONB field — old rows decode as 0.
+	// token-quoted pool whose leg carries no SOL price, so there is no route
+	// to copy it and the run skips it (`non_sol_quote`). Additive JSONB
+	// field — old rows decode as 0.
 	CopiesSkippedNonSolQuote *int `json:"copies_skipped_non_sol_quote,omitempty"`
 
 	// CopiesSkippedPoolNotSimulated CopiesSkippedPoolNotSimulated counts target swaps a per-pool run saw on a
@@ -2977,8 +2976,8 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	HeldPositions *[]PulsightInternalCoreUsecasesBacktestBacktestPosition `json:"held_positions,omitempty"`
 
 	// LandingContestedPct LandingContestedPct is the share (0-100) of filled copies whose pool saw
-	// at least one other tx inside the latency gap — how often somebody beat
-	// the bot to the pool. Nil when the run had no landing fills.
+	// at least one other tx inside the latency gap — how often somebody
+	// reached the pool first. Nil when the run had no landing fills.
 	LandingContestedPct *float32 `json:"landing_contested_pct,omitempty"`
 
 	// LatencySlots LatencySlots echoes the run's landing latency (req.LatencySlots) so a
