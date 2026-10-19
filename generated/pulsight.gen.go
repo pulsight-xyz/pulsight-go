@@ -1207,6 +1207,25 @@ type PulsightInternalCoreDomainAggregatorHop struct {
 	PoolId    *int    `json:"pool_id,omitempty"`
 }
 
+// PulsightInternalCoreDomainAggregatorLegsExportCatalog defines model for pulsight_internal_core_domain_aggregator.LegsExportCatalog.
+type PulsightInternalCoreDomainAggregatorLegsExportCatalog struct {
+	// Days Days are the exportable UTC days, newest first (YYYY-MM-DD).
+	Days *[]string `json:"days,omitempty"`
+
+	// Parts Parts is how many parts each day is split into; a pool's legs are always in part pool_id % parts.
+	//
+	// Example: 16
+	Parts *int `json:"parts,omitempty"`
+
+	// Schema Schema is the column set every part of every day carries.
+	//
+	// Example: legs-1
+	Schema *string `json:"schema,omitempty"`
+
+	// Venues Venues are the venues whose legs are exported.
+	Venues *[]string `json:"venues,omitempty"`
+}
+
 // PulsightInternalCoreDomainAggregatorLpEvent defines model for pulsight_internal_core_domain_aggregator.LpEvent.
 type PulsightInternalCoreDomainAggregatorLpEvent struct {
 	BaseAmount *string `json:"base_amount,omitempty"`
@@ -4540,6 +4559,27 @@ type ClientInterface interface {
 	// Corresponds with GET /api/health/live (the `GetHealthLive` operationId).
 	GetHealthLive(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetLegsExport List the exportable days of DEX legs
+	//
+	// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+	//
+	// Corresponds with GET /api/legs/export (the `GetLegsExport` operationId).
+	GetLegsExport(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLegsExportByDayLegsByPart Download one part of a day's DEX legs
+	//
+	// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	//
+	// Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
+	GetLegsExportByDayLegsByPart(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLegsExportByDayPools Download the pools of a day's DEX legs
+	//
+	// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	//
+	// Corresponds with GET /api/legs/export/{day}/pools (the `GetLegsExportByDayPools` operationId).
+	GetLegsExportByDayPools(ctx context.Context, day string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetMeCredits Get My Credits
 	//
 	// Returns the caller's credit balance, per-cycle allowance and current period for the api credit pool.
@@ -5315,6 +5355,57 @@ func (c *Client) GetHealth(ctx context.Context, reqEditors ...RequestEditorFn) (
 // Corresponds with GET /api/health/live (the `GetHealthLive` operationId).
 func (c *Client) GetHealthLive(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetHealthLiveRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLegsExport List the exportable days of DEX legs
+//
+// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+//
+// Corresponds with GET /api/legs/export (the `GetLegsExport` operationId).
+func (c *Client) GetLegsExport(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLegsExportRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLegsExportByDayLegsByPart Download one part of a day's DEX legs
+//
+// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+//
+// Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
+func (c *Client) GetLegsExportByDayLegsByPart(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLegsExportByDayLegsByPartRequest(c.Server, day, part)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLegsExportByDayPools Download the pools of a day's DEX legs
+//
+// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+//
+// Corresponds with GET /api/legs/export/{day}/pools (the `GetLegsExportByDayPools` operationId).
+func (c *Client) GetLegsExportByDayPools(ctx context.Context, day string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLegsExportByDayPoolsRequest(c.Server, day)
 	if err != nil {
 		return nil, err
 	}
@@ -7288,6 +7379,108 @@ func NewGetHealthLiveRequest(server string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/api/health/live")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetLegsExportRequest constructs an http.Request for the GetLegsExport method
+func NewGetLegsExportRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/legs/export")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetLegsExportByDayLegsByPartRequest constructs an http.Request for the GetLegsExportByDayLegsByPart method
+func NewGetLegsExportByDayLegsByPartRequest(server string, day string, part int) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "day", day, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "part", part, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/legs/export/%s/legs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetLegsExportByDayPoolsRequest constructs an http.Request for the GetLegsExportByDayPools method
+func NewGetLegsExportByDayPoolsRequest(server string, day string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "day", day, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/legs/export/%s/pools", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11855,6 +12048,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/health/live (the `GetHealthLive` operationId).
 	GetHealthLiveWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthLiveResponse, error)
 
+	// GetLegsExportWithResponse List the exportable days of DEX legs
+	//
+	// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/legs/export (the `GetLegsExport` operationId).
+	GetLegsExportWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLegsExportResponse, error)
+
+	// GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
+	//
+	// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
+	GetLegsExportByDayLegsByPartWithResponse(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*GetLegsExportByDayLegsByPartResponse, error)
+
+	// GetLegsExportByDayPoolsWithResponse Download the pools of a day's DEX legs
+	//
+	// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/legs/export/{day}/pools (the `GetLegsExportByDayPools` operationId).
+	GetLegsExportByDayPoolsWithResponse(ctx context.Context, day string, reqEditors ...RequestEditorFn) (*GetLegsExportByDayPoolsResponse, error)
+
 	// GetMeCreditsWithResponse Get My Credits
 	//
 	// Returns the caller's credit balance, per-cycle allowance and current period for the api credit pool.
@@ -13095,6 +13315,129 @@ func (r GetHealthLiveResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetHealthLiveResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetLegsExportResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorLegsExportCatalog
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetLegsExportResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorLegsExportCatalog {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetLegsExportResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetLegsExportResponse) GetJSON403() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON403
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLegsExportResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLegsExportResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLegsExportResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLegsExportResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetLegsExportByDayLegsByPartResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLegsExportByDayLegsByPartResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLegsExportByDayLegsByPartResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLegsExportByDayLegsByPartResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLegsExportByDayLegsByPartResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetLegsExportByDayPoolsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLegsExportByDayPoolsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLegsExportByDayPoolsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLegsExportByDayPoolsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLegsExportByDayPoolsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17262,6 +17605,51 @@ func (c *ClientWithResponses) GetHealthLiveWithResponse(ctx context.Context, req
 	return ParseGetHealthLiveResponse(rsp)
 }
 
+// GetLegsExportWithResponse List the exportable days of DEX legs
+//
+// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/legs/export (the `GetLegsExport` operationId).
+func (c *ClientWithResponses) GetLegsExportWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLegsExportResponse, error) {
+	rsp, err := c.GetLegsExport(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLegsExportResponse(rsp)
+}
+
+// GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
+//
+// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
+func (c *ClientWithResponses) GetLegsExportByDayLegsByPartWithResponse(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*GetLegsExportByDayLegsByPartResponse, error) {
+	rsp, err := c.GetLegsExportByDayLegsByPart(ctx, day, part, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLegsExportByDayLegsByPartResponse(rsp)
+}
+
+// GetLegsExportByDayPoolsWithResponse Download the pools of a day's DEX legs
+//
+// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/legs/export/{day}/pools (the `GetLegsExportByDayPools` operationId).
+func (c *ClientWithResponses) GetLegsExportByDayPoolsWithResponse(ctx context.Context, day string, reqEditors ...RequestEditorFn) (*GetLegsExportByDayPoolsResponse, error) {
+	rsp, err := c.GetLegsExportByDayPools(ctx, day, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLegsExportByDayPoolsResponse(rsp)
+}
+
 // GetMeCreditsWithResponse Get My Credits
 //
 // Returns the caller's credit balance, per-cycle allowance and current period for the api credit pool.
@@ -18799,6 +19187,78 @@ func ParseGetHealthLiveResponse(rsp *http.Response) (*GetHealthLiveResponse, err
 		}
 		response.JSON200 = &dest
 
+	}
+
+	return response, nil
+}
+
+// ParseGetLegsExportResponse parses an HTTP response from a GetLegsExportWithResponse call
+func ParseGetLegsExportResponse(rsp *http.Response) (*GetLegsExportResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLegsExportResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorLegsExportCatalog
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLegsExportByDayLegsByPartResponse parses an HTTP response from a GetLegsExportByDayLegsByPartWithResponse call
+func ParseGetLegsExportByDayLegsByPartResponse(rsp *http.Response) (*GetLegsExportByDayLegsByPartResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLegsExportByDayLegsByPartResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetLegsExportByDayPoolsResponse parses an HTTP response from a GetLegsExportByDayPoolsWithResponse call
+func ParseGetLegsExportByDayPoolsResponse(rsp *http.Response) (*GetLegsExportByDayPoolsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLegsExportByDayPoolsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
 	}
 
 	return response, nil
