@@ -1219,11 +1219,8 @@ type PulsightInternalCoreDomainAggregatorLegsExportCatalog struct {
 
 	// Schema Schema is the column set every part of every day carries.
 	//
-	// Example: legs-1
+	// Example: legs-2
 	Schema *string `json:"schema,omitempty"`
-
-	// Venues Venues are the venues whose legs are exported.
-	Venues *[]string `json:"venues,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorLpEvent defines model for pulsight_internal_core_domain_aggregator.LpEvent.
@@ -4561,21 +4558,21 @@ type ClientInterface interface {
 
 	// GetLegsExport List the exportable days of DEX legs
 	//
-	// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+	// Lists the complete UTC days of DEX legs the export serves, every venue the ledger records (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
 	//
 	// Corresponds with GET /api/legs/export (the `GetLegsExport` operationId).
 	GetLegsExport(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetLegsExportByDayLegsByPart Download one part of a day's DEX legs
 	//
-	// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
 	GetLegsExportByDayLegsByPart(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetLegsExportByDayPools Download the pools of a day's DEX legs
 	//
-	// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), every pool with a leg on the UTC day, on any venue: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Corresponds with GET /api/legs/export/{day}/pools (the `GetLegsExportByDayPools` operationId).
 	GetLegsExportByDayPools(ctx context.Context, day string, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5367,7 +5364,7 @@ func (c *Client) GetHealthLive(ctx context.Context, reqEditors ...RequestEditorF
 
 // GetLegsExport List the exportable days of DEX legs
 //
-// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+// Lists the complete UTC days of DEX legs the export serves, every venue the ledger records (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
 //
 // Corresponds with GET /api/legs/export (the `GetLegsExport` operationId).
 func (c *Client) GetLegsExport(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5384,7 +5381,7 @@ func (c *Client) GetLegsExport(ctx context.Context, reqEditors ...RequestEditorF
 
 // GetLegsExportByDayLegsByPart Download one part of a day's DEX legs
 //
-// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
 func (c *Client) GetLegsExportByDayLegsByPart(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5401,7 +5398,7 @@ func (c *Client) GetLegsExportByDayLegsByPart(ctx context.Context, day string, p
 
 // GetLegsExportByDayPools Download the pools of a day's DEX legs
 //
-// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), every pool with a leg on the UTC day, on any venue: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Corresponds with GET /api/legs/export/{day}/pools (the `GetLegsExportByDayPools` operationId).
 func (c *Client) GetLegsExportByDayPools(ctx context.Context, day string, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -12050,7 +12047,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetLegsExportWithResponse List the exportable days of DEX legs
 	//
-	// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+	// Lists the complete UTC days of DEX legs the export serves, every venue the ledger records (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12059,7 +12056,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
 	//
-	// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12068,7 +12065,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetLegsExportByDayPoolsWithResponse Download the pools of a day's DEX legs
 	//
-	// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), every pool with a leg on the UTC day, on any venue: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -17607,7 +17604,7 @@ func (c *ClientWithResponses) GetHealthLiveWithResponse(ctx context.Context, req
 
 // GetLegsExportWithResponse List the exportable days of DEX legs
 //
-// Lists the complete UTC days of PumpSwap and Raydium CPMM legs the export serves (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
+// Lists the complete UTC days of DEX legs the export serves, every venue the ledger records (inside the ledger's 90-day history), how many parts each day is split into and the column schema. Free. Needs an api token with the `data:export` scope on an account the export is granted to.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17622,7 +17619,7 @@ func (c *ClientWithResponses) GetLegsExportWithResponse(ctx context.Context, req
 
 // GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
 //
-// Streams, as Parquet (zstd), every PumpSwap and Raydium CPMM leg of the UTC day whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17637,7 +17634,7 @@ func (c *ClientWithResponses) GetLegsExportByDayLegsByPartWithResponse(ctx conte
 
 // GetLegsExportByDayPoolsWithResponse Download the pools of a day's DEX legs
 //
-// Streams, as Parquet (zstd), every pool with a PumpSwap or Raydium CPMM leg on the UTC day: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), every pool with a leg on the UTC day, on any venue: pool_id, pool (base58), dex, mint_id and mint (the base, base58), quote_mint_id and quote_mint (base58), first_slot (the pool's first swap the ledger saw, which may predate the 90-day history). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Returns a wrapper object for the known response body format(s).
 //
