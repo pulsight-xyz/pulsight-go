@@ -1128,24 +1128,55 @@ type PulsightInternalCoreDomainAggregatorDevStat struct {
 
 // PulsightInternalCoreDomainAggregatorGlobalTipStats defines model for pulsight_internal_core_domain_aggregator.GlobalTipStats.
 type PulsightInternalCoreDomainAggregatorGlobalTipStats struct {
+	// P50TipLamports P50TipLamports, P90TipLamports and P99TipLamports are the median, 90th
+	// and 99th percentile tip (t-digest estimates). Lamports only: there is no
+	// USD twin of a percentile.
 	P50TipLamports *float32 `json:"p50_tip_lamports,omitempty"`
 	P90TipLamports *float32 `json:"p90_tip_lamports,omitempty"`
-	PriorityFeeSum *int     `json:"priority_fee_sum,omitempty"`
-	SwapCount      *int     `json:"swap_count,omitempty"`
+	P99TipLamports *float32 `json:"p99_tip_lamports,omitempty"`
+
+	// Previous Previous holds the same figures over the window of equal length just
+	// before this one. Omitted for `all`, and when the ledger does not cover
+	// that window.
+	Previous *PulsightInternalCoreDomainAggregatorTipPeriodStats `json:"previous,omitempty"`
+
+	// PriorityFeeSum PriorityFeeSum is the priority fees the tipped transactions paid
+	// alongside their tips, in lamports.
+	PriorityFeeSum    *int `json:"priority_fee_sum,omitempty"`
+	PriorityFeeSumUsd *int `json:"priority_fee_sum_usd,omitempty"`
+
+	// SwapCount SwapCount is every landed transaction of the period, tipped or not,
+	// read off the hourly program plane with each hour weighted by its
+	// overlap with the period.
+	SwapCount *int `json:"swap_count,omitempty"`
+
+	// TipAvgLamports TipAvgLamports is the mean tip per tipped transaction.
 	TipAvgLamports *float32 `json:"tip_avg_lamports,omitempty"`
-	TipCount       *int     `json:"tip_count,omitempty"`
-	TipSumLamports *int     `json:"tip_sum_lamports,omitempty"`
+	TipAvgUsd      *float32 `json:"tip_avg_usd,omitempty"`
 
-	// TippedFraction TippedFraction is tip_count / swap_count over the window (0..1).
+	// TipCount TipCount is the number of tipped transactions.
+	TipCount *int `json:"tip_count,omitempty"`
+
+	// TipSumLamports TipSumLamports is the tips those transactions paid.
+	TipSumLamports *int `json:"tip_sum_lamports,omitempty"`
+	TipSumUsd      *int `json:"tip_sum_usd,omitempty"`
+
+	// TippedFraction TippedFraction is tip_count / swap_count (0..1).
 	TippedFraction *float32 `json:"tipped_fraction,omitempty"`
-	Window         *string  `json:"window,omitempty"`
-}
 
-// PulsightInternalCoreDomainAggregatorHeatmapResponse defines model for pulsight_internal_core_domain_aggregator.HeatmapResponse.
-type PulsightInternalCoreDomainAggregatorHeatmapResponse struct {
-	Bucket       *string                                                `json:"bucket,omitempty"`
-	HorizonHours *int                                                   `json:"horizon_hours,omitempty"`
-	Points       *[]PulsightInternalCoreDomainAggregatorTipHeatmapPoint `json:"points,omitempty"`
+	// TippedVolumeFraction TippedVolumeFraction is tipped_volume_lamports / total_volume_lamports
+	// (0..1).
+	TippedVolumeFraction *float32 `json:"tipped_volume_fraction,omitempty"`
+
+	// TippedVolumeLamports TippedVolumeLamports is the value the tipped transactions traded.
+	TippedVolumeLamports *int `json:"tipped_volume_lamports,omitempty"`
+	TippedVolumeUsd      *int `json:"tipped_volume_usd,omitempty"`
+
+	// TotalVolumeLamports TotalVolumeLamports is the value every landed transaction traded,
+	// weighted like SwapCount.
+	TotalVolumeLamports *int    `json:"total_volume_lamports,omitempty"`
+	TotalVolumeUsd      *int    `json:"total_volume_usd,omitempty"`
+	Window              *string `json:"window,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorHolderEntry defines model for pulsight_internal_core_domain_aggregator.HolderEntry.
@@ -1211,27 +1242,23 @@ type PulsightInternalCoreDomainAggregatorMarketStat struct {
 	TotalLiquidityUsd *float32 `json:"total_liquidity_usd,omitempty"`
 }
 
-// PulsightInternalCoreDomainAggregatorMatPoint defines model for pulsight_internal_core_domain_aggregator.MatPoint.
-type PulsightInternalCoreDomainAggregatorMatPoint struct {
-	BucketTs *int     `json:"bucket_ts,omitempty"`
-	Ma1h     *float32 `json:"ma_1h,omitempty"`
-	Ma5m     *float32 `json:"ma_5m,omitempty"`
-	TipAvg   *float32 `json:"tip_avg,omitempty"`
-}
-
-// PulsightInternalCoreDomainAggregatorMevTipSharePoint defines model for pulsight_internal_core_domain_aggregator.MevTipSharePoint.
-type PulsightInternalCoreDomainAggregatorMevTipSharePoint struct {
-	BucketTs             *int     `json:"bucket_ts,omitempty"`
-	SharePct             *float32 `json:"share_pct,omitempty"`
-	TippedVolumeLamports *int     `json:"tipped_volume_lamports,omitempty"`
-	TotalVolumeLamports  *int     `json:"total_volume_lamports,omitempty"`
-}
-
 // PulsightInternalCoreDomainAggregatorMintActivityBase defines model for pulsight_internal_core_domain_aggregator.MintActivityBase.
 type PulsightInternalCoreDomainAggregatorMintActivityBase struct {
 	FeesLamports *int `json:"fees_lamports,omitempty"`
 	FeesMicroUsd *int `json:"fees_micro_usd,omitempty"`
 	Swaps        *int `json:"swaps,omitempty"`
+
+	// TipTrades TipTrades is a point's tip_trades over everything before the range.
+	// Served with the `tips` field.
+	TipTrades *int `json:"tip_trades,omitempty"`
+
+	// TippedTrades TippedTrades is a point's tipped_trades over everything before the
+	// range. Served with the `tips` field.
+	TippedTrades *int `json:"tipped_trades,omitempty"`
+
+	// Traders Traders packs the key of every wallet with a buy or sell row before the
+	// range, as a point's traders. Served with the `trader_base` field.
+	Traders *[]byte `json:"traders,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintActivityPoint defines model for pulsight_internal_core_domain_aggregator.MintActivityPoint.
@@ -1239,13 +1266,39 @@ type PulsightInternalCoreDomainAggregatorMintActivityPoint struct {
 	FeesLamports *int `json:"fees_lamports,omitempty"`
 	FeesMicroUsd *int `json:"fees_micro_usd,omitempty"`
 	Swaps        *int `json:"swaps,omitempty"`
-	Ts           *int `json:"ts,omitempty"`
+
+	// TipTrades TipTrades counts the bucket's buy and sell rows, arbitrage excluded,
+	// whose transaction's landing tip was recorded — the denominator of the
+	// token page's tipped share. Served with the `tips` field.
+	TipTrades *int `json:"tip_trades,omitempty"`
+
+	// TippedTrades TippedTrades counts those of them whose transaction paid a landing
+	// tip. Served with the `tips` field.
+	TippedTrades *int `json:"tipped_trades,omitempty"`
+
+	// Traders Traders packs one key per wallet with a buy or sell row in the bucket:
+	// ClickHouse cityHash64 of the wallet's 32 bytes, 8 bytes little-endian
+	// each, base64-encoded. Served with the `traders` field.
+	Traders *[]byte `json:"traders,omitempty"`
+	Ts      *int    `json:"ts,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintActivitySeed defines model for pulsight_internal_core_domain_aggregator.MintActivitySeed.
 type PulsightInternalCoreDomainAggregatorMintActivitySeed struct {
-	Base   *PulsightInternalCoreDomainAggregatorMintActivityBase    `json:"base,omitempty"`
-	From   *int                                                     `json:"from,omitempty"`
+	Base *PulsightInternalCoreDomainAggregatorMintActivityBase `json:"base,omitempty"`
+
+	// Fields Fields names the opt-in parts the response carries, in the request's
+	// vocabulary.
+	Fields *[]string `json:"fields,omitempty"`
+
+	// FirstTradeTs FirstTradeTS is the mint's first trade, unix seconds, absent when it
+	// has none. Served with the `launch` field.
+	FirstTradeTs *int `json:"first_trade_ts,omitempty"`
+	From         *int `json:"from,omitempty"`
+
+	// Launch Launch is the mint's sealed launch bundle, absent until it is sealed.
+	// Served with the `launch` field.
+	Launch *PulsightInternalCoreDomainAggregatorMintLaunchBundle    `json:"launch,omitempty"`
 	Mint   *string                                                  `json:"mint,omitempty"`
 	Points *[]PulsightInternalCoreDomainAggregatorMintActivityPoint `json:"points,omitempty"`
 	To     *int                                                     `json:"to,omitempty"`
@@ -1291,6 +1344,17 @@ type PulsightInternalCoreDomainAggregatorMintHoneypot struct {
 type PulsightInternalCoreDomainAggregatorMintInsiders struct {
 	PctOfSupply *float32 `json:"pct_of_supply,omitempty"`
 	Wallets     *int     `json:"wallets,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorMintLaunchBundle defines model for pulsight_internal_core_domain_aggregator.MintLaunchBundle.
+type PulsightInternalCoreDomainAggregatorMintLaunchBundle struct {
+	// MeasuredAt MeasuredAt is when the bundle became measurable, unix seconds: 302 s
+	// after the mint's first trade, when its seal falls due.
+	MeasuredAt *int `json:"measured_at,omitempty"`
+
+	// Pct Pct is the share of supply the launch bundle took, in percent — the
+	// risk card's bundled at launch.
+	Pct *float32 `json:"pct,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintLiveMetrics defines model for pulsight_internal_core_domain_aggregator.MintLiveMetrics.
@@ -1928,30 +1992,195 @@ type PulsightInternalCoreDomainAggregatorSafetyEvent struct {
 
 // PulsightInternalCoreDomainAggregatorServiceDominanceRow defines model for pulsight_internal_core_domain_aggregator.ServiceDominanceRow.
 type PulsightInternalCoreDomainAggregatorServiceDominanceRow struct {
-	SharePct       *float32 `json:"share_pct,omitempty"`
+	// P50TipLamports P50TipLamports and P90TipLamports are the median and 90th percentile
+	// tip paid to this service.
+	P50TipLamports *float32 `json:"p50_tip_lamports,omitempty"`
+	P90TipLamports *float32 `json:"p90_tip_lamports,omitempty"`
+
+	// PrevSharePct PrevSharePct is SharePct over the window of equal length just before
+	// this one: 0 for a service absent from it, null for `all` and when the
+	// ledger does not cover it.
+	PrevSharePct *float32 `json:"prev_share_pct,omitempty"`
+	SharePct     *float32 `json:"share_pct,omitempty"`
+
+	// TipAvgLamports TipAvgLamports is the mean tip per tipped transaction.
+	TipAvgLamports *float32 `json:"tip_avg_lamports,omitempty"`
+	TipAvgUsd      *float32 `json:"tip_avg_usd,omitempty"`
 	TipService     *string  `json:"tip_service,omitempty"`
+
+	// TipSharePct TipSharePct is this service's share of the tips paid in the window
+	// (0..100).
+	TipSharePct    *float32 `json:"tip_share_pct,omitempty"`
 	TipSumLamports *int     `json:"tip_sum_lamports,omitempty"`
-	TippedCount    *int     `json:"tipped_count,omitempty"`
+
+	// TipSumUsd TipSumUsd is TipSumLamports on the transactions' USD stamps
+	// (micro-USD).
+	TipSumUsd   *int `json:"tip_sum_usd,omitempty"`
+	TippedCount *int `json:"tipped_count,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTimeframe defines model for pulsight_internal_core_domain_aggregator.Timeframe.
 type PulsightInternalCoreDomainAggregatorTimeframe string
 
-// PulsightInternalCoreDomainAggregatorTipHeatmapPoint defines model for pulsight_internal_core_domain_aggregator.TipHeatmapPoint.
-type PulsightInternalCoreDomainAggregatorTipHeatmapPoint struct {
-	// BucketTs unix epoch seconds at bucket start
-	BucketTs          *int     `json:"bucket_ts,omitempty"`
-	MedianTipLamports *float32 `json:"median_tip_lamports,omitempty"`
+// PulsightInternalCoreDomainAggregatorTipAdoption defines model for pulsight_internal_core_domain_aggregator.TipAdoption.
+type PulsightInternalCoreDomainAggregatorTipAdoption struct {
+	// BucketSecs BucketSecs is the bucket width in seconds, a whole number of hours;
+	// buckets start on multiples of it since the Unix epoch.
+	BucketSecs *int `json:"bucket_secs,omitempty"`
+
+	// From From is the first bucket's start (unix seconds).
+	From *int `json:"from,omitempty"`
+
+	// Points Points is ascending; a bucket with neither tipped nor landed
+	// transactions is absent.
+	Points *[]PulsightInternalCoreDomainAggregatorTipAdoptionPoint `json:"points,omitempty"`
+
+	// To To is the read time (unix seconds); the bucket containing it is still
+	// filling.
+	To     *int    `json:"to,omitempty"`
+	Window *string `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTipAdoptionPoint defines model for pulsight_internal_core_domain_aggregator.TipAdoptionPoint.
+type PulsightInternalCoreDomainAggregatorTipAdoptionPoint struct {
+	// BucketTs BucketTS is the bucket start, unix seconds.
+	BucketTs *int `json:"bucket_ts,omitempty"`
+
+	// LandedCount LandedCount is the bucket's landed transactions, tipped or not.
+	LandedCount *int `json:"landed_count,omitempty"`
+
+	// TippedCount TippedCount is the bucket's tipped transactions.
+	TippedCount *int `json:"tipped_count,omitempty"`
+
+	// TippedVolumeLamports TippedVolumeLamports is the value the tipped transactions traded.
+	TippedVolumeLamports *int `json:"tipped_volume_lamports,omitempty"`
+	TippedVolumeUsd      *int `json:"tipped_volume_usd,omitempty"`
+
+	// TotalVolumeLamports TotalVolumeLamports is the value every landed transaction traded.
+	TotalVolumeLamports *int `json:"total_volume_lamports,omitempty"`
+	TotalVolumeUsd      *int `json:"total_volume_usd,omitempty"`
+
+	// TxShare TxShare is tipped_count / landed_count (0..1), null when nothing
+	// landed.
+	TxShare *float32 `json:"tx_share,omitempty"`
+
+	// VolumeShare VolumeShare is tipped_volume_lamports / total_volume_lamports (0..1),
+	// null when nothing traded.
+	VolumeShare *float32 `json:"volume_share,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTipPeriodStats defines model for pulsight_internal_core_domain_aggregator.TipPeriodStats.
+type PulsightInternalCoreDomainAggregatorTipPeriodStats struct {
+	// P50TipLamports P50TipLamports, P90TipLamports and P99TipLamports are the median, 90th
+	// and 99th percentile tip (t-digest estimates). Lamports only: there is no
+	// USD twin of a percentile.
+	P50TipLamports *float32 `json:"p50_tip_lamports,omitempty"`
+	P90TipLamports *float32 `json:"p90_tip_lamports,omitempty"`
+	P99TipLamports *float32 `json:"p99_tip_lamports,omitempty"`
+
+	// PriorityFeeSum PriorityFeeSum is the priority fees the tipped transactions paid
+	// alongside their tips, in lamports.
+	PriorityFeeSum    *int `json:"priority_fee_sum,omitempty"`
+	PriorityFeeSumUsd *int `json:"priority_fee_sum_usd,omitempty"`
+
+	// SwapCount SwapCount is every landed transaction of the period, tipped or not,
+	// read off the hourly program plane with each hour weighted by its
+	// overlap with the period.
+	SwapCount *int `json:"swap_count,omitempty"`
+
+	// TipAvgLamports TipAvgLamports is the mean tip per tipped transaction.
+	TipAvgLamports *float32 `json:"tip_avg_lamports,omitempty"`
+	TipAvgUsd      *float32 `json:"tip_avg_usd,omitempty"`
+
+	// TipCount TipCount is the number of tipped transactions.
+	TipCount *int `json:"tip_count,omitempty"`
+
+	// TipSumLamports TipSumLamports is the tips those transactions paid.
+	TipSumLamports *int `json:"tip_sum_lamports,omitempty"`
+	TipSumUsd      *int `json:"tip_sum_usd,omitempty"`
+
+	// TippedFraction TippedFraction is tip_count / swap_count (0..1).
+	TippedFraction *float32 `json:"tipped_fraction,omitempty"`
+
+	// TippedVolumeFraction TippedVolumeFraction is tipped_volume_lamports / total_volume_lamports
+	// (0..1).
+	TippedVolumeFraction *float32 `json:"tipped_volume_fraction,omitempty"`
+
+	// TippedVolumeLamports TippedVolumeLamports is the value the tipped transactions traded.
+	TippedVolumeLamports *int `json:"tipped_volume_lamports,omitempty"`
+	TippedVolumeUsd      *int `json:"tipped_volume_usd,omitempty"`
+
+	// TotalVolumeLamports TotalVolumeLamports is the value every landed transaction traded,
+	// weighted like SwapCount.
+	TotalVolumeLamports *int `json:"total_volume_lamports,omitempty"`
+	TotalVolumeUsd      *int `json:"total_volume_usd,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTipSeries defines model for pulsight_internal_core_domain_aggregator.TipSeries.
+type PulsightInternalCoreDomainAggregatorTipSeries struct {
+	// BucketSecs BucketSecs is the bucket width in seconds; buckets start on multiples
+	// of it since the Unix epoch.
+	BucketSecs *int `json:"bucket_secs,omitempty"`
+
+	// From From is the first bucket's start (unix seconds): the window start
+	// rounded down to a bucket.
+	From *int `json:"from,omitempty"`
+
+	// Points Points holds the buckets with at least one tipped transaction, oldest
+	// first; a bucket without one is absent rather than zero.
+	Points *[]PulsightInternalCoreDomainAggregatorTipSeriesPoint `json:"points,omitempty"`
+
+	// To To is the read time (unix seconds); the bucket containing it is still
+	// filling.
+	To     *int    `json:"to,omitempty"`
+	Window *string `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTipSeriesPoint defines model for pulsight_internal_core_domain_aggregator.TipSeriesPoint.
+type PulsightInternalCoreDomainAggregatorTipSeriesPoint struct {
+	// BucketTs BucketTS is the bucket start, unix seconds.
+	BucketTs *int `json:"bucket_ts,omitempty"`
+
+	// P50TipLamports P50TipLamports, P90TipLamports and P99TipLamports are the bucket's
+	// median, 90th and 99th percentile tip.
+	P50TipLamports    *float32 `json:"p50_tip_lamports,omitempty"`
 	P90TipLamports    *float32 `json:"p90_tip_lamports,omitempty"`
+	P99TipLamports    *float32 `json:"p99_tip_lamports,omitempty"`
+	PriorityFeeSum    *int     `json:"priority_fee_sum,omitempty"`
+	PriorityFeeSumUsd *int     `json:"priority_fee_sum_usd,omitempty"`
+	TipSumLamports    *int     `json:"tip_sum_lamports,omitempty"`
+	TipSumUsd         *int     `json:"tip_sum_usd,omitempty"`
 	TippedCount       *int     `json:"tipped_count,omitempty"`
 }
 
-// PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint defines model for pulsight_internal_core_domain_aggregator.TipPriorityRatioPoint.
-type PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint struct {
-	BucketTs       *int     `json:"bucket_ts,omitempty"`
-	PriorityFeeSum *int     `json:"priority_fee_sum,omitempty"`
-	Ratio          *float32 `json:"ratio,omitempty"`
-	TipSumLamports *int     `json:"tip_sum_lamports,omitempty"`
+// PulsightInternalCoreDomainAggregatorTipServiceSeries defines model for pulsight_internal_core_domain_aggregator.TipServiceSeries.
+type PulsightInternalCoreDomainAggregatorTipServiceSeries struct {
+	// BucketSecs BucketSecs is the bucket width in seconds; buckets start on multiples
+	// of it since the Unix epoch.
+	BucketSecs *int `json:"bucket_secs,omitempty"`
+
+	// Buckets Buckets is every bucket start from `from` through the bucket
+	// containing `to`, ascending.
+	Buckets *[]int `json:"buckets,omitempty"`
+
+	// From From is the first bucket's start (unix seconds).
+	From *int `json:"from,omitempty"`
+
+	// Services Services is ordered by the window's tipped transactions, descending.
+	Services *[]PulsightInternalCoreDomainAggregatorTipServiceSeriesRow `json:"services,omitempty"`
+
+	// To To is the read time (unix seconds); the last bucket contains it and is
+	// still filling.
+	To     *int    `json:"to,omitempty"`
+	Window *string `json:"window,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTipServiceSeriesRow defines model for pulsight_internal_core_domain_aggregator.TipServiceSeriesRow.
+type PulsightInternalCoreDomainAggregatorTipServiceSeriesRow struct {
+	TipService *string `json:"tip_service,omitempty"`
+
+	// TippedCount TippedCount is aligned with `buckets`; a bucket without one is 0.
+	TippedCount *[]int `json:"tipped_count,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTrade defines model for pulsight_internal_core_domain_aggregator.Trade.
@@ -3697,6 +3926,9 @@ type GetMintsByPubkeyActivityParams struct {
 
 	// To Range end, unix seconds (exclusive)
 	To int `form:"to" json:"to"`
+
+	// Fields Opt-in parts, comma-separated: tips, traders, trader_base, launch
+	Fields *string `form:"fields,omitempty" json:"fields,omitempty"`
 }
 
 // GetMintsByPubkeyBundlersParams defines parameters for GetMintsByPubkeyBundlers.
@@ -3945,41 +4177,32 @@ type GetSwapsParams struct {
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// GetTipsAdoptionParams defines parameters for GetTipsAdoption.
+type GetTipsAdoptionParams struct {
+	// Window Window (30m|1h|12h|1d|7d|30d|all)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+}
+
 // GetTipsGlobalParams defines parameters for GetTipsGlobal.
 type GetTipsGlobalParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
-// GetTipsHeatmapParams defines parameters for GetTipsHeatmap.
-type GetTipsHeatmapParams struct {
-	// Bucket Bucket (1m|5m|10m)
-	Bucket *string `form:"bucket,omitempty" json:"bucket,omitempty"`
-
-	// HorizonHours Horizon hours (1..24)
-	HorizonHours *int `form:"horizon_hours,omitempty" json:"horizon_hours,omitempty"`
-}
-
-// GetTipsMatParams defines parameters for GetTipsMat.
-type GetTipsMatParams struct {
-	// Window Window (30m|1h|12h|1d|7d|30d|all)
-	Window *string `form:"window,omitempty" json:"window,omitempty"`
-}
-
-// GetTipsMevShareParams defines parameters for GetTipsMevShare.
-type GetTipsMevShareParams struct {
-	// Window Window (30m|1h|12h|1d|7d|30d|all)
-	Window *string `form:"window,omitempty" json:"window,omitempty"`
-}
-
-// GetTipsPriorityRatioParams defines parameters for GetTipsPriorityRatio.
-type GetTipsPriorityRatioParams struct {
+// GetTipsSeriesParams defines parameters for GetTipsSeries.
+type GetTipsSeriesParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
 // GetTipsServicesParams defines parameters for GetTipsServices.
 type GetTipsServicesParams struct {
+	// Window Window (30m|1h|12h|1d|7d|30d|all)
+	Window *string `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetTipsServicesSeriesParams defines parameters for GetTipsServicesSeries.
+type GetTipsServicesSeriesParams struct {
 	// Window Window (30m|1h|12h|1d|7d|30d|all)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
@@ -4347,7 +4570,7 @@ type ClientInterface interface {
 
 	// GetMintsByPubkeyActivity Mint Activity Seed
 	//
-	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours. `fields` opts into more: `tips` (the tipped-share counts per minute and before the range), `traders` (each minute's trading wallets as packed keys), `trader_base` (the keys of every wallet that traded before the range) and `launch` (the sealed launch bundle and the first trade); the response's `fields` names what it carries.
 	//
 	// Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
 	GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -4585,35 +4808,40 @@ type ClientInterface interface {
 	// Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 	GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetTipsAdoption Tip adoption series
+	//
+	// The share of landed transactions and of traded value that paid a tip, per bucket of at least an hour (at most about 180 buckets), with the counts and volumes in both currencies behind each share. A share is null where its denominator is zero; the last bucket is still filling.
+	//
+	// Corresponds with GET /api/tips/adoption (the `GetTipsAdoption` operationId).
+	GetTipsAdoption(ctx context.Context, params *GetTipsAdoptionParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetTipsGlobal Global tip stats
+	//
+	// The window's tipped transactions, tips and priority fees in both currencies, the median, 90th and 99th percentile tip, and the share of landed transactions and traded value that tipped; `previous` carries the same figures over the window of equal length before it (absent for `all` and when the ledger does not cover it). `all` is the last 90 days.
 	//
 	// Corresponds with GET /api/tips/global (the `GetTipsGlobal` operationId).
 	GetTipsGlobal(ctx context.Context, params *GetTipsGlobalParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetTipsHeatmap Tip heatmap
+	// GetTipsSeries Tip series
 	//
-	// Corresponds with GET /api/tips/heatmap (the `GetTipsHeatmap` operationId).
-	GetTipsHeatmap(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetTipsMat Tip moving-average series
+	// The window's tip figures per bucket (60 s up to 4 h, or a day for the 90-day window; at most 180 buckets): tipped transactions, tips and priority fees in both currencies, and the median, 90th and 99th percentile tip. Buckets without a tipped transaction are absent; the last bucket is still filling.
 	//
-	// Corresponds with GET /api/tips/mat (the `GetTipsMat` operationId).
-	GetTipsMat(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetTipsMevShare Tipped-volume share series
-	//
-	// Corresponds with GET /api/tips/mev-share (the `GetTipsMevShare` operationId).
-	GetTipsMevShare(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetTipsPriorityRatio Tip vs priority-fee ratio series
-	//
-	// Corresponds with GET /api/tips/priority-ratio (the `GetTipsPriorityRatio` operationId).
-	GetTipsPriorityRatio(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// Corresponds with GET /api/tips/series (the `GetTipsSeries` operationId).
+	GetTipsSeries(ctx context.Context, params *GetTipsSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTipsServices Tip service dominance
 	//
+	// Every tip service with a tipped transaction in the window, by tipped transactions descending: its share of the tipped transactions and of the tips paid, the tips in both currencies, the mean, median and 90th percentile tip, and `prev_share_pct`, its share over the window of equal length before (null for `all` and when the ledger does not cover it).
+	//
 	// Corresponds with GET /api/tips/services (the `GetTipsServices` operationId).
 	GetTipsServices(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTipsServicesSeries Tip service series
+	//
+	// Each tip service's tipped transactions per bucket over the window, on the bucket grid of /api/tips/series: `buckets` lists every bucket start and each service's counts align with it, zero-filled. Services are ordered by the window's tipped transactions, descending.
+	//
+	// Corresponds with GET /api/tips/services/series (the `GetTipsServicesSeries` operationId).
+	GetTipsServicesSeries(ctx context.Context, params *GetTipsServicesSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTokenFilters List Token Filters
 	//
@@ -5167,7 +5395,7 @@ func (c *Client) GetMintsByPubkey(ctx context.Context, pubkey string, reqEditors
 
 // GetMintsByPubkeyActivity Mint Activity Seed
 //
-// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours. `fields` opts into more: `tips` (the tipped-share counts per minute and before the range), `traders` (each minute's trading wallets as packed keys), `trader_base` (the keys of every wallet that traded before the range) and `launch` (the sealed launch bundle and the first trade); the response's `fields` names what it carries.
 //
 // Corresponds with GET /api/mints/{pubkey}/activity (the `GetMintsByPubkeyActivity` operationId).
 func (c *Client) GetMintsByPubkeyActivity(ctx context.Context, pubkey string, params *GetMintsByPubkeyActivityParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5765,7 +5993,26 @@ func (c *Client) GetSwaps(ctx context.Context, params *GetSwapsParams, reqEditor
 	return c.Client.Do(req)
 }
 
+// GetTipsAdoption Tip adoption series
+//
+// The share of landed transactions and of traded value that paid a tip, per bucket of at least an hour (at most about 180 buckets), with the counts and volumes in both currencies behind each share. A share is null where its denominator is zero; the last bucket is still filling.
+//
+// Corresponds with GET /api/tips/adoption (the `GetTipsAdoption` operationId).
+func (c *Client) GetTipsAdoption(ctx context.Context, params *GetTipsAdoptionParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsAdoptionRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetTipsGlobal Global tip stats
+//
+// The window's tipped transactions, tips and priority fees in both currencies, the median, 90th and 99th percentile tip, and the share of landed transactions and traded value that tipped; `previous` carries the same figures over the window of equal length before it (absent for `all` and when the ledger does not cover it). `all` is the last 90 days.
 //
 // Corresponds with GET /api/tips/global (the `GetTipsGlobal` operationId).
 func (c *Client) GetTipsGlobal(ctx context.Context, params *GetTipsGlobalParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -5780,56 +6027,13 @@ func (c *Client) GetTipsGlobal(ctx context.Context, params *GetTipsGlobalParams,
 	return c.Client.Do(req)
 }
 
-// GetTipsHeatmap Tip heatmap
+// GetTipsSeries Tip series
 //
-// Corresponds with GET /api/tips/heatmap (the `GetTipsHeatmap` operationId).
-func (c *Client) GetTipsHeatmap(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTipsHeatmapRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GetTipsMat Tip moving-average series
+// The window's tip figures per bucket (60 s up to 4 h, or a day for the 90-day window; at most 180 buckets): tipped transactions, tips and priority fees in both currencies, and the median, 90th and 99th percentile tip. Buckets without a tipped transaction are absent; the last bucket is still filling.
 //
-// Corresponds with GET /api/tips/mat (the `GetTipsMat` operationId).
-func (c *Client) GetTipsMat(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTipsMatRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GetTipsMevShare Tipped-volume share series
-//
-// Corresponds with GET /api/tips/mev-share (the `GetTipsMevShare` operationId).
-func (c *Client) GetTipsMevShare(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTipsMevShareRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GetTipsPriorityRatio Tip vs priority-fee ratio series
-//
-// Corresponds with GET /api/tips/priority-ratio (the `GetTipsPriorityRatio` operationId).
-func (c *Client) GetTipsPriorityRatio(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetTipsPriorityRatioRequest(c.Server, params)
+// Corresponds with GET /api/tips/series (the `GetTipsSeries` operationId).
+func (c *Client) GetTipsSeries(ctx context.Context, params *GetTipsSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsSeriesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -5842,9 +6046,28 @@ func (c *Client) GetTipsPriorityRatio(ctx context.Context, params *GetTipsPriori
 
 // GetTipsServices Tip service dominance
 //
+// Every tip service with a tipped transaction in the window, by tipped transactions descending: its share of the tipped transactions and of the tips paid, the tips in both currencies, the mean, median and 90th percentile tip, and `prev_share_pct`, its share over the window of equal length before (null for `all` and when the ledger does not cover it).
+//
 // Corresponds with GET /api/tips/services (the `GetTipsServices` operationId).
 func (c *Client) GetTipsServices(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetTipsServicesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTipsServicesSeries Tip service series
+//
+// Each tip service's tipped transactions per bucket over the window, on the bucket grid of /api/tips/series: `buckets` lists every bucket start and each service's counts align with it, zero-filled. Services are ordered by the window's tipped transactions, descending.
+//
+// Corresponds with GET /api/tips/services/series (the `GetTipsServicesSeries` operationId).
+func (c *Client) GetTipsServicesSeries(ctx context.Context, params *GetTipsServicesSeriesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTipsServicesSeriesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -7572,6 +7795,18 @@ func NewGetMintsByPubkeyActivityRequest(server string, pubkey string, params *Ge
 			for _, qp := range strings.Split(queryFrag, "&") {
 				rawQueryFragments = append(rawQueryFragments, qp)
 			}
+		}
+
+		if params.Fields != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "fields", *params.Fields, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
 		}
 
 		if encoded := queryValues.Encode(); encoded != "" {
@@ -9634,6 +9869,60 @@ func NewGetSwapsRequest(server string, params *GetSwapsParams) (*http.Request, e
 	return req, nil
 }
 
+// NewGetTipsAdoptionRequest constructs an http.Request for the GetTipsAdoption method
+func NewGetTipsAdoptionRequest(server string, params *GetTipsAdoptionParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/tips/adoption")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetTipsGlobalRequest constructs an http.Request for the GetTipsGlobal method
 func NewGetTipsGlobalRequest(server string, params *GetTipsGlobalParams) (*http.Request, error) {
 	var err error
@@ -9688,8 +9977,8 @@ func NewGetTipsGlobalRequest(server string, params *GetTipsGlobalParams) (*http.
 	return req, nil
 }
 
-// NewGetTipsHeatmapRequest constructs an http.Request for the GetTipsHeatmap method
-func NewGetTipsHeatmapRequest(server string, params *GetTipsHeatmapParams) (*http.Request, error) {
+// NewGetTipsSeriesRequest constructs an http.Request for the GetTipsSeries method
+func NewGetTipsSeriesRequest(server string, params *GetTipsSeriesParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -9697,181 +9986,7 @@ func NewGetTipsHeatmapRequest(server string, params *GetTipsHeatmapParams) (*htt
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/tips/heatmap")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Bucket != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "bucket", *params.Bucket, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if params.HorizonHours != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "horizon_hours", *params.HorizonHours, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetTipsMatRequest constructs an http.Request for the GetTipsMat method
-func NewGetTipsMatRequest(server string, params *GetTipsMatParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/tips/mat")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Window != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetTipsMevShareRequest constructs an http.Request for the GetTipsMevShare method
-func NewGetTipsMevShareRequest(server string, params *GetTipsMevShareParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/tips/mev-share")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		// queryValues collects non-styled parameters (passthrough, JSON)
-		// that are safe to round-trip through url.Values.Encode().
-		queryValues := queryURL.Query()
-		// rawQueryFragments collects pre-encoded query fragments from
-		// styled parameters, preserving literal commas as delimiters
-		// per the OpenAPI spec (e.g. "color=blue,black,brown").
-		var rawQueryFragments []string
-
-		if params.Window != nil {
-
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
-				return nil, err
-			} else {
-				for _, qp := range strings.Split(queryFrag, "&") {
-					rawQueryFragments = append(rawQueryFragments, qp)
-				}
-			}
-
-		}
-
-		if encoded := queryValues.Encode(); encoded != "" {
-			rawQueryFragments = append(rawQueryFragments, encoded)
-		}
-		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetTipsPriorityRatioRequest constructs an http.Request for the GetTipsPriorityRatio method
-func NewGetTipsPriorityRatioRequest(server string, params *GetTipsPriorityRatioParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/tips/priority-ratio")
+	operationPath := fmt.Sprintf("/api/tips/series")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9926,6 +10041,60 @@ func NewGetTipsServicesRequest(server string, params *GetTipsServicesParams) (*h
 	}
 
 	operationPath := fmt.Sprintf("/api/tips/services")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetTipsServicesSeriesRequest constructs an http.Request for the GetTipsServicesSeries method
+func NewGetTipsServicesSeriesRequest(server string, params *GetTipsServicesSeriesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/tips/services/series")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -11724,7 +11893,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyActivityWithResponse Mint Activity Seed
 	//
-	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+	// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours. `fields` opts into more: `tips` (the tipped-share counts per minute and before the range), `traders` (each minute's trading wallets as packed keys), `trader_base` (the keys of every wallet that traded before the range) and `launch` (the sealed launch bundle and the first trade); the response's `fields` names what it carries.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -12018,47 +12187,50 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/swaps (the `GetSwaps` operationId).
 	GetSwapsWithResponse(ctx context.Context, params *GetSwapsParams, reqEditors ...RequestEditorFn) (*GetSwapsResponse, error)
 
+	// GetTipsAdoptionWithResponse Tip adoption series
+	//
+	// The share of landed transactions and of traded value that paid a tip, per bucket of at least an hour (at most about 180 buckets), with the counts and volumes in both currencies behind each share. A share is null where its denominator is zero; the last bucket is still filling.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/tips/adoption (the `GetTipsAdoption` operationId).
+	GetTipsAdoptionWithResponse(ctx context.Context, params *GetTipsAdoptionParams, reqEditors ...RequestEditorFn) (*GetTipsAdoptionResponse, error)
+
 	// GetTipsGlobalWithResponse Global tip stats
+	//
+	// The window's tipped transactions, tips and priority fees in both currencies, the median, 90th and 99th percentile tip, and the share of landed transactions and traded value that tipped; `previous` carries the same figures over the window of equal length before it (absent for `all` and when the ledger does not cover it). `all` is the last 90 days.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /api/tips/global (the `GetTipsGlobal` operationId).
 	GetTipsGlobalWithResponse(ctx context.Context, params *GetTipsGlobalParams, reqEditors ...RequestEditorFn) (*GetTipsGlobalResponse, error)
 
-	// GetTipsHeatmapWithResponse Tip heatmap
+	// GetTipsSeriesWithResponse Tip series
+	//
+	// The window's tip figures per bucket (60 s up to 4 h, or a day for the 90-day window; at most 180 buckets): tipped transactions, tips and priority fees in both currencies, and the median, 90th and 99th percentile tip. Buckets without a tipped transaction are absent; the last bucket is still filling.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
-	// Corresponds with GET /api/tips/heatmap (the `GetTipsHeatmap` operationId).
-	GetTipsHeatmapWithResponse(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*GetTipsHeatmapResponse, error)
-
-	// GetTipsMatWithResponse Tip moving-average series
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/tips/mat (the `GetTipsMat` operationId).
-	GetTipsMatWithResponse(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*GetTipsMatResponse, error)
-
-	// GetTipsMevShareWithResponse Tipped-volume share series
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/tips/mev-share (the `GetTipsMevShare` operationId).
-	GetTipsMevShareWithResponse(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*GetTipsMevShareResponse, error)
-
-	// GetTipsPriorityRatioWithResponse Tip vs priority-fee ratio series
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/tips/priority-ratio (the `GetTipsPriorityRatio` operationId).
-	GetTipsPriorityRatioWithResponse(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*GetTipsPriorityRatioResponse, error)
+	// Corresponds with GET /api/tips/series (the `GetTipsSeries` operationId).
+	GetTipsSeriesWithResponse(ctx context.Context, params *GetTipsSeriesParams, reqEditors ...RequestEditorFn) (*GetTipsSeriesResponse, error)
 
 	// GetTipsServicesWithResponse Tip service dominance
+	//
+	// Every tip service with a tipped transaction in the window, by tipped transactions descending: its share of the tipped transactions and of the tips paid, the tips in both currencies, the mean, median and 90th percentile tip, and `prev_share_pct`, its share over the window of equal length before (null for `all` and when the ledger does not cover it).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
 	// Corresponds with GET /api/tips/services (the `GetTipsServices` operationId).
 	GetTipsServicesWithResponse(ctx context.Context, params *GetTipsServicesParams, reqEditors ...RequestEditorFn) (*GetTipsServicesResponse, error)
+
+	// GetTipsServicesSeriesWithResponse Tip service series
+	//
+	// Each tip service's tipped transactions per bucket over the window, on the bucket grid of /api/tips/series: `buckets` lists every bucket start and each service's counts align with it, zero-filled. Services are ordered by the window's tipped transactions, descending.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/tips/services/series (the `GetTipsServicesSeries` operationId).
+	GetTipsServicesSeriesWithResponse(ctx context.Context, params *GetTipsServicesSeriesParams, reqEditors ...RequestEditorFn) (*GetTipsServicesSeriesResponse, error)
 
 	// GetTokenFiltersWithResponse List Token Filters
 	//
@@ -14895,6 +15067,54 @@ func (r GetSwapsResponse) ContentType() string {
 	return ""
 }
 
+type GetTipsAdoptionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorTipAdoption
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTipsAdoptionResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorTipAdoption {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetTipsAdoptionResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTipsAdoptionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTipsAdoptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTipsAdoptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTipsAdoptionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetTipsGlobalResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -14943,32 +15163,32 @@ func (r GetTipsGlobalResponse) ContentType() string {
 	return ""
 }
 
-type GetTipsHeatmapResponse struct {
+type GetTipsSeriesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *PulsightInternalCoreDomainAggregatorHeatmapResponse
+	JSON200 *PulsightInternalCoreDomainAggregatorTipSeries
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTipsHeatmapResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorHeatmapResponse {
+func (r GetTipsSeriesResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorTipSeries {
 	return r.JSON200
 }
 
 // GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTipsHeatmapResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+func (r GetTipsSeriesResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
 	return r.JSON400
 }
 
 // GetBody returns the raw response body bytes
-func (r GetTipsHeatmapResponse) GetBody() []byte {
+func (r GetTipsSeriesResponse) GetBody() []byte {
 	return r.Body
 }
 
 // Status returns HTTPResponse.Status
-func (r GetTipsHeatmapResponse) Status() string {
+func (r GetTipsSeriesResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -14976,7 +15196,7 @@ func (r GetTipsHeatmapResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetTipsHeatmapResponse) StatusCode() int {
+func (r GetTipsSeriesResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -14984,151 +15204,7 @@ func (r GetTipsHeatmapResponse) StatusCode() int {
 }
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTipsHeatmapResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetTipsMatResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]PulsightInternalCoreDomainAggregatorMatPoint
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTipsMatResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorMatPoint {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTipsMatResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetBody returns the raw response body bytes
-func (r GetTipsMatResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTipsMatResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTipsMatResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTipsMatResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetTipsMevShareResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]PulsightInternalCoreDomainAggregatorMevTipSharePoint
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTipsMevShareResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorMevTipSharePoint {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTipsMevShareResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetBody returns the raw response body bytes
-func (r GetTipsMevShareResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTipsMevShareResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTipsMevShareResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTipsMevShareResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetTipsPriorityRatioResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *[]PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint
-	// JSON400 the response for an HTTP 400 `application/json` response
-	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetTipsPriorityRatioResponse) GetJSON200() *[]PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint {
-	return r.JSON200
-}
-
-// GetJSON400 returns the response for an HTTP 400 `application/json` response
-func (r GetTipsPriorityRatioResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
-	return r.JSON400
-}
-
-// GetBody returns the raw response body bytes
-func (r GetTipsPriorityRatioResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetTipsPriorityRatioResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetTipsPriorityRatioResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetTipsPriorityRatioResponse) ContentType() string {
+func (r GetTipsSeriesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -15177,6 +15253,54 @@ func (r GetTipsServicesResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetTipsServicesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTipsServicesSeriesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainAggregatorTipServiceSeries
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTipsServicesSeriesResponse) GetJSON200() *PulsightInternalCoreDomainAggregatorTipServiceSeries {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetTipsServicesSeriesResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTipsServicesSeriesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTipsServicesSeriesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTipsServicesSeriesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTipsServicesSeriesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17200,7 +17324,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyWithResponse(ctx context.Context, 
 
 // GetMintsByPubkeyActivityWithResponse Mint Activity Seed
 //
-// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours.
+// Returns the mint's per-minute swap count + network fees (tx fee + MEV tip, in lamports and in micro-USD as stamped at execution) over [from, to), plus the lifetime totals strictly before `from`. Range capped at 25 hours. `fields` opts into more: `tips` (the tipped-share counts per minute and before the range), `traders` (each minute's trading wallets as packed keys), `trader_base` (the keys of every wallet that traded before the range) and `launch` (the sealed launch bundle and the first trade); the response's `fields` names what it carries.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17710,7 +17834,24 @@ func (c *ClientWithResponses) GetSwapsWithResponse(ctx context.Context, params *
 	return ParseGetSwapsResponse(rsp)
 }
 
+// GetTipsAdoptionWithResponse Tip adoption series
+//
+// The share of landed transactions and of traded value that paid a tip, per bucket of at least an hour (at most about 180 buckets), with the counts and volumes in both currencies behind each share. A share is null where its denominator is zero; the last bucket is still filling.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/tips/adoption (the `GetTipsAdoption` operationId).
+func (c *ClientWithResponses) GetTipsAdoptionWithResponse(ctx context.Context, params *GetTipsAdoptionParams, reqEditors ...RequestEditorFn) (*GetTipsAdoptionResponse, error) {
+	rsp, err := c.GetTipsAdoption(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTipsAdoptionResponse(rsp)
+}
+
 // GetTipsGlobalWithResponse Global tip stats
+//
+// The window's tipped transactions, tips and priority fees in both currencies, the median, 90th and 99th percentile tip, and the share of landed transactions and traded value that tipped; `previous` carries the same figures over the window of equal length before it (absent for `all` and when the ledger does not cover it). `all` is the last 90 days.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17723,59 +17864,24 @@ func (c *ClientWithResponses) GetTipsGlobalWithResponse(ctx context.Context, par
 	return ParseGetTipsGlobalResponse(rsp)
 }
 
-// GetTipsHeatmapWithResponse Tip heatmap
+// GetTipsSeriesWithResponse Tip series
+//
+// The window's tip figures per bucket (60 s up to 4 h, or a day for the 90-day window; at most 180 buckets): tipped transactions, tips and priority fees in both currencies, and the median, 90th and 99th percentile tip. Buckets without a tipped transaction are absent; the last bucket is still filling.
 //
 // Returns a wrapper object for the known response body format(s).
 //
-// Corresponds with GET /api/tips/heatmap (the `GetTipsHeatmap` operationId).
-func (c *ClientWithResponses) GetTipsHeatmapWithResponse(ctx context.Context, params *GetTipsHeatmapParams, reqEditors ...RequestEditorFn) (*GetTipsHeatmapResponse, error) {
-	rsp, err := c.GetTipsHeatmap(ctx, params, reqEditors...)
+// Corresponds with GET /api/tips/series (the `GetTipsSeries` operationId).
+func (c *ClientWithResponses) GetTipsSeriesWithResponse(ctx context.Context, params *GetTipsSeriesParams, reqEditors ...RequestEditorFn) (*GetTipsSeriesResponse, error) {
+	rsp, err := c.GetTipsSeries(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetTipsHeatmapResponse(rsp)
-}
-
-// GetTipsMatWithResponse Tip moving-average series
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/tips/mat (the `GetTipsMat` operationId).
-func (c *ClientWithResponses) GetTipsMatWithResponse(ctx context.Context, params *GetTipsMatParams, reqEditors ...RequestEditorFn) (*GetTipsMatResponse, error) {
-	rsp, err := c.GetTipsMat(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTipsMatResponse(rsp)
-}
-
-// GetTipsMevShareWithResponse Tipped-volume share series
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/tips/mev-share (the `GetTipsMevShare` operationId).
-func (c *ClientWithResponses) GetTipsMevShareWithResponse(ctx context.Context, params *GetTipsMevShareParams, reqEditors ...RequestEditorFn) (*GetTipsMevShareResponse, error) {
-	rsp, err := c.GetTipsMevShare(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTipsMevShareResponse(rsp)
-}
-
-// GetTipsPriorityRatioWithResponse Tip vs priority-fee ratio series
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/tips/priority-ratio (the `GetTipsPriorityRatio` operationId).
-func (c *ClientWithResponses) GetTipsPriorityRatioWithResponse(ctx context.Context, params *GetTipsPriorityRatioParams, reqEditors ...RequestEditorFn) (*GetTipsPriorityRatioResponse, error) {
-	rsp, err := c.GetTipsPriorityRatio(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetTipsPriorityRatioResponse(rsp)
+	return ParseGetTipsSeriesResponse(rsp)
 }
 
 // GetTipsServicesWithResponse Tip service dominance
+//
+// Every tip service with a tipped transaction in the window, by tipped transactions descending: its share of the tipped transactions and of the tips paid, the tips in both currencies, the mean, median and 90th percentile tip, and `prev_share_pct`, its share over the window of equal length before (null for `all` and when the ledger does not cover it).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -17786,6 +17892,21 @@ func (c *ClientWithResponses) GetTipsServicesWithResponse(ctx context.Context, p
 		return nil, err
 	}
 	return ParseGetTipsServicesResponse(rsp)
+}
+
+// GetTipsServicesSeriesWithResponse Tip service series
+//
+// Each tip service's tipped transactions per bucket over the window, on the bucket grid of /api/tips/series: `buckets` lists every bucket start and each service's counts align with it, zero-filled. Services are ordered by the window's tipped transactions, descending.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/tips/services/series (the `GetTipsServicesSeries` operationId).
+func (c *ClientWithResponses) GetTipsServicesSeriesWithResponse(ctx context.Context, params *GetTipsServicesSeriesParams, reqEditors ...RequestEditorFn) (*GetTipsServicesSeriesResponse, error) {
+	rsp, err := c.GetTipsServicesSeries(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTipsServicesSeriesResponse(rsp)
 }
 
 // GetTokenFiltersWithResponse List Token Filters
@@ -20103,6 +20224,39 @@ func ParseGetSwapsResponse(rsp *http.Response) (*GetSwapsResponse, error) {
 	return response, nil
 }
 
+// ParseGetTipsAdoptionResponse parses an HTTP response from a GetTipsAdoptionWithResponse call
+func ParseGetTipsAdoptionResponse(rsp *http.Response) (*GetTipsAdoptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTipsAdoptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorTipAdoption
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetTipsGlobalResponse parses an HTTP response from a GetTipsGlobalWithResponse call
 func ParseGetTipsGlobalResponse(rsp *http.Response) (*GetTipsGlobalResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -20136,121 +20290,22 @@ func ParseGetTipsGlobalResponse(rsp *http.Response) (*GetTipsGlobalResponse, err
 	return response, nil
 }
 
-// ParseGetTipsHeatmapResponse parses an HTTP response from a GetTipsHeatmapWithResponse call
-func ParseGetTipsHeatmapResponse(rsp *http.Response) (*GetTipsHeatmapResponse, error) {
+// ParseGetTipsSeriesResponse parses an HTTP response from a GetTipsSeriesWithResponse call
+func ParseGetTipsSeriesResponse(rsp *http.Response) (*GetTipsSeriesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetTipsHeatmapResponse{
+	response := &GetTipsSeriesResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PulsightInternalCoreDomainAggregatorHeatmapResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTipsMatResponse parses an HTTP response from a GetTipsMatWithResponse call
-func ParseGetTipsMatResponse(rsp *http.Response) (*GetTipsMatResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTipsMatResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []PulsightInternalCoreDomainAggregatorMatPoint
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTipsMevShareResponse parses an HTTP response from a GetTipsMevShareWithResponse call
-func ParseGetTipsMevShareResponse(rsp *http.Response) (*GetTipsMevShareResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTipsMevShareResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []PulsightInternalCoreDomainAggregatorMevTipSharePoint
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
-		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON400 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetTipsPriorityRatioResponse parses an HTTP response from a GetTipsPriorityRatioWithResponse call
-func ParseGetTipsPriorityRatioResponse(rsp *http.Response) (*GetTipsPriorityRatioResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetTipsPriorityRatioResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest []PulsightInternalCoreDomainAggregatorTipPriorityRatioPoint
+		var dest PulsightInternalCoreDomainAggregatorTipSeries
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -20284,6 +20339,39 @@ func ParseGetTipsServicesResponse(rsp *http.Response) (*GetTipsServicesResponse,
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest []PulsightInternalCoreDomainAggregatorServiceDominanceRow
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTipsServicesSeriesResponse parses an HTTP response from a GetTipsServicesSeriesWithResponse call
+func ParseGetTipsServicesSeriesResponse(rsp *http.Response) (*GetTipsServicesSeriesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTipsServicesSeriesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainAggregatorTipServiceSeries
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
