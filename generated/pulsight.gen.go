@@ -397,6 +397,30 @@ func (e PulsightInternalCoreUsecasesBacktestTradeSource) Valid() bool {
 	}
 }
 
+// Defines values for GetLegsExportByDayFactsByDatasetParamsDataset.
+const (
+	Bundles  GetLegsExportByDayFactsByDatasetParamsDataset = "bundles"
+	Insiders GetLegsExportByDayFactsByDatasetParamsDataset = "insiders"
+	Mints    GetLegsExportByDayFactsByDatasetParamsDataset = "mints"
+	Minutes  GetLegsExportByDayFactsByDatasetParamsDataset = "minutes"
+)
+
+// Valid indicates whether the value is a known member of the GetLegsExportByDayFactsByDatasetParamsDataset enum.
+func (e GetLegsExportByDayFactsByDatasetParamsDataset) Valid() bool {
+	switch e {
+	case Bundles:
+		return true
+	case Insiders:
+		return true
+	case Mints:
+		return true
+	case Minutes:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for GetMintsParamsHours.
 const (
 	N1  GetMintsParamsHours = 1
@@ -1211,6 +1235,17 @@ type PulsightInternalCoreDomainAggregatorHop struct {
 type PulsightInternalCoreDomainAggregatorLegsExportCatalog struct {
 	// Days Days are the exportable UTC days, newest first (YYYY-MM-DD).
 	Days *[]string `json:"days,omitempty"`
+
+	// Facts Facts are the token facts files every exportable day carries.
+	Facts *[]string `json:"facts,omitempty"`
+
+	// FactsSchema FactsSchema is the column set of the token facts files.
+	//
+	// Example: facts-1
+	FactsSchema *string `json:"facts_schema,omitempty"`
+
+	// InsidersSinceMs InsidersSinceMs is when the insider plane found its first insider (unix ms), 0 before it found any; insider holdings before it are unknown.
+	InsidersSinceMs *int `json:"insiders_since_ms,omitempty"`
 
 	// Parts Parts is how many parts each day is split into; a pool's legs are always in part pool_id % parts.
 	//
@@ -3851,6 +3886,9 @@ type GetCashbackSummaryParams struct {
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 }
 
+// GetLegsExportByDayFactsByDatasetParamsDataset defines parameters for GetLegsExportByDayFactsByDataset.
+type GetLegsExportByDayFactsByDatasetParamsDataset string
+
 // GetMeCreditsLedgerParams defines parameters for GetMeCreditsLedger.
 type GetMeCreditsLedgerParams struct {
 	// Limit Max entries to return (default 50, max 200)
@@ -4569,6 +4607,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/legs/export/declared-quotes (the `GetLegsExportDeclaredQuotes` operationId).
 	GetLegsExportDeclaredQuotes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLegsExportByDayFactsByDataset Download one token facts file of a day
+	//
+	// Streams, as Parquet (zstd), one token facts file (schema `facts_schema` of the catalog) of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). Timestamps are unix milliseconds. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	//
+	// Corresponds with GET /api/legs/export/{day}/facts/{dataset} (the `GetLegsExportByDayFactsByDataset` operationId).
+	GetLegsExportByDayFactsByDataset(ctx context.Context, day string, dataset GetLegsExportByDayFactsByDatasetParamsDataset, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetLegsExportByDayLegsByPart Download one part of a day's DEX legs
 	//
@@ -5393,6 +5438,23 @@ func (c *Client) GetLegsExport(ctx context.Context, reqEditors ...RequestEditorF
 // Corresponds with GET /api/legs/export/declared-quotes (the `GetLegsExportDeclaredQuotes` operationId).
 func (c *Client) GetLegsExportDeclaredQuotes(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetLegsExportDeclaredQuotesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLegsExportByDayFactsByDataset Download one token facts file of a day
+//
+// Streams, as Parquet (zstd), one token facts file (schema `facts_schema` of the catalog) of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). Timestamps are unix milliseconds. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+//
+// Corresponds with GET /api/legs/export/{day}/facts/{dataset} (the `GetLegsExportByDayFactsByDataset` operationId).
+func (c *Client) GetLegsExportByDayFactsByDataset(ctx context.Context, day string, dataset GetLegsExportByDayFactsByDatasetParamsDataset, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLegsExportByDayFactsByDatasetRequest(c.Server, day, dataset)
 	if err != nil {
 		return nil, err
 	}
@@ -7454,6 +7516,47 @@ func NewGetLegsExportDeclaredQuotesRequest(server string) (*http.Request, error)
 	}
 
 	operationPath := fmt.Sprintf("/api/legs/export/declared-quotes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetLegsExportByDayFactsByDatasetRequest constructs an http.Request for the GetLegsExportByDayFactsByDataset method
+func NewGetLegsExportByDayFactsByDatasetRequest(server string, day string, dataset GetLegsExportByDayFactsByDatasetParamsDataset) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "day", day, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "dataset", dataset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/legs/export/%s/facts/%s", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -12114,6 +12217,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/legs/export/declared-quotes (the `GetLegsExportDeclaredQuotes` operationId).
 	GetLegsExportDeclaredQuotesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLegsExportDeclaredQuotesResponse, error)
 
+	// GetLegsExportByDayFactsByDatasetWithResponse Download one token facts file of a day
+	//
+	// Streams, as Parquet (zstd), one token facts file (schema `facts_schema` of the catalog) of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). Timestamps are unix milliseconds. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/legs/export/{day}/facts/{dataset} (the `GetLegsExportByDayFactsByDataset` operationId).
+	GetLegsExportByDayFactsByDatasetWithResponse(ctx context.Context, day string, dataset GetLegsExportByDayFactsByDatasetParamsDataset, reqEditors ...RequestEditorFn) (*GetLegsExportByDayFactsByDatasetResponse, error)
+
 	// GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
 	//
 	// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
@@ -13461,6 +13573,40 @@ func (r GetLegsExportDeclaredQuotesResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetLegsExportDeclaredQuotesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetLegsExportByDayFactsByDatasetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLegsExportByDayFactsByDatasetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLegsExportByDayFactsByDatasetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLegsExportByDayFactsByDatasetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLegsExportByDayFactsByDatasetResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -17726,6 +17872,21 @@ func (c *ClientWithResponses) GetLegsExportDeclaredQuotesWithResponse(ctx contex
 	return ParseGetLegsExportDeclaredQuotesResponse(rsp)
 }
 
+// GetLegsExportByDayFactsByDatasetWithResponse Download one token facts file of a day
+//
+// Streams, as Parquet (zstd), one token facts file (schema `facts_schema` of the catalog) of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). Timestamps are unix milliseconds. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/legs/export/{day}/facts/{dataset} (the `GetLegsExportByDayFactsByDataset` operationId).
+func (c *ClientWithResponses) GetLegsExportByDayFactsByDatasetWithResponse(ctx context.Context, day string, dataset GetLegsExportByDayFactsByDatasetParamsDataset, reqEditors ...RequestEditorFn) (*GetLegsExportByDayFactsByDatasetResponse, error) {
+	rsp, err := c.GetLegsExportByDayFactsByDataset(ctx, day, dataset, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLegsExportByDayFactsByDatasetResponse(rsp)
+}
+
 // GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
 //
 // Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
@@ -19347,6 +19508,22 @@ func ParseGetLegsExportDeclaredQuotesResponse(rsp *http.Response) (*GetLegsExpor
 	}
 
 	response := &GetLegsExportDeclaredQuotesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	return response, nil
+}
+
+// ParseGetLegsExportByDayFactsByDatasetResponse parses an HTTP response from a GetLegsExportByDayFactsByDatasetWithResponse call
+func ParseGetLegsExportByDayFactsByDatasetResponse(rsp *http.Response) (*GetLegsExportByDayFactsByDatasetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLegsExportByDayFactsByDatasetResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
