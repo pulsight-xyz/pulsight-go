@@ -1247,6 +1247,9 @@ type PulsightInternalCoreDomainAggregatorLegsExportCatalog struct {
 	// InsidersSinceMs InsidersSinceMs is when the insider plane found its first insider (unix ms), 0 before it found any; insider holdings before it are unknown.
 	InsidersSinceMs *int `json:"insiders_since_ms,omitempty"`
 
+	// LedgerStartMs LedgerStartMs is the time of the oldest leg the ledger holds (unix ms), 0 when it holds none; a pool's swaps before it are unknown.
+	LedgerStartMs *int `json:"ledger_start_ms,omitempty"`
+
 	// Parts Parts is how many parts each day is split into; a pool's legs are always in part pool_id % parts.
 	//
 	// Example: 16
@@ -1254,7 +1257,7 @@ type PulsightInternalCoreDomainAggregatorLegsExportCatalog struct {
 
 	// Schema Schema is the column set every part of every day carries.
 	//
-	// Example: legs-2
+	// Example: legs-3
 	Schema *string `json:"schema,omitempty"`
 }
 
