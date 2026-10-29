@@ -1241,7 +1241,7 @@ type PulsightInternalCoreDomainAggregatorLegsExportCatalog struct {
 
 	// FactsSchema FactsSchema is the column set of the token facts files.
 	//
-	// Example: facts-1
+	// Example: facts-2
 	FactsSchema *string `json:"facts_schema,omitempty"`
 
 	// InsidersSinceMs InsidersSinceMs is when the insider plane found its first insider (unix ms), 0 before it found any; insider holdings before it are unknown.
