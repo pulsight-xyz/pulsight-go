@@ -4293,6 +4293,9 @@ type GetTradersParams struct {
 	// FavoritesOnly Restrict to the caller's favorited traders (authenticated only)
 	FavoritesOnly *bool `form:"favorites_only,omitempty" json:"favorites_only,omitempty"`
 
+	// TrackedOnly Restrict to the caller's tracked wallets (authenticated only); with favorites_only, to the tracked favorites
+	TrackedOnly *bool `form:"tracked_only,omitempty" json:"tracked_only,omitempty"`
+
 	// ExtraWindows Comma list of DISPLAY-only window families to include: 1d, all. They ride the same board row; sorting is unaffected (it reads 7d/30d board columns) and f= filters read 1d/7d/30d board columns.
 	ExtraWindows *string `form:"extra_windows,omitempty" json:"extra_windows,omitempty"`
 
@@ -10941,6 +10944,18 @@ func NewGetTradersRequest(server string, params *GetTradersParams) (*http.Reques
 		if params.FavoritesOnly != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "favorites_only", *params.FavoritesOnly, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.TrackedOnly != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "tracked_only", *params.TrackedOnly, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
