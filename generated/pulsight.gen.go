@@ -1118,6 +1118,10 @@ type PulsightInternalCoreDomainAggregatorCosts struct {
 	RentRefunded  *PulsightInternalCoreDomainAggregatorMoney `json:"rent_refunded,omitempty"`
 	Tip           *PulsightInternalCoreDomainAggregatorMoney `json:"tip,omitempty"`
 	TipService    *string                                    `json:"tip_service,omitempty"`
+
+	// Topup TopUp is what the payer deposited into a pump holder-rewards pot in the
+	// transaction: a cost of the sender, which net PnL subtracts, and no fee.
+	Topup *PulsightInternalCoreDomainAggregatorMoney `json:"topup,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorCreatedMintRow defines model for pulsight_internal_core_domain_aggregator.CreatedMintRow.
@@ -2446,6 +2450,11 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	CashbackClaimedLamports *int `json:"cashback_claimed_lamports,omitempty"`
 	CashbackClaimedUsd      *int `json:"cashback_claimed_usd,omitempty"`
 
+	// DexFees DexFees is the venue fees paid on top of the swap amounts, with the
+	// cashback a venue charges on top.
+	DexFees    *int `json:"dex_fees,omitempty"`
+	DexFeesUsd *int `json:"dex_fees_usd,omitempty"`
+
 	// DidntBuySells DidntBuySells / SoldGtBoughtSells count the window's uncovered sells:
 	// sells of a mint with no observed buy, and sells that exceeded the
 	// observed bought balance.
@@ -2461,12 +2470,16 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	LossSellsUsd       *int `json:"loss_sells_usd,omitempty"`
 
 	// NetRealizedProfit NetRealizedProfit is the board row's net PnL: RealizedProfit minus
-	// TotalFees, TotalTips and FailedCostLamports, plus the kept cashback and
-	// the holder rewards received — what the wallet actually kept. This is the
-	// HEADLINE PnL; RealizedProfit is the pre-cost component (accrual + arb
-	// take-home).
+	// TotalFees, Topups, TotalTips and FailedCostLamports, plus the kept
+	// cashback and the holder rewards received — what the wallet actually
+	// kept. This is the HEADLINE PnL; RealizedProfit is the pre-cost component
+	// (accrual + arb take-home).
 	NetRealizedProfit    *int `json:"net_realized_profit,omitempty"`
 	NetRealizedProfitUsd *int `json:"net_realized_profit_usd,omitempty"`
+
+	// PlatformFees PlatformFees is what trading tools and routers charged.
+	PlatformFees    *int `json:"platform_fees,omitempty"`
+	PlatformFeesUsd *int `json:"platform_fees_usd,omitempty"`
 
 	// RealizedProfit RealizedProfit is the window's PnL: accrual realized profit PLUS the
 	// arbitrage take-home (ArbPnlLamports). The two are disjoint (an arb round
@@ -2478,11 +2491,17 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	SoldGtBoughtSells  *int `json:"sold_gt_bought_sells,omitempty"`
 	SwapCount          *int `json:"swap_count,omitempty"`
 	TokenNum           *int `json:"token_num,omitempty"`
-	TotalBuys          *int `json:"total_buys,omitempty"`
+
+	// Topups Topups is what the wallet deposited into pump holder-rewards pots. It is
+	// a cost, not a fee: TotalFees leaves it out and NetRealizedProfit
+	// subtracts it.
+	Topups    *int `json:"topups,omitempty"`
+	TopupsUsd *int `json:"topups_usd,omitempty"`
+	TotalBuys *int `json:"total_buys,omitempty"`
 
 	// TotalFees TotalFees is the window's execution costs other than tips: network fees
 	// (base + priority) counted once per transaction, plus venue, platform and
-	// cashback-on-top fees.
+	// cashback-on-top fees — TxFees + DexFees + PlatformFees.
 	TotalFees    *int `json:"total_fees,omitempty"`
 	TotalFeesUsd *int `json:"total_fees_usd,omitempty"`
 	TotalSells   *int `json:"total_sells,omitempty"`
@@ -2491,6 +2510,11 @@ type PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow struct {
 	TotalTips    *int    `json:"total_tips,omitempty"`
 	TotalTipsUsd *int    `json:"total_tips_usd,omitempty"`
 	Trader       *string `json:"trader,omitempty"`
+
+	// TxFees TxFees is the network fees (base + priority), counted once per
+	// transaction.
+	TxFees    *int `json:"tx_fees,omitempty"`
+	TxFeesUsd *int `json:"tx_fees_usd,omitempty"`
 
 	// UncoveredProceedsLamports UncoveredProceeds — proceeds of the window's sells of tokens with no
 	// known cost (received by transfer, or beyond the recorded buys). Neither
@@ -2787,10 +2811,16 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	CashbackShareAll      *float32 `json:"cashback_share_all,omitempty"`
 
 	// Chain "sol" | "eth"
-	Chain            *string `json:"chain,omitempty"`
-	CreatedAt        *string `json:"created_at,omitempty"`
-	DidntBuySells1d  *int    `json:"didnt_buy_sells_1d,omitempty"`
-	DidntBuySells30d *int    `json:"didnt_buy_sells_30d,omitempty"`
+	Chain            *string  `json:"chain,omitempty"`
+	CreatedAt        *string  `json:"created_at,omitempty"`
+	DexFees1d        *float32 `json:"dex_fees_1d,omitempty"`
+	DexFees1dUsd     *float32 `json:"dex_fees_1d_usd,omitempty"`
+	DexFees30d       *float32 `json:"dex_fees_30d,omitempty"`
+	DexFees30dUsd    *float32 `json:"dex_fees_30d_usd,omitempty"`
+	DexFees7d        *float32 `json:"dex_fees_7d,omitempty"`
+	DexFees7dUsd     *float32 `json:"dex_fees_7d_usd,omitempty"`
+	DidntBuySells1d  *int     `json:"didnt_buy_sells_1d,omitempty"`
+	DidntBuySells30d *int     `json:"didnt_buy_sells_30d,omitempty"`
 
 	// DidntBuySells7d Uncovered-sell counters for the window: sells with no observed buy of
 	// the mint / sells exceeding the observed bought balance.
@@ -2843,16 +2873,23 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	NetProfit30dUsd            *float32 `json:"net_profit_30d_usd,omitempty"`
 
 	// NetProfit7d Net-of-costs windowed figures, lamports. NetProfit is realized PnL
-	// minus tips, per-transaction fees and the fees burned on failed / no-CPI
-	// transactions — what the wallet actually kept. The gross figure stays on
+	// minus TotalCosts (fees, pot top-ups, tips and the fees burned on failed
+	// / no-CPI transactions), plus the cashback claimed and the holder rewards
+	// received — what the wallet actually kept. The gross figure stays on
 	// RealizedProfit*d so both are readable. SuccessRate / SpamRate are nil
 	// when the window observed no transactions at all (0 would read as
 	// "never lands").
-	NetProfit7d     *float32 `json:"net_profit_7d,omitempty"`
-	NetProfit7dUsd  *float32 `json:"net_profit_7d_usd,omitempty"`
-	NetProfitAll    *float32 `json:"net_profit_all,omitempty"`
-	NetProfitAllUsd *float32 `json:"net_profit_all_usd,omitempty"`
-	OldestTradeAt   *int     `json:"oldest_trade_at,omitempty"`
+	NetProfit7d        *float32 `json:"net_profit_7d,omitempty"`
+	NetProfit7dUsd     *float32 `json:"net_profit_7d_usd,omitempty"`
+	NetProfitAll       *float32 `json:"net_profit_all,omitempty"`
+	NetProfitAllUsd    *float32 `json:"net_profit_all_usd,omitempty"`
+	OldestTradeAt      *int     `json:"oldest_trade_at,omitempty"`
+	PlatformFees1d     *float32 `json:"platform_fees_1d,omitempty"`
+	PlatformFees1dUsd  *float32 `json:"platform_fees_1d_usd,omitempty"`
+	PlatformFees30d    *float32 `json:"platform_fees_30d,omitempty"`
+	PlatformFees30dUsd *float32 `json:"platform_fees_30d_usd,omitempty"`
+	PlatformFees7d     *float32 `json:"platform_fees_7d,omitempty"`
+	PlatformFees7dUsd  *float32 `json:"platform_fees_7d_usd,omitempty"`
 
 	// RealizedProfit RealizedProfit is the lifetime realized PnL in lamports.
 	RealizedProfit *float32 `json:"realized_profit,omitempty"`
@@ -2922,6 +2959,12 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	TokenNum30d       *int      `json:"token_num_30d,omitempty"`
 	TokenNum7d        *int      `json:"token_num_7d,omitempty"`
 	TokenNumAll       *int      `json:"token_num_all,omitempty"`
+	Topups1d          *float32  `json:"topups_1d,omitempty"`
+	Topups1dUsd       *float32  `json:"topups_1d_usd,omitempty"`
+	Topups30d         *float32  `json:"topups_30d,omitempty"`
+	Topups30dUsd      *float32  `json:"topups_30d_usd,omitempty"`
+	Topups7d          *float32  `json:"topups_7d,omitempty"`
+	Topups7dUsd       *float32  `json:"topups_7d_usd,omitempty"`
 	TotalCosts1d      *float32  `json:"total_costs_1d,omitempty"`
 	TotalCosts1dUsd   *float32  `json:"total_costs_1d_usd,omitempty"`
 	TotalCosts30d     *float32  `json:"total_costs_30d,omitempty"`
@@ -2934,16 +2977,27 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	TotalProfit7d     *float32  `json:"total_profit_7d,omitempty"`
 	TotalProfitPnl30d *float32  `json:"total_profit_pnl_30d,omitempty"`
 	TotalProfitPnl7d  *float32  `json:"total_profit_pnl_7d,omitempty"`
-	UpdatedAt         *string   `json:"updated_at,omitempty"`
-	WalletAddress     *string   `json:"wallet_address,omitempty"`
-	Winrate1d         *float32  `json:"winrate_1d,omitempty"`
-	Winrate1dUsd      *float32  `json:"winrate_1d_usd,omitempty"`
-	Winrate30d        *float32  `json:"winrate_30d,omitempty"`
-	Winrate30dUsd     *float32  `json:"winrate_30d_usd,omitempty"`
-	Winrate7d         *float32  `json:"winrate_7d,omitempty"`
-	Winrate7dUsd      *float32  `json:"winrate_7d_usd,omitempty"`
-	WinrateAll        *float32  `json:"winrate_all,omitempty"`
-	WinrateAllUsd     *float32  `json:"winrate_all_usd,omitempty"`
+	TxFees1d          *float32  `json:"tx_fees_1d,omitempty"`
+	TxFees1dUsd       *float32  `json:"tx_fees_1d_usd,omitempty"`
+	TxFees30d         *float32  `json:"tx_fees_30d,omitempty"`
+	TxFees30dUsd      *float32  `json:"tx_fees_30d_usd,omitempty"`
+
+	// TxFees7d TotalCosts lines: TxFees the network fees, DexFees the venue fees and
+	// venue cashback charged on top, PlatformFees what trading tools and
+	// routers charged, Topups what the wallet deposited into pump
+	// holder-rewards pots. Tips and failed-tx burn are the rest.
+	TxFees7d      *float32 `json:"tx_fees_7d,omitempty"`
+	TxFees7dUsd   *float32 `json:"tx_fees_7d_usd,omitempty"`
+	UpdatedAt     *string  `json:"updated_at,omitempty"`
+	WalletAddress *string  `json:"wallet_address,omitempty"`
+	Winrate1d     *float32 `json:"winrate_1d,omitempty"`
+	Winrate1dUsd  *float32 `json:"winrate_1d_usd,omitempty"`
+	Winrate30d    *float32 `json:"winrate_30d,omitempty"`
+	Winrate30dUsd *float32 `json:"winrate_30d_usd,omitempty"`
+	Winrate7d     *float32 `json:"winrate_7d,omitempty"`
+	Winrate7dUsd  *float32 `json:"winrate_7d_usd,omitempty"`
+	WinrateAll    *float32 `json:"winrate_all,omitempty"`
+	WinrateAllUsd *float32 `json:"winrate_all_usd,omitempty"`
 }
 
 // PulsightInternalCoreDomainWebhookNotifier defines model for pulsight_internal_core_domain_webhook.Notifier.
@@ -3510,16 +3564,18 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
 	Cashback      *int    `json:"cashback,omitempty"`
 	CashbackUsd   *int    `json:"cashback_usd,omitempty"`
 	Day           *string `json:"day,omitempty"`
+	DexFees       *int    `json:"dex_fees,omitempty"`
+	DexFeesUsd    *int    `json:"dex_fees_usd,omitempty"`
 	FailedCost    *int    `json:"failed_cost,omitempty"`
 	FailedCostUsd *int    `json:"failed_cost_usd,omitempty"`
 	FailedTxs     *int    `json:"failed_txs,omitempty"`
 
-	// Fees Costs of the day (lamports): per-tx fees, tips, and failed-tx burn,
-	// against what pump paid the wallet that day — cashback CLAIMED and
+	// Fees Costs of the day (lamports): fees, pot top-ups, tips, and failed-tx
+	// burn, against what pump paid the wallet that day — cashback CLAIMED and
 	// holder rewards RECEIVED, both cash basis — with `net = profit - fees
-	// - tips - failed_cost + cashback + holder_rewards` (profit already
-	// includes the arbitrage take-home). The charts plot NET as the headline
-	// series; `profit` stays as the flat/gross component.
+	// - topups - tips - failed_cost + cashback + holder_rewards` (profit
+	// already includes the arbitrage take-home). The charts plot NET as the
+	// headline series; `profit` stays as the flat/gross component.
 	Fees                *int `json:"fees,omitempty"`
 	FeesUsd             *int `json:"fees_usd,omitempty"`
 	HolderRewardPayouts *int `json:"holder_reward_payouts,omitempty"`
@@ -3532,6 +3588,8 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
 	HolderRewardsUsd *int `json:"holder_rewards_usd,omitempty"`
 	Net              *int `json:"net,omitempty"`
 	NetUsd           *int `json:"net_usd,omitempty"`
+	PlatformFees     *int `json:"platform_fees,omitempty"`
+	PlatformFeesUsd  *int `json:"platform_fees_usd,omitempty"`
 	Profit           *int `json:"profit,omitempty"`
 
 	// ProfitUsd The Usd twins are the same day's figures on the trades' USD stamps
@@ -3540,6 +3598,17 @@ type PulsightInternalCoreUsecasesTraderPnlSeriesPoint struct {
 	SuccessRate *float32 `json:"success_rate,omitempty"`
 	Tips        *int     `json:"tips,omitempty"`
 	TipsUsd     *int     `json:"tips_usd,omitempty"`
+
+	// Topups Topups is what the wallet deposited into pump holder-rewards pots: a
+	// cost in no fee line.
+	Topups    *int `json:"topups,omitempty"`
+	TopupsUsd *int `json:"topups_usd,omitempty"`
+
+	// TxFees TxFees, DexFees and PlatformFees itemize Fees: the network fees once
+	// per transaction, the venue fees and venue cashback charged on top of the
+	// swap amounts, and what trading tools and routers charged.
+	TxFees    *int `json:"tx_fees,omitempty"`
+	TxFeesUsd *int `json:"tx_fees_usd,omitempty"`
 
 	// Txs Txs is the day's landed transaction count; FailedTxs the failed-tx
 	// ledger's failed swaps+arbs+other. SuccessRate divides the OBSERVED
@@ -3618,6 +3687,12 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	CashbackShareAll      *float32 `json:"cashback_share_all,omitempty"`
 	Chain                 *string  `json:"chain,omitempty"`
 	CreatedAt             *string  `json:"created_at,omitempty"`
+	DexFees1d             *float32 `json:"dex_fees_1d,omitempty"`
+	DexFees1dUsd          *float32 `json:"dex_fees_1d_usd,omitempty"`
+	DexFees30d            *float32 `json:"dex_fees_30d,omitempty"`
+	DexFees30dUsd         *float32 `json:"dex_fees_30d_usd,omitempty"`
+	DexFees7d             *float32 `json:"dex_fees_7d,omitempty"`
+	DexFees7dUsd          *float32 `json:"dex_fees_7d_usd,omitempty"`
 	DidntBuySells1d       *int     `json:"didnt_buy_sells_1d,omitempty"`
 	DidntBuySells30d      *int     `json:"didnt_buy_sells_30d,omitempty"`
 
@@ -3695,7 +3770,13 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// Periods Periods is one row per canonical window (1d, 7d, 30d, all) off the
 	// wallet's board row. Drives the period stats panel on the
 	// trader-detail page.
-	Periods *[]PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow `json:"periods,omitempty"`
+	Periods            *[]PulsightInternalCoreDomainAggregatorTraderPeriodStatsRow `json:"periods,omitempty"`
+	PlatformFees1d     *float32                                                    `json:"platform_fees_1d,omitempty"`
+	PlatformFees1dUsd  *float32                                                    `json:"platform_fees_1d_usd,omitempty"`
+	PlatformFees30d    *float32                                                    `json:"platform_fees_30d,omitempty"`
+	PlatformFees30dUsd *float32                                                    `json:"platform_fees_30d_usd,omitempty"`
+	PlatformFees7d     *float32                                                    `json:"platform_fees_7d,omitempty"`
+	PlatformFees7dUsd  *float32                                                    `json:"platform_fees_7d_usd,omitempty"`
 
 	// PnlDistribution PnlDistribution is the 5-bucket realised-PnL distribution for
 	// the request window: [<-50%, -50–0%, 0–2×, 2–5×, >5×]. Nil when
@@ -3782,6 +3863,12 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// wasn't inlined. Mirror the creator_tokens_* leaderboard filters.
 	TokensCreated     *int     `json:"tokens_created,omitempty"`
 	TokensGraduated   *int     `json:"tokens_graduated,omitempty"`
+	Topups1d          *float32 `json:"topups_1d,omitempty"`
+	Topups1dUsd       *float32 `json:"topups_1d_usd,omitempty"`
+	Topups30d         *float32 `json:"topups_30d,omitempty"`
+	Topups30dUsd      *float32 `json:"topups_30d_usd,omitempty"`
+	Topups7d          *float32 `json:"topups_7d,omitempty"`
+	Topups7dUsd       *float32 `json:"topups_7d_usd,omitempty"`
 	TotalCosts1d      *float32 `json:"total_costs_1d,omitempty"`
 	TotalCosts1dUsd   *float32 `json:"total_costs_1d_usd,omitempty"`
 	TotalCosts30d     *float32 `json:"total_costs_30d,omitempty"`
@@ -3794,16 +3881,26 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	TotalProfit7d     *float32 `json:"total_profit_7d,omitempty"`
 	TotalProfitPnl30d *float32 `json:"total_profit_pnl_30d,omitempty"`
 	TotalProfitPnl7d  *float32 `json:"total_profit_pnl_7d,omitempty"`
-	UpdatedAt         *string  `json:"updated_at,omitempty"`
-	WalletAddress     *string  `json:"wallet_address,omitempty"`
-	Winrate1d         *float32 `json:"winrate_1d,omitempty"`
-	Winrate1dUsd      *float32 `json:"winrate_1d_usd,omitempty"`
-	Winrate30d        *float32 `json:"winrate_30d,omitempty"`
-	Winrate30dUsd     *float32 `json:"winrate_30d_usd,omitempty"`
-	Winrate7d         *float32 `json:"winrate_7d,omitempty"`
-	Winrate7dUsd      *float32 `json:"winrate_7d_usd,omitempty"`
-	WinrateAll        *float32 `json:"winrate_all,omitempty"`
-	WinrateAllUsd     *float32 `json:"winrate_all_usd,omitempty"`
+	TxFees1d          *float32 `json:"tx_fees_1d,omitempty"`
+	TxFees1dUsd       *float32 `json:"tx_fees_1d_usd,omitempty"`
+	TxFees30d         *float32 `json:"tx_fees_30d,omitempty"`
+	TxFees30dUsd      *float32 `json:"tx_fees_30d_usd,omitempty"`
+
+	// TxFees7d The lines of TotalCosts7d beside tips and failed-tx burn: network fees,
+	// venue fees (with venue cashback charged on top), platform fees, and
+	// what the wallet deposited into pump holder-rewards pots.
+	TxFees7d      *float32 `json:"tx_fees_7d,omitempty"`
+	TxFees7dUsd   *float32 `json:"tx_fees_7d_usd,omitempty"`
+	UpdatedAt     *string  `json:"updated_at,omitempty"`
+	WalletAddress *string  `json:"wallet_address,omitempty"`
+	Winrate1d     *float32 `json:"winrate_1d,omitempty"`
+	Winrate1dUsd  *float32 `json:"winrate_1d_usd,omitempty"`
+	Winrate30d    *float32 `json:"winrate_30d,omitempty"`
+	Winrate30dUsd *float32 `json:"winrate_30d_usd,omitempty"`
+	Winrate7d     *float32 `json:"winrate_7d,omitempty"`
+	Winrate7dUsd  *float32 `json:"winrate_7d_usd,omitempty"`
+	WinrateAll    *float32 `json:"winrate_all,omitempty"`
+	WinrateAllUsd *float32 `json:"winrate_all_usd,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesTraderTraderListResult defines model for pulsight_internal_core_usecases_trader.TraderListResult.
