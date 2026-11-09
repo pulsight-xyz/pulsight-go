@@ -496,28 +496,66 @@ type InternalAdaptersPrimaryHttpHandlerPaginatedCreditLedger struct {
 	Total  *int                                           `json:"total,omitempty"`
 }
 
+// InternalAdaptersPrimaryHttpHandlerSimulationAssumptionsResponse defines model for internal_adapters_primary_http_handler.SimulationAssumptionsResponse.
+type InternalAdaptersPrimaryHttpHandlerSimulationAssumptionsResponse struct {
+	// SimulationAssumptions SimulationAssumptions is the list every run's
+	// summary.simulation_assumptions and every preview carry.
+	SimulationAssumptions *[]string `json:"simulation_assumptions,omitempty"`
+}
+
 // InternalAdaptersPrimaryHttpHandlerStrategyListItem defines model for internal_adapters_primary_http_handler.StrategyListItem.
 type InternalAdaptersPrimaryHttpHandlerStrategyListItem struct {
 	Record *PulsightInternalCoreDomainStrategyRecord        `json:"record,omitempty"`
 	Stats  *InternalAdaptersPrimaryHttpHandlerStrategyStats `json:"stats,omitempty"`
 }
 
+// InternalAdaptersPrimaryHttpHandlerStrategyRunPoint defines model for internal_adapters_primary_http_handler.StrategyRunPoint.
+type InternalAdaptersPrimaryHttpHandlerStrategyRunPoint struct {
+	BacktestId *string `json:"backtest_id,omitempty"`
+
+	// CreatedAt CreatedAt is when the run was submitted, the key the series is
+	// ordered by.
+	CreatedAt *string  `json:"created_at,omitempty"`
+	RoiPct    *float32 `json:"roi_pct,omitempty"`
+
+	// TimeFrom TimeFrom and TimeTo bound the window the run replayed.
+	TimeFrom *string `json:"time_from,omitempty"`
+	TimeTo   *string `json:"time_to,omitempty"`
+
+	// TotalPnlSol TotalPnlSol is the run's summary.total_pnl_sol, not a running sum.
+	TotalPnlSol *float32 `json:"total_pnl_sol,omitempty"`
+}
+
 // InternalAdaptersPrimaryHttpHandlerStrategyStats defines model for internal_adapters_primary_http_handler.StrategyStats.
 type InternalAdaptersPrimaryHttpHandlerStrategyStats struct {
 	Draft *bool `json:"draft,omitempty"`
 
-	// EquityPoints EquityPoints is the cumulative-P&L curve across the most
-	// recent ≤20 `done` runs, ordered ascending by finished_at.
-	// Each element is the running sum of `summary.total_pnl_sol`
-	// through that run, so a frontend <polyline> over these points
-	// renders the dashboard sparkline directly.
-	EquityPoints      *[]float32 `json:"equity_points,omitempty"`
-	LastRunAt         *string    `json:"last_run_at,omitempty"`
-	LastRunPnlSol     *float32   `json:"last_run_pnl_sol,omitempty"`
-	LastRunStatus     *string    `json:"last_run_status,omitempty"`
-	LastRunTrades     *int       `json:"last_run_trades,omitempty"`
-	LastRunWinRatePct *float32   `json:"last_run_win_rate_pct,omitempty"`
-	TotalRuns         *int       `json:"total_runs,omitempty"`
+	// LastRunAt LastRunAt is when that run finished, or when it was submitted
+	// while it has not finished.
+	LastRunAt *string `json:"last_run_at,omitempty"`
+
+	// LastRunPnlSol LastRunPnlSol is that run's summary.total_pnl_sol; null until
+	// the run has a summary.
+	LastRunPnlSol *float32 `json:"last_run_pnl_sol,omitempty"`
+
+	// LastRunStatus LastRunStatus is the status of the newest run by created_at,
+	// whatever its outcome.
+	LastRunStatus *string `json:"last_run_status,omitempty"`
+
+	// LastRunTrades LastRunTrades is that run's summary.trades: every fill, buys
+	// included.
+	LastRunTrades *int `json:"last_run_trades,omitempty"`
+
+	// LastRunWinRatePct LastRunWinRatePct is that run's wins / (wins + losses) × 100, the
+	// win rate the run page shows; null until the run has closed a trade.
+	LastRunWinRatePct *float32 `json:"last_run_win_rate_pct,omitempty"`
+
+	// RunPoints RunPoints is one point per `done` run among the newest 20 by
+	// created_at, in ascending created_at order. Each point carries
+	// that run's own total_pnl_sol, never a running sum: runs differ
+	// in window and scope, so their PnL does not add up to an equity.
+	RunPoints *[]InternalAdaptersPrimaryHttpHandlerStrategyRunPoint `json:"run_points,omitempty"`
+	TotalRuns *int                                                  `json:"total_runs,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerWebhookNotifierCreateRequest defines model for internal_adapters_primary_http_handler.WebhookNotifierCreateRequest.
@@ -3117,6 +3155,18 @@ type PulsightInternalCorePortsInputUserPoolCredits struct {
 	Used *int `json:"used,omitempty"`
 }
 
+// PulsightInternalCoreUsecasesBacktestBacktestBreakdown defines model for pulsight_internal_core_usecases_backtest.BacktestBreakdown.
+type PulsightInternalCoreUsecasesBacktestBacktestBreakdown struct {
+	BacktestId       *string                                                     `json:"backtest_id,omitempty"`
+	DeclinesByReason *map[string]int                                             `json:"declines_by_reason,omitempty"`
+	Equity           *PulsightInternalCoreUsecasesBacktestEquityCurve            `json:"equity,omitempty"`
+	Mints            *[]PulsightInternalCoreUsecasesBacktestMintBreakdown        `json:"mints,omitempty"`
+	Target           *[]PulsightInternalCoreUsecasesBacktestTargetMintComparison `json:"target,omitempty"`
+
+	// TargetWallets TargetWallets are the mirrored wallets the target comparison reads.
+	TargetWallets *[]string `json:"target_wallets,omitempty"`
+}
+
 // PulsightInternalCoreUsecasesBacktestBacktestDecline defines model for pulsight_internal_core_usecases_backtest.BacktestDecline.
 type PulsightInternalCoreUsecasesBacktestBacktestDecline struct {
 	BacktestId *string `json:"backtest_id,omitempty"`
@@ -3151,6 +3201,34 @@ type PulsightInternalCoreUsecasesBacktestBacktestDecline struct {
 	Ts                *string                                          `json:"ts,omitempty"`
 }
 
+// PulsightInternalCoreUsecasesBacktestBacktestEstimate defines model for pulsight_internal_core_usecases_backtest.BacktestEstimate.
+type PulsightInternalCoreUsecasesBacktestBacktestEstimate struct {
+	// Credits Credits is what the run would debit: one api credit per estimated tick.
+	Credits *int `json:"credits,omitempty"`
+
+	// EstimatedTicks EstimatedTicks is the run's tick count: candles in the window times
+	// the scope's token slots (times the pools per mint on a per-pool run).
+	EstimatedTicks *int `json:"estimated_ticks,omitempty"`
+
+	// MaxTickBudget MaxTickBudget is the per-run tick ceiling, the most a run may cost.
+	MaxTickBudget *int `json:"max_tick_budget,omitempty"`
+
+	// MaxWindowSecs MaxWindowSecs is the longest window the request's timeframe allows, in
+	// seconds; 0 means unlimited.
+	MaxWindowSecs *int `json:"max_window_secs,omitempty"`
+
+	// MintsCount MintsCount is how many tokens the scope admits over the window: the
+	// explicit list, or the strategy's own selection resolved minute by
+	// minute as a run resolves it.
+	MintsCount *int `json:"mints_count,omitempty"`
+
+	// WithinBudget WithinBudget reports EstimatedTicks <= MaxTickBudget.
+	WithinBudget *bool `json:"within_budget,omitempty"`
+
+	// WithinWindow WithinWindow reports that the window fits MaxWindowSecs.
+	WithinWindow *bool `json:"within_window,omitempty"`
+}
+
 // PulsightInternalCoreUsecasesBacktestBacktestPosition defines model for pulsight_internal_core_usecases_backtest.BacktestPosition.
 type PulsightInternalCoreUsecasesBacktestBacktestPosition struct {
 	CostBasisSol *float32 `json:"cost_basis_sol,omitempty"`
@@ -3177,26 +3255,29 @@ type PulsightInternalCoreUsecasesBacktestBacktestPosition struct {
 
 // PulsightInternalCoreUsecasesBacktestBacktestRecord defines model for pulsight_internal_core_usecases_backtest.BacktestRecord.
 type PulsightInternalCoreUsecasesBacktestBacktestRecord struct {
-	CreatedAt          *string                                              `json:"created_at,omitempty"`
-	Error              *string                                              `json:"error,omitempty"`
-	FinishedAt         *string                                              `json:"finished_at,omitempty"`
-	Id                 *string                                              `json:"id,omitempty"`
-	LatencySlots       *int                                                 `json:"latency_slots,omitempty"`
-	PerPool            *bool                                                `json:"per_pool,omitempty"`
-	ProgressNote       *string                                              `json:"progress_note,omitempty"`
-	ProgressPct        *int                                                 `json:"progress_pct,omitempty"`
-	Scope              *PulsightInternalCoreUsecasesBacktestTokenScope      `json:"scope,omitempty"`
-	StartedAt          *string                                              `json:"started_at,omitempty"`
-	StartingBalanceSol *float32                                             `json:"starting_balance_sol,omitempty"`
-	Status             *PulsightInternalCoreUsecasesBacktestBacktestStatus  `json:"status,omitempty"`
-	StrategyId         *string                                              `json:"strategy_id,omitempty"`
-	StrategySnapshot   *PulsightInternalCoreDomainStrategyStrategyDef       `json:"strategy_snapshot,omitempty"`
-	Summary            *PulsightInternalCoreUsecasesBacktestBacktestSummary `json:"summary,omitempty"`
-	TargetTrader       *string                                              `json:"target_trader,omitempty"`
-	TimeFrom           *string                                              `json:"time_from,omitempty"`
-	TimeTo             *string                                              `json:"time_to,omitempty"`
-	Timeframe          *PulsightInternalCoreDomainAggregatorTimeframe       `json:"timeframe,omitempty"`
-	UserId             *string                                              `json:"user_id,omitempty"`
+	CreatedAt          *string                                             `json:"created_at,omitempty"`
+	Error              *string                                             `json:"error,omitempty"`
+	FinishedAt         *string                                             `json:"finished_at,omitempty"`
+	Id                 *string                                             `json:"id,omitempty"`
+	LatencySlots       *int                                                `json:"latency_slots,omitempty"`
+	PerPool            *bool                                               `json:"per_pool,omitempty"`
+	ProgressNote       *string                                             `json:"progress_note,omitempty"`
+	ProgressPct        *int                                                `json:"progress_pct,omitempty"`
+	Scope              *PulsightInternalCoreUsecasesBacktestTokenScope     `json:"scope,omitempty"`
+	StartedAt          *string                                             `json:"started_at,omitempty"`
+	StartingBalanceSol *float32                                            `json:"starting_balance_sol,omitempty"`
+	Status             *PulsightInternalCoreUsecasesBacktestBacktestStatus `json:"status,omitempty"`
+	StrategyId         *string                                             `json:"strategy_id,omitempty"`
+
+	// StrategySnapshot StrategySnapshot is the def the run executed, frozen at submit. A run
+	// list carries it only with include=snapshot.
+	StrategySnapshot *PulsightInternalCoreDomainStrategyStrategyDef       `json:"strategy_snapshot,omitempty"`
+	Summary          *PulsightInternalCoreUsecasesBacktestBacktestSummary `json:"summary,omitempty"`
+	TargetTrader     *string                                              `json:"target_trader,omitempty"`
+	TimeFrom         *string                                              `json:"time_from,omitempty"`
+	TimeTo           *string                                              `json:"time_to,omitempty"`
+	Timeframe        *PulsightInternalCoreDomainAggregatorTimeframe       `json:"timeframe,omitempty"`
+	UserId           *string                                              `json:"user_id,omitempty"`
 
 	// Venue Venue / PerPool / LatencySlots echo the submitted run parameters. They
 	// are persisted because the NATS worker path REBUILDS the BacktestRequest
@@ -3251,6 +3332,10 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// went through (reverted ones are excluded; their cost shows as
 	// RevertFeesSol + missed entries). Nil when the run had no landing fills.
 	AvgLandingDriftBps *float32 `json:"avg_landing_drift_bps,omitempty"`
+
+	// CapitalRequiredSol CapitalRequiredSol is the starting balance that would have kept the cash
+	// walk at or above zero: max(StartingBalanceSol, StartingBalanceSol-MinCashSol).
+	CapitalRequiredSol *float32 `json:"capital_required_sol,omitempty"`
 
 	// CopiesDeclined CopiesDeclined counts target swaps a signal-driven exec wanted to act
 	// on but that a RULE refused: cooldown, sizing, max_buys_per_open_position,
@@ -3327,6 +3412,13 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	Losses         *int     `json:"losses,omitempty"`
 	MaxDrawdownSol *float32 `json:"max_drawdown_sol,omitempty"`
 
+	// MinCashSol MinCashSol is the low point of the chronological cash walk: the starting
+	// balance minus every buy's size and costs, plus every sell's proceeds net
+	// of costs, minus reverted fills' costs. Negative means the run spent SOL
+	// the starting balance never had — the engine replays each token's whole
+	// window before the next one and cannot gate a buy on portfolio cash.
+	MinCashSol *float32 `json:"min_cash_sol,omitempty"`
+
 	// OurAvgPriceImpactPct Price-impact rollups, in percent of mid. "Our*" averages over every
 	// simulated trade that had a pool snapshot; "Target*" averages over the
 	// copy trades that mirrored a target swap 1:1 (same timestamp). Zero when
@@ -3389,11 +3481,18 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	RevertFeesSol *float32 `json:"revert_fees_sol,omitempty"`
 	RoiPct        *float32 `json:"roi_pct,omitempty"`
 
+	// ScopeExitsUnpriced ScopeExitsUnpriced counts the forced closes an `on_retire: sell` policy
+	// could not fill because no candle had priced the token yet when it left
+	// the selection: the position stays open, its exits keep firing, and
+	// whatever is left at the end is marked in HeldPositions. Additive JSONB
+	// field — old rows decode as 0.
+	ScopeExitsUnpriced *int `json:"scope_exits_unpriced,omitempty"`
+
 	// SimulationAssumptions SimulationAssumptions is free-text notes about which real-world
 	// cost components the simulator did NOT model (route hops, MEV,
 	// partial fills, pre-trade gas estimation, etc.). Rendered
 	// prominently on the result page so users don't read "won 4.2 SOL"
-	// too literally.
+	// too literally. A run list carries them only with include=assumptions.
 	SimulationAssumptions      *[]string `json:"simulation_assumptions,omitempty"`
 	StartingBalanceSol         *float32  `json:"starting_balance_sol,omitempty"`
 	TargetAvgPriceImpactPct    *float32  `json:"target_avg_price_impact_pct,omitempty"`
@@ -3468,6 +3567,46 @@ type PulsightInternalCoreUsecasesBacktestBacktestTrade struct {
 // PulsightInternalCoreUsecasesBacktestDeclineReason defines model for pulsight_internal_core_usecases_backtest.DeclineReason.
 type PulsightInternalCoreUsecasesBacktestDeclineReason string
 
+// PulsightInternalCoreUsecasesBacktestEquityCurve defines model for pulsight_internal_core_usecases_backtest.EquityCurve.
+type PulsightInternalCoreUsecasesBacktestEquityCurve struct {
+	MaxDrawdownAt  *string                                            `json:"max_drawdown_at,omitempty"`
+	MaxDrawdownSol *float32                                           `json:"max_drawdown_sol,omitempty"`
+	Points         *[]PulsightInternalCoreUsecasesBacktestEquityPoint `json:"points,omitempty"`
+
+	// SampledEveryNSteps SampledEveryNSteps is 1 when every step is a point, more when the walk
+	// was sampled to MaxEquityPoints.
+	SampledEveryNSteps *int `json:"sampled_every_n_steps,omitempty"`
+}
+
+// PulsightInternalCoreUsecasesBacktestEquityPoint defines model for pulsight_internal_core_usecases_backtest.EquityPoint.
+type PulsightInternalCoreUsecasesBacktestEquityPoint struct {
+	BalanceSol *float32 `json:"balance_sol,omitempty"`
+	Ts         *string  `json:"ts,omitempty"`
+}
+
+// PulsightInternalCoreUsecasesBacktestMintBreakdown defines model for pulsight_internal_core_usecases_backtest.MintBreakdown.
+type PulsightInternalCoreUsecasesBacktestMintBreakdown struct {
+	Buys *int `json:"buys,omitempty"`
+
+	// Declines Declines counts the target swaps on the mint a copy exec wanted to act
+	// on but did not fill.
+	Declines *int `json:"declines,omitempty"`
+
+	// FeesSol FeesSol is the swap, tip, platform and transfer fees its fills paid.
+	FeesSol *float32 `json:"fees_sol,omitempty"`
+	FirstTs *string  `json:"first_ts,omitempty"`
+
+	// HeldAtEnd HeldAtEnd reports a position still open when the run ended.
+	HeldAtEnd *bool   `json:"held_at_end,omitempty"`
+	LastTs    *string `json:"last_ts,omitempty"`
+	Mint      *string `json:"mint,omitempty"`
+
+	// Pool Pool is the pool most of the mint's fills priced on.
+	Pool           *string  `json:"pool,omitempty"`
+	RealizedPnlSol *float32 `json:"realized_pnl_sol,omitempty"`
+	Sells          *int     `json:"sells,omitempty"`
+}
+
 // PulsightInternalCoreUsecasesBacktestPreviewMarker defines model for pulsight_internal_core_usecases_backtest.PreviewMarker.
 type PulsightInternalCoreUsecasesBacktestPreviewMarker struct {
 	PoolSolAtTrigger *float32 `json:"pool_sol_at_trigger,omitempty"`
@@ -3511,6 +3650,25 @@ type PulsightInternalCoreUsecasesBacktestPreviewSkip struct {
 
 // PulsightInternalCoreUsecasesBacktestSide defines model for pulsight_internal_core_usecases_backtest.Side.
 type PulsightInternalCoreUsecasesBacktestSide string
+
+// PulsightInternalCoreUsecasesBacktestTargetMintComparison defines model for pulsight_internal_core_usecases_backtest.TargetMintComparison.
+type PulsightInternalCoreUsecasesBacktestTargetMintComparison struct {
+	// FollowedPct FollowedPct is our buys over the target's, in percent; absent when the
+	// target bought nothing.
+	FollowedPct    *float32 `json:"followed_pct,omitempty"`
+	Mint           *string  `json:"mint,omitempty"`
+	OurBuys        *int     `json:"our_buys,omitempty"`
+	OurRealizedSol *float32 `json:"our_realized_sol,omitempty"`
+	OurSells       *int     `json:"our_sells,omitempty"`
+	TargetBuys     *int     `json:"target_buys,omitempty"`
+	TargetSells    *int     `json:"target_sells,omitempty"`
+
+	// TargetSolIn TargetSolIn and TargetSolOut are the SOL the target spent buying and
+	// received selling in the window; their difference is a cash flow, not a
+	// realized PnL, since a position can stay open.
+	TargetSolIn  *float32 `json:"target_sol_in,omitempty"`
+	TargetSolOut *float32 `json:"target_sol_out,omitempty"`
+}
 
 // PulsightInternalCoreUsecasesBacktestTimeRange defines model for pulsight_internal_core_usecases_backtest.TimeRange.
 type PulsightInternalCoreUsecasesBacktestTimeRange struct {
@@ -3930,8 +4088,17 @@ type PulsightInternalCoreUsecasesTraderTraderPnlDistributionRow struct {
 
 // GetBacktestsParams defines parameters for GetBacktests.
 type GetBacktestsParams struct {
-	// StrategyId Strategy ID (when called via /api/backtests)
-	StrategyId *string `form:"strategy_id,omitempty" json:"strategy_id,omitempty"`
+	// StrategyId Strategy ID
+	StrategyId string `form:"strategy_id" json:"strategy_id"`
+
+	// Limit Page size (default 20, max 200)
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Page offset (default 0)
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Include Comma-separated: snapshot (strategy_snapshot), assumptions (summary.simulation_assumptions). Default none.
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
 }
 
 // PostBacktestsParams defines parameters for PostBacktests.
@@ -3940,22 +4107,49 @@ type PostBacktestsParams struct {
 	IdempotencyKey *string `json:"Idempotency-Key,omitempty"`
 }
 
+// GetBacktestsByIdBreakdownParams defines parameters for GetBacktestsByIdBreakdown.
+type GetBacktestsByIdBreakdownParams struct {
+	// Include Comma-separated: mints, declines, equity, target (default mints,declines,equity)
+	Include *string `form:"include,omitempty" json:"include,omitempty"`
+}
+
 // GetBacktestsByIdDeclinesParams defines parameters for GetBacktestsByIdDeclines.
 type GetBacktestsByIdDeclinesParams struct {
-	// Limit Page size (default 200, max 2000)
+	// Limit Page size (default 200, max 5000)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
 	// Offset Page offset (default 0)
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Mint Only this mint's declines
+	Mint *string `form:"mint,omitempty" json:"mint,omitempty"`
+
+	// Side buy or sell
+	Side *string `form:"side,omitempty" json:"side,omitempty"`
+
+	// Source copy_buy, copy_sell, emit_buy or emit_sell
+	Source *string `form:"source,omitempty" json:"source,omitempty"`
+
+	// Reason One decline reason, e.g. max_buys_per_position
+	Reason *string `form:"reason,omitempty" json:"reason,omitempty"`
 }
 
 // GetBacktestsByIdTradesParams defines parameters for GetBacktestsByIdTrades.
 type GetBacktestsByIdTradesParams struct {
-	// Limit Page size (default 200, max 2000)
+	// Limit Page size (default 200, max 5000)
 	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
 
 	// Offset Page offset (default 0)
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Mint Only this mint's trades
+	Mint *string `form:"mint,omitempty" json:"mint,omitempty"`
+
+	// Side buy or sell
+	Side *string `form:"side,omitempty" json:"side,omitempty"`
+
+	// Source copy_buy, copy_sell, emit_buy, emit_sell or scope_exit
+	Source *string `form:"source,omitempty" json:"source,omitempty"`
 }
 
 // GetCashbackLeaderboardParams defines parameters for GetCashbackLeaderboard.
@@ -4504,6 +4698,9 @@ type GetTradersByWalletAddressTokensParams struct {
 // PostBacktestsJSONRequestBody defines body for PostBacktests for application/json ContentType.
 type PostBacktestsJSONRequestBody = PulsightInternalCoreUsecasesBacktestBacktestRequest
 
+// PostBacktestsEstimateJSONRequestBody defines body for PostBacktestsEstimate for application/json ContentType.
+type PostBacktestsEstimateJSONRequestBody = PulsightInternalCoreUsecasesBacktestBacktestRequest
+
 // PostBacktestsPickTokensJSONRequestBody defines body for PostBacktestsPickTokens for application/json ContentType.
 type PostBacktestsPickTokensJSONRequestBody = InternalAdaptersPrimaryHttpHandlerPickTokensRequest
 
@@ -4630,6 +4827,25 @@ type ClientInterface interface {
 	// Corresponds with POST /api/backtests (the `PostBacktests` operationId).
 	PostBacktests(ctx context.Context, params *PostBacktestsParams, body PostBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetBacktestsAssumptions Backtest Simulation Assumptions
+	//
+	// Corresponds with GET /api/backtests/assumptions (the `GetBacktestsAssumptions` operationId).
+	GetBacktestsAssumptions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostBacktestsEstimateWithBody Estimate Backtest
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+	PostBacktestsEstimateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostBacktestsEstimate Estimate Backtest
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+	PostBacktestsEstimate(ctx context.Context, body PostBacktestsEstimateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetBacktestsLimits Get Backtest Limits
 	//
 	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
@@ -4660,6 +4876,11 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/backtests/{id} (the `GetBacktestsById` operationId).
 	GetBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetBacktestsByIdBreakdown Backtest Breakdown
+	//
+	// Corresponds with GET /api/backtests/{id}/breakdown (the `GetBacktestsByIdBreakdown` operationId).
+	GetBacktestsByIdBreakdown(ctx context.Context, id string, params *GetBacktestsByIdBreakdownParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetBacktestsByIdDeclines List Backtest Declines
 	//
@@ -5340,6 +5561,55 @@ func (c *Client) PostBacktests(ctx context.Context, params *PostBacktestsParams,
 	return c.Client.Do(req)
 }
 
+// GetBacktestsAssumptions Backtest Simulation Assumptions
+//
+// Corresponds with GET /api/backtests/assumptions (the `GetBacktestsAssumptions` operationId).
+func (c *Client) GetBacktestsAssumptions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBacktestsAssumptionsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostBacktestsEstimateWithBody Estimate Backtest
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+func (c *Client) PostBacktestsEstimateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostBacktestsEstimateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostBacktestsEstimate Estimate Backtest
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+func (c *Client) PostBacktestsEstimate(ctx context.Context, body PostBacktestsEstimateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostBacktestsEstimateRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetBacktestsLimits Get Backtest Limits
 //
 // Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
@@ -5411,6 +5681,21 @@ func (c *Client) DeleteBacktestsById(ctx context.Context, id string, reqEditors 
 // Corresponds with GET /api/backtests/{id} (the `GetBacktestsById` operationId).
 func (c *Client) GetBacktestsById(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetBacktestsByIdRequest(c.Server, id)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetBacktestsByIdBreakdown Backtest Breakdown
+//
+// Corresponds with GET /api/backtests/{id}/breakdown (the `GetBacktestsByIdBreakdown` operationId).
+func (c *Client) GetBacktestsByIdBreakdown(ctx context.Context, id string, params *GetBacktestsByIdBreakdownParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetBacktestsByIdBreakdownRequest(c.Server, id, params)
 	if err != nil {
 		return nil, err
 	}
@@ -6988,9 +7273,41 @@ func NewGetBacktestsRequest(server string, params *GetBacktestsParams) (*http.Re
 		// per the OpenAPI spec (e.g. "color=blue,black,brown").
 		var rawQueryFragments []string
 
-		if params.StrategyId != nil {
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "strategy_id", params.StrategyId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else {
+			for _, qp := range strings.Split(queryFrag, "&") {
+				rawQueryFragments = append(rawQueryFragments, qp)
+			}
+		}
 
-			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "strategy_id", *params.StrategyId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Offset != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -7065,6 +7382,73 @@ func NewPostBacktestsRequestWithBody(server string, params *PostBacktestsParams,
 		}
 
 	}
+
+	return req, nil
+}
+
+// NewGetBacktestsAssumptionsRequest constructs an http.Request for the GetBacktestsAssumptions method
+func NewGetBacktestsAssumptionsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/backtests/assumptions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostBacktestsEstimateRequest calls the generic PostBacktestsEstimate builder with application/json body
+func NewPostBacktestsEstimateRequest(server string, body PostBacktestsEstimateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostBacktestsEstimateRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostBacktestsEstimateRequestWithBody constructs an http.Request for the PostBacktestsEstimate method, with any body, and a specified content type
+func NewPostBacktestsEstimateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/backtests/estimate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -7204,6 +7588,67 @@ func NewGetBacktestsByIdRequest(server string, id string) (*http.Request, error)
 	return req, nil
 }
 
+// NewGetBacktestsByIdBreakdownRequest constructs an http.Request for the GetBacktestsByIdBreakdown method
+func NewGetBacktestsByIdBreakdownRequest(server string, id string, params *GetBacktestsByIdBreakdownParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "id", id, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/backtests/%s/breakdown", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Include != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "include", *params.Include, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetBacktestsByIdDeclinesRequest constructs an http.Request for the GetBacktestsByIdDeclines method
 func NewGetBacktestsByIdDeclinesRequest(server string, id string, params *GetBacktestsByIdDeclinesParams) (*http.Request, error) {
 	var err error
@@ -7254,6 +7699,54 @@ func NewGetBacktestsByIdDeclinesRequest(server string, id string, params *GetBac
 		if params.Offset != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Mint != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "mint", *params.Mint, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Side != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "side", *params.Side, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Source != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "source", *params.Source, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Reason != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "reason", *params.Reason, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -7327,6 +7820,42 @@ func NewGetBacktestsByIdTradesRequest(server string, id string, params *GetBackt
 		if params.Offset != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "offset", *params.Offset, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Mint != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "mint", *params.Mint, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Side != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "side", *params.Side, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Source != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "source", *params.Source, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -12229,6 +12758,27 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/backtests (the `PostBacktests` operationId).
 	PostBacktestsWithResponse(ctx context.Context, params *PostBacktestsParams, body PostBacktestsJSONRequestBody, reqEditors ...RequestEditorFn) (*PostBacktestsResponse, error)
 
+	// GetBacktestsAssumptionsWithResponse Backtest Simulation Assumptions
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/backtests/assumptions (the `GetBacktestsAssumptions` operationId).
+	GetBacktestsAssumptionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBacktestsAssumptionsResponse, error)
+
+	// PostBacktestsEstimateWithBodyWithResponse Estimate Backtest
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+	PostBacktestsEstimateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostBacktestsEstimateResponse, error)
+
+	// PostBacktestsEstimateWithResponse Estimate Backtest
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+	PostBacktestsEstimateWithResponse(ctx context.Context, body PostBacktestsEstimateJSONRequestBody, reqEditors ...RequestEditorFn) (*PostBacktestsEstimateResponse, error)
+
 	// GetBacktestsLimitsWithResponse Get Backtest Limits
 	//
 	// Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
@@ -12265,6 +12815,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/backtests/{id} (the `GetBacktestsById` operationId).
 	GetBacktestsByIdWithResponse(ctx context.Context, id string, reqEditors ...RequestEditorFn) (*GetBacktestsByIdResponse, error)
+
+	// GetBacktestsByIdBreakdownWithResponse Backtest Breakdown
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/backtests/{id}/breakdown (the `GetBacktestsByIdBreakdown` operationId).
+	GetBacktestsByIdBreakdownWithResponse(ctx context.Context, id string, params *GetBacktestsByIdBreakdownParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdBreakdownResponse, error)
 
 	// GetBacktestsByIdDeclinesWithResponse List Backtest Declines
 	//
@@ -13038,6 +13595,11 @@ type ClientWithResponsesInterface interface {
 	PatchWebhookNotifiersByIdWithResponse(ctx context.Context, id string, body PatchWebhookNotifiersByIdJSONRequestBody, reqEditors ...RequestEditorFn) (*PatchWebhookNotifiersByIdResponse, error)
 }
 
+// GetBacktestsResponse200Headers the declared response headers of an HTTP 200 response for GetBacktests
+type GetBacktestsResponse200Headers struct {
+	XTotalCount *int
+}
+
 type GetBacktestsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13045,6 +13607,8 @@ type GetBacktestsResponse struct {
 	JSON200 *[]PulsightInternalCoreUsecasesBacktestBacktestRecord
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetBacktestsResponse200Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -13135,6 +13699,109 @@ func (r PostBacktestsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostBacktestsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetBacktestsAssumptionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *InternalAdaptersPrimaryHttpHandlerSimulationAssumptionsResponse
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetBacktestsAssumptionsResponse) GetJSON200() *InternalAdaptersPrimaryHttpHandlerSimulationAssumptionsResponse {
+	return r.JSON200
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetBacktestsAssumptionsResponse) GetJSON401() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON401
+}
+
+// GetBody returns the raw response body bytes
+func (r GetBacktestsAssumptionsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBacktestsAssumptionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBacktestsAssumptionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetBacktestsAssumptionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostBacktestsEstimateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreUsecasesBacktestBacktestEstimate
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostBacktestsEstimateResponse) GetJSON200() *PulsightInternalCoreUsecasesBacktestBacktestEstimate {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PostBacktestsEstimateResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r PostBacktestsEstimateResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r PostBacktestsEstimateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostBacktestsEstimateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostBacktestsEstimateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostBacktestsEstimateResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -13326,6 +13993,66 @@ func (r GetBacktestsByIdResponse) ContentType() string {
 	return ""
 }
 
+type GetBacktestsByIdBreakdownResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreUsecasesBacktestBacktestBreakdown
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetBacktestsByIdBreakdownResponse) GetJSON200() *PulsightInternalCoreUsecasesBacktestBacktestBreakdown {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetBacktestsByIdBreakdownResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetBacktestsByIdBreakdownResponse) GetJSON404() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON404
+}
+
+// GetBody returns the raw response body bytes
+func (r GetBacktestsByIdBreakdownResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetBacktestsByIdBreakdownResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetBacktestsByIdBreakdownResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetBacktestsByIdBreakdownResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetBacktestsByIdDeclinesResponse200Headers the declared response headers of an HTTP 200 response for GetBacktestsByIdDeclines
+type GetBacktestsByIdDeclinesResponse200Headers struct {
+	XTotalCount *int
+}
+
 type GetBacktestsByIdDeclinesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13333,6 +14060,8 @@ type GetBacktestsByIdDeclinesResponse struct {
 	JSON200 *[]PulsightInternalCoreUsecasesBacktestBacktestDecline
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetBacktestsByIdDeclinesResponse200Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -13374,6 +14103,11 @@ func (r GetBacktestsByIdDeclinesResponse) ContentType() string {
 	return ""
 }
 
+// GetBacktestsByIdTradesResponse200Headers the declared response headers of an HTTP 200 response for GetBacktestsByIdTrades
+type GetBacktestsByIdTradesResponse200Headers struct {
+	XTotalCount *int
+}
+
 type GetBacktestsByIdTradesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -13381,6 +14115,8 @@ type GetBacktestsByIdTradesResponse struct {
 	JSON200 *[]PulsightInternalCoreUsecasesBacktestBacktestTrade
 	// JSON400 the response for an HTTP 400 `application/json` response
 	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetBacktestsByIdTradesResponse200Headers
 }
 
 // GetJSON200 returns the response for an HTTP 200 `application/json` response
@@ -17806,6 +18542,45 @@ func (c *ClientWithResponses) PostBacktestsWithResponse(ctx context.Context, par
 	return ParsePostBacktestsResponse(rsp)
 }
 
+// GetBacktestsAssumptionsWithResponse Backtest Simulation Assumptions
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/backtests/assumptions (the `GetBacktestsAssumptions` operationId).
+func (c *ClientWithResponses) GetBacktestsAssumptionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetBacktestsAssumptionsResponse, error) {
+	rsp, err := c.GetBacktestsAssumptions(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBacktestsAssumptionsResponse(rsp)
+}
+
+// PostBacktestsEstimateWithBodyWithResponse Estimate Backtest
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+func (c *ClientWithResponses) PostBacktestsEstimateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostBacktestsEstimateResponse, error) {
+	rsp, err := c.PostBacktestsEstimateWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostBacktestsEstimateResponse(rsp)
+}
+
+// PostBacktestsEstimateWithResponse Estimate Backtest
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/backtests/estimate (the `PostBacktestsEstimate` operationId).
+func (c *ClientWithResponses) PostBacktestsEstimateWithResponse(ctx context.Context, body PostBacktestsEstimateJSONRequestBody, reqEditors ...RequestEditorFn) (*PostBacktestsEstimateResponse, error) {
+	rsp, err := c.PostBacktestsEstimate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostBacktestsEstimateResponse(rsp)
+}
+
 // GetBacktestsLimitsWithResponse Get Backtest Limits
 //
 // Returns the per-run backtest cost ceiling (max credits per run) and the per-timeframe maximum run window in seconds, so clients can show and pre-check them. An absent timeframe is unlimited.
@@ -17871,6 +18646,19 @@ func (c *ClientWithResponses) GetBacktestsByIdWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParseGetBacktestsByIdResponse(rsp)
+}
+
+// GetBacktestsByIdBreakdownWithResponse Backtest Breakdown
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/backtests/{id}/breakdown (the `GetBacktestsByIdBreakdown` operationId).
+func (c *ClientWithResponses) GetBacktestsByIdBreakdownWithResponse(ctx context.Context, id string, params *GetBacktestsByIdBreakdownParams, reqEditors ...RequestEditorFn) (*GetBacktestsByIdBreakdownResponse, error) {
+	rsp, err := c.GetBacktestsByIdBreakdown(ctx, id, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetBacktestsByIdBreakdownResponse(rsp)
 }
 
 // GetBacktestsByIdDeclinesWithResponse List Backtest Declines
@@ -19220,6 +20008,19 @@ func ParseGetBacktestsResponse(rsp *http.Response) (*GetBacktestsResponse, error
 
 	}
 
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetBacktestsResponse200Headers
+		if values := rsp.Header.Values("X-Total-Count"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Total-Count", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XTotalCount = &value
+		}
+		response.Headers200 = &headers
+	}
+
 	return response, nil
 }
 
@@ -19243,6 +20044,79 @@ func ParsePostBacktestsResponse(rsp *http.Response) (*PostBacktestsResponse, err
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetBacktestsAssumptionsResponse parses an HTTP response from a GetBacktestsAssumptionsWithResponse call
+func ParseGetBacktestsAssumptionsResponse(rsp *http.Response) (*GetBacktestsAssumptionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBacktestsAssumptionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest InternalAdaptersPrimaryHttpHandlerSimulationAssumptionsResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostBacktestsEstimateResponse parses an HTTP response from a PostBacktestsEstimateWithResponse call
+func ParsePostBacktestsEstimateResponse(rsp *http.Response) (*PostBacktestsEstimateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostBacktestsEstimateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreUsecasesBacktestBacktestEstimate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
@@ -19385,6 +20259,46 @@ func ParseGetBacktestsByIdResponse(rsp *http.Response) (*GetBacktestsByIdRespons
 	return response, nil
 }
 
+// ParseGetBacktestsByIdBreakdownResponse parses an HTTP response from a GetBacktestsByIdBreakdownWithResponse call
+func ParseGetBacktestsByIdBreakdownResponse(rsp *http.Response) (*GetBacktestsByIdBreakdownResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetBacktestsByIdBreakdownResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreUsecasesBacktestBacktestBreakdown
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetBacktestsByIdDeclinesResponse parses an HTTP response from a GetBacktestsByIdDeclinesWithResponse call
 func ParseGetBacktestsByIdDeclinesResponse(rsp *http.Response) (*GetBacktestsByIdDeclinesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -19413,6 +20327,19 @@ func ParseGetBacktestsByIdDeclinesResponse(rsp *http.Response) (*GetBacktestsByI
 		}
 		response.JSON400 = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetBacktestsByIdDeclinesResponse200Headers
+		if values := rsp.Header.Values("X-Total-Count"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Total-Count", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XTotalCount = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil
@@ -19446,6 +20373,19 @@ func ParseGetBacktestsByIdTradesResponse(rsp *http.Response) (*GetBacktestsByIdT
 		}
 		response.JSON400 = &dest
 
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetBacktestsByIdTradesResponse200Headers
+		if values := rsp.Header.Values("X-Total-Count"); len(values) > 0 {
+			var value int
+			if err := runtime.BindStyledParameterWithOptions("simple", "X-Total-Count", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.XTotalCount = &value
+		}
+		response.Headers200 = &headers
 	}
 
 	return response, nil
