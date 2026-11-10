@@ -2191,6 +2191,11 @@ type PulsightInternalCoreDomainAggregatorTax struct {
 	// SwapFeeMinBps when that is known.
 	BuyBps *int `json:"buy_bps,omitempty"`
 
+	// BuyPpm BuyPpm is the tax a buy pays in millionths of the traded value,
+	// SwapFeePpm plus TransferFeeBps × 100: BuyBps exactly. Absent while
+	// either is unknown.
+	BuyPpm *int `json:"buy_ppm,omitempty"`
+
 	// Dex Dex is Pool's venue slug, same vocabulary as `?dex=`.
 	Dex *string `json:"dex,omitempty"`
 
@@ -2209,13 +2214,18 @@ type PulsightInternalCoreDomainAggregatorTax struct {
 	// SellBps SellBps is the tax a sell pays, on the same components as BuyBps.
 	SellBps *int `json:"sell_bps,omitempty"`
 
+	// SellPpm SellPpm is the tax a sell pays in millionths, on the same components as
+	// BuyPpm.
+	SellPpm *int `json:"sell_ppm,omitempty"`
+
 	// SwapFeeAt SwapFeeAt is the minute a recorded SwapFeeBps was recorded in. Omitted on
 	// a listing row and for a configured fee.
 	SwapFeeAt *string `json:"swap_fee_at,omitempty"`
 
 	// SwapFeeBps SwapFeeBps is the pool's swap fee, the venue's whole schedule (LP,
-	// protocol, creator and partner shares). Absent when it is unknown —
-	// never free.
+	// protocol, creator and partner shares), rounded to the nearest basis
+	// point: a known fee under half a basis point reads 0 here and exactly in
+	// SwapFeePpm. Absent when it is unknown — never free.
 	SwapFeeBps *int `json:"swap_fee_bps,omitempty"`
 
 	// SwapFeeMinBps SwapFeeMinBps is a lower bound on the pool's swap fee, set only while
@@ -2223,12 +2233,20 @@ type PulsightInternalCoreDomainAggregatorTax struct {
 	// venue adds a variable fee on top that no recorded trade has priced yet.
 	SwapFeeMinBps *int `json:"swap_fee_min_bps,omitempty"`
 
+	// SwapFeeMinPpm SwapFeeMinPpm is SwapFeeMinBps in millionths, exactly.
+	SwapFeeMinPpm *int `json:"swap_fee_min_ppm,omitempty"`
+
 	// SwapFeeParts SwapFeeParts splits SwapFeeBps into the shares the venue defines,
 	// summing to it: always for a configured fee, and for a recorded one where
 	// the venue defines its split as shares of whatever fee it charges.
 	// Absent when the swap fee is a lower bound or unknown, and on a listing
 	// row.
 	SwapFeeParts *[]PulsightInternalCoreDomainAggregatorTaxPart `json:"swap_fee_parts,omitempty"`
+
+	// SwapFeePpm SwapFeePpm is the pool's swap fee in millionths of the traded value, set
+	// whenever SwapFeeBps is: a configured fee to the millionth, a recorded one
+	// to the basis point.
+	SwapFeePpm *int `json:"swap_fee_ppm,omitempty"`
 
 	// SwapFeeSource SwapFeeSource says where the swap fee comes from: `recorded`, the highest
 	// fee the pool's trades recorded in the latest minute that recorded one;
@@ -2293,6 +2311,9 @@ type PulsightInternalCoreDomainAggregatorTaxVia struct {
 	// else its reference pool.
 	Pool *string `json:"pool,omitempty"`
 
+	// Ppm Ppm is Bps in millionths of the traded value, exactly.
+	Ppm *int `json:"ppm,omitempty"`
+
 	// PumpRouted PumpRouted reports that pump's own router (`multi_hop_swap`) serves this
 	// route: Pool is a PumpSwap pool and the token's pool is a pump pool.
 	// Through that router the hop adds nothing: pump charges the far pool's
@@ -2313,6 +2334,12 @@ type PulsightInternalCoreDomainAggregatorTaxVia struct {
 	// SwapFeeMinBps SwapFeeMinBps is a lower bound on that swap fee, set only while
 	// SwapFeeBps is unknown.
 	SwapFeeMinBps *int `json:"swap_fee_min_bps,omitempty"`
+
+	// SwapFeeMinPpm SwapFeeMinPpm is SwapFeeMinBps in millionths, exactly.
+	SwapFeeMinPpm *int `json:"swap_fee_min_ppm,omitempty"`
+
+	// SwapFeePpm SwapFeePpm is SwapFeeBps in millionths, exactly.
+	SwapFeePpm *int `json:"swap_fee_ppm,omitempty"`
 
 	// TransferFeeBps TransferFeeBps is the quote token's Token-2022 transfer fee; absent
 	// until its mint account has been read.
@@ -4455,7 +4482,7 @@ type GetMintsParams struct {
 	// MinTippedShare Min share of the mint's trades whose transaction paid a landing tip, in percent — the row's tipped_share_pct. Mints without it are excluded.
 	MinTippedShare *float32 `form:"min_tipped_share,omitempty" json:"min_tipped_share,omitempty"`
 
-	// MinTax Min tax in percent — the row's own tax: its reference pool's swap fee plus the mint's Token-2022 transfer fee, never the hop a token-quoted pool adds for a SOL trade (`tax.via`). Compared on the known part: a swap fee known only as a lower bound counts as that bound, and a mint whose swap fee is unknown passes only when its transfer fee alone reaches the floor.
+	// MinTax Min tax in percent — the row's own tax: its reference pool's swap fee plus the mint's Token-2022 transfer fee, never the hop a token-quoted pool adds for a SOL trade (`tax.via`). Compared exactly, to the millionth (`tax.buy_ppm`), on the known part: a swap fee known only as a lower bound counts as that bound, and a mint whose swap fee is unknown passes only when its transfer fee alone reaches the floor; a fee under a basis point is known, never unknown (0.004 % passes `min_tax=0.003`).
 	MinTax *float32 `form:"min_tax,omitempty" json:"min_tax,omitempty"`
 
 	// MaxTax Max tax in percent, on the same basis as min_tax (the reference pool's swap fee plus the transfer fee, without `tax.via`): a mint whose swap fee is unknown passes unless its transfer fee alone exceeds the ceiling.
@@ -4527,7 +4554,7 @@ type GetMintsByPubkeyMarketsParams struct {
 	// Window Window (1m|5m|1h|24h|all, default 24h)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 
-	// MinTax Min tax in percent — each row's own tax: that pool's swap fee plus the mint's transfer fee. Compared on the known part: a swap fee known only as a lower bound counts as that bound, and a pool whose swap fee is unknown passes only when the mint's transfer fee alone reaches the floor.
+	// MinTax Min tax in percent — each row's own tax: that pool's swap fee plus the mint's transfer fee. Compared exactly, to the millionth (`tax.buy_ppm`), on the known part: a swap fee known only as a lower bound counts as that bound, and a pool whose swap fee is unknown passes only when the mint's transfer fee alone reaches the floor.
 	MinTax *float32 `form:"min_tax,omitempty" json:"min_tax,omitempty"`
 
 	// MaxTax Max tax in percent, on the same basis as min_tax: a pool whose swap fee is unknown passes unless the mint's transfer fee alone exceeds the ceiling.
