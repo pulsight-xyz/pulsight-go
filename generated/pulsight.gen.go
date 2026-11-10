@@ -34,6 +34,54 @@ func (e PulsightInternalCoreDomainAggregatorRiskLevel) Valid() bool {
 	}
 }
 
+// Defines values for PulsightInternalCoreDomainAggregatorTaxSwapFeeSource.
+const (
+	Configured PulsightInternalCoreDomainAggregatorTaxSwapFeeSource = "configured"
+	Recorded   PulsightInternalCoreDomainAggregatorTaxSwapFeeSource = "recorded"
+)
+
+// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainAggregatorTaxSwapFeeSource enum.
+func (e PulsightInternalCoreDomainAggregatorTaxSwapFeeSource) Valid() bool {
+	switch e {
+	case Configured:
+		return true
+	case Recorded:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PulsightInternalCoreDomainAggregatorTaxPartKind.
+const (
+	Cashback      PulsightInternalCoreDomainAggregatorTaxPartKind = "cashback"
+	Creator       PulsightInternalCoreDomainAggregatorTaxPartKind = "creator"
+	Fund          PulsightInternalCoreDomainAggregatorTaxPartKind = "fund"
+	HolderRewards PulsightInternalCoreDomainAggregatorTaxPartKind = "holder_rewards"
+	Lp            PulsightInternalCoreDomainAggregatorTaxPartKind = "lp"
+	Protocol      PulsightInternalCoreDomainAggregatorTaxPartKind = "protocol"
+)
+
+// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainAggregatorTaxPartKind enum.
+func (e PulsightInternalCoreDomainAggregatorTaxPartKind) Valid() bool {
+	switch e {
+	case Cashback:
+		return true
+	case Creator:
+		return true
+	case Fund:
+		return true
+	case HolderRewards:
+		return true
+	case Lp:
+		return true
+	case Protocol:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PulsightInternalCoreDomainAggregatorTimeframe.
 const (
 	Timeframe12h PulsightInternalCoreDomainAggregatorTimeframe = "12h"
@@ -1685,8 +1733,9 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 
 	// Tax Tax is what a trade of the mint pays on its reference pool, the pool
 	// its price is read from: that pool's swap fee plus the mint's transfer
-	// fee. nil when the mint has no reference pool and no transfer fee on
-	// file.
+	// fee. When that pool is quoted in another token, the hop a SOL trade adds
+	// rides apart as Tax.Via. nil when the mint has no reference pool and no
+	// transfer fee on file.
 	Tax *PulsightInternalCoreDomainAggregatorTax `json:"tax,omitempty"`
 
 	// TippedSharePct TippedSharePct — share of the mint's trades whose transaction paid a
@@ -2135,7 +2184,8 @@ type PulsightInternalCoreDomainAggregatorServiceDominanceRow struct {
 // PulsightInternalCoreDomainAggregatorTax defines model for pulsight_internal_core_domain_aggregator.Tax.
 type PulsightInternalCoreDomainAggregatorTax struct {
 	// BuyBps BuyBps is the tax a buy pays, SwapFeeBps plus TransferFeeBps. Absent
-	// while either is unknown: the tax is then at least TransferFeeBps.
+	// while either is unknown: the tax is then at least TransferFeeBps, plus
+	// SwapFeeMinBps when that is known.
 	BuyBps *int `json:"buy_bps,omitempty"`
 
 	// Dex Dex is Pool's venue slug, same vocabulary as `?dex=`.
@@ -2143,8 +2193,9 @@ type PulsightInternalCoreDomainAggregatorTax struct {
 
 	// HolderRewards HolderRewards reports that the creator share inside SwapFeeBps is paid
 	// to the coin's holders: the mint is a pump.fun holder-rewards coin and
-	// the pool is its own pump.fun curve or PumpSwap pool. Never set on a
-	// listing row, whose pool is not named.
+	// the pool is its own pump.fun curve or PumpSwap pool. SwapFeeParts sizes
+	// the share as `holder_rewards` when the pool's configuration is known.
+	// Never set on a listing row, whose pool is not named.
 	HolderRewards *bool `json:"holder_rewards,omitempty"`
 
 	// Pool Pool is the pool SwapFeeBps was read from: on the token page's row the
@@ -2155,19 +2206,100 @@ type PulsightInternalCoreDomainAggregatorTax struct {
 	// SellBps SellBps is the tax a sell pays, on the same components as BuyBps.
 	SellBps *int `json:"sell_bps,omitempty"`
 
-	// SwapFeeAt SwapFeeAt is the minute SwapFeeBps was recorded in. Omitted on a
-	// listing row.
+	// SwapFeeAt SwapFeeAt is the minute a recorded SwapFeeBps was recorded in. Omitted on
+	// a listing row and for a configured fee.
 	SwapFeeAt *string `json:"swap_fee_at,omitempty"`
 
 	// SwapFeeBps SwapFeeBps is the pool's swap fee, the venue's whole schedule (LP,
-	// protocol, creator and partner shares): the highest fee its trades
-	// recorded in the latest minute that recorded one. Absent when no trade
-	// on the pool ever recorded a fee — unknown, never free.
+	// protocol, creator and partner shares). Absent when it is unknown —
+	// never free.
 	SwapFeeBps *int `json:"swap_fee_bps,omitempty"`
+
+	// SwapFeeMinBps SwapFeeMinBps is a lower bound on the pool's swap fee, set only while
+	// SwapFeeBps is unknown: the pool's configuration fixes a base fee and the
+	// venue adds a variable fee on top that no recorded trade has priced yet.
+	SwapFeeMinBps *int `json:"swap_fee_min_bps,omitempty"`
+
+	// SwapFeeParts SwapFeeParts splits a configured SwapFeeBps into the shares the venue
+	// defines, summing to it. Absent when the swap fee is recorded, a lower
+	// bound or unknown, and on a listing row.
+	SwapFeeParts *[]PulsightInternalCoreDomainAggregatorTaxPart `json:"swap_fee_parts,omitempty"`
+
+	// SwapFeeSource SwapFeeSource says where the swap fee comes from: `recorded`, the highest
+	// fee the pool's trades recorded in the latest minute that recorded one;
+	// `configured`, the pool's fee configuration read from chain. The
+	// configuration stands while the trades record its total or one hop's share
+	// of it, and a recorded fee it does not explain wins. Omitted on a listing
+	// row.
+	SwapFeeSource *PulsightInternalCoreDomainAggregatorTaxSwapFeeSource `json:"swap_fee_source,omitempty"`
 
 	// TransferFeeBps TransferFeeBps is the mint's Token-2022 transfer fee, the higher of its
 	// current and scheduled rate with its per-transfer cap not applied; 0 for
 	// a mint without one. Absent until the mint account has been read.
+	TransferFeeBps *int `json:"transfer_fee_bps,omitempty"`
+
+	// Via Via is the extra a SOL trade pays when Pool is quoted in another token:
+	// the hop between SOL and that token. Absent when Pool is quoted in SOL or
+	// in a money mint, on a listing row and on a market row. Never part of
+	// BuyBps, SellBps or a tax filter.
+	Via *PulsightInternalCoreDomainAggregatorTaxVia `json:"via,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTaxSwapFeeSource SwapFeeSource says where the swap fee comes from: `recorded`, the highest
+// fee the pool's trades recorded in the latest minute that recorded one;
+// `configured`, the pool's fee configuration read from chain. The
+// configuration stands while the trades record its total or one hop's share
+// of it, and a recorded fee it does not explain wins. Omitted on a listing
+// row.
+type PulsightInternalCoreDomainAggregatorTaxSwapFeeSource string
+
+// PulsightInternalCoreDomainAggregatorTaxPart defines model for pulsight_internal_core_domain_aggregator.TaxPart.
+type PulsightInternalCoreDomainAggregatorTaxPart struct {
+	// Bps Bps is the share in basis points of the traded value, to two decimals.
+	Bps *float32 `json:"bps,omitempty"`
+
+	// Kind Kind names the share: `lp` (paid to liquidity providers), `protocol`
+	// (the venue), `fund` (the venue's fund), `creator` (the coin's creator),
+	// `holder_rewards` (the coin's holders), `cashback` (paid back to the
+	// trader).
+	Kind *PulsightInternalCoreDomainAggregatorTaxPartKind `json:"kind,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTaxPartKind Kind names the share: `lp` (paid to liquidity providers), `protocol`
+// (the venue), `fund` (the venue's fund), `creator` (the coin's creator),
+// `holder_rewards` (the coin's holders), `cashback` (paid back to the
+// trader).
+type PulsightInternalCoreDomainAggregatorTaxPartKind string
+
+// PulsightInternalCoreDomainAggregatorTaxVia defines model for pulsight_internal_core_domain_aggregator.TaxVia.
+type PulsightInternalCoreDomainAggregatorTaxVia struct {
+	// Bps Bps is what the hop adds, SwapFeeBps plus TransferFeeBps; absent while
+	// either is unknown.
+	Bps *int `json:"bps,omitempty"`
+
+	// Dex Dex is Pool's venue slug.
+	Dex *string `json:"dex,omitempty"`
+
+	// Pool Pool is the hop's pool: the quote token's deepest pool paired with SOL,
+	// else its reference pool.
+	Pool *string `json:"pool,omitempty"`
+
+	// QuoteMint QuoteMint is the quote token the hop swaps through.
+	QuoteMint *string `json:"quote_mint,omitempty"`
+
+	// QuoteSymbol QuoteSymbol is QuoteMint's symbol, empty when unknown.
+	QuoteSymbol *string `json:"quote_symbol,omitempty"`
+
+	// SwapFeeBps SwapFeeBps is the swap fee of the hop's pool, on the basis of
+	// Tax.SwapFeeBps; absent when unknown.
+	SwapFeeBps *int `json:"swap_fee_bps,omitempty"`
+
+	// SwapFeeMinBps SwapFeeMinBps is a lower bound on that swap fee, set only while
+	// SwapFeeBps is unknown.
+	SwapFeeMinBps *int `json:"swap_fee_min_bps,omitempty"`
+
+	// TransferFeeBps TransferFeeBps is the quote token's Token-2022 transfer fee; absent
+	// until its mint account has been read.
 	TransferFeeBps *int `json:"transfer_fee_bps,omitempty"`
 }
 
@@ -4307,10 +4439,10 @@ type GetMintsParams struct {
 	// MinTippedShare Min share of the mint's trades whose transaction paid a landing tip, in percent — the row's tipped_share_pct. Mints without it are excluded.
 	MinTippedShare *float32 `form:"min_tipped_share,omitempty" json:"min_tipped_share,omitempty"`
 
-	// MinTax Min tax in percent — the row's tax: its reference pool's swap fee plus the mint's Token-2022 transfer fee. Compared on the known part: a mint whose swap fee is unknown passes only when its transfer fee alone reaches the floor.
+	// MinTax Min tax in percent — the row's own tax: its reference pool's swap fee plus the mint's Token-2022 transfer fee, never the hop a token-quoted pool adds for a SOL trade (`tax.via`). Compared on the known part: a swap fee known only as a lower bound counts as that bound, and a mint whose swap fee is unknown passes only when its transfer fee alone reaches the floor.
 	MinTax *float32 `form:"min_tax,omitempty" json:"min_tax,omitempty"`
 
-	// MaxTax Max tax in percent, on the same basis as min_tax: a mint whose swap fee is unknown passes unless its transfer fee alone exceeds the ceiling.
+	// MaxTax Max tax in percent, on the same basis as min_tax (the reference pool's swap fee plus the transfer fee, without `tax.via`): a mint whose swap fee is unknown passes unless its transfer fee alone exceeds the ceiling.
 	MaxTax *float32 `form:"max_tax,omitempty" json:"max_tax,omitempty"`
 
 	// MaxAgeSecs Only mints first seen within the last N seconds (launched < N ago). Mints with no observed first_seen are excluded.
@@ -4379,10 +4511,10 @@ type GetMintsByPubkeyMarketsParams struct {
 	// Window Window (1m|5m|1h|24h|all, default 24h)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
 
-	// MinTax Min tax in percent, compared on the known part: a pool whose swap fee is unknown passes only when the mint's transfer fee alone reaches the floor.
+	// MinTax Min tax in percent — each row's own tax: that pool's swap fee plus the mint's transfer fee. Compared on the known part: a swap fee known only as a lower bound counts as that bound, and a pool whose swap fee is unknown passes only when the mint's transfer fee alone reaches the floor.
 	MinTax *float32 `form:"min_tax,omitempty" json:"min_tax,omitempty"`
 
-	// MaxTax Max tax in percent, on the same basis: a pool whose swap fee is unknown passes unless the mint's transfer fee alone exceeds the ceiling.
+	// MaxTax Max tax in percent, on the same basis as min_tax: a pool whose swap fee is unknown passes unless the mint's transfer fee alone exceeds the ceiling.
 	MaxTax *float32 `form:"max_tax,omitempty" json:"max_tax,omitempty"`
 }
 
@@ -5002,7 +5134,7 @@ type ClientInterface interface {
 
 	// GetLegsExportByDayFactsByDataset Download one token facts file of a day
 	//
-	// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none), transfer_fee_bps and transfer_fee_known (the mint's Token-2022 transfer fee in basis points; known with 0 for a mint whose account was read without one). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Corresponds with GET /api/legs/export/{day}/facts/{dataset} (the `GetLegsExportByDayFactsByDataset` operationId).
 	GetLegsExportByDayFactsByDataset(ctx context.Context, day string, dataset GetLegsExportByDayFactsByDatasetParamsDataset, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5906,7 +6038,7 @@ func (c *Client) GetLegsExportDeclaredQuotes(ctx context.Context, reqEditors ...
 
 // GetLegsExportByDayFactsByDataset Download one token facts file of a day
 //
-// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none), transfer_fee_bps and transfer_fee_known (the mint's Token-2022 transfer fee in basis points; known with 0 for a mint whose account was read without one). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Corresponds with GET /api/legs/export/{day}/facts/{dataset} (the `GetLegsExportByDayFactsByDataset` operationId).
 func (c *Client) GetLegsExportByDayFactsByDataset(ctx context.Context, day string, dataset GetLegsExportByDayFactsByDatasetParamsDataset, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -13007,7 +13139,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetLegsExportByDayFactsByDatasetWithResponse Download one token facts file of a day
 	//
-	// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none), transfer_fee_bps and transfer_fee_known (the mint's Token-2022 transfer fee in basis points; known with 0 for a mint whose account was read without one). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -18893,7 +19025,7 @@ func (c *ClientWithResponses) GetLegsExportDeclaredQuotesWithResponse(ctx contex
 
 // GetLegsExportByDayFactsByDatasetWithResponse Download one token facts file of a day
 //
-// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), one token facts file of the UTC day, for the mints traded that day on any venue. `minutes`: per mint and minute with trades, buys, swaps (transactions counted per trader and side), fees_sol and volume_sol (lamports, a transaction's fee and value counted once), new_traders (traders whose first ledger trade of the mint falls in the minute), trades and tipped_trades (non-arb buys and sells, and those whose transaction paid a tip). `mints`: mint_id, mint (base58), created_ms, first_trade_ms, supply (raw units, 0 = unknown), dev_known and dev_first_sell_ms (0 = none), transfer_fee_bps and transfer_fee_known (the mint's Token-2022 transfer fee in basis points; known with 0 for a mint whose account was read without one). `bundles`: each sealed bundle cohort generation's sealed_ms and initial holding (raw units). `insiders`: per insider wallet (32 raw bytes) and minute of the day, found_ms (when the wallet became an insider of the mint) and its net token flow (trades and transfers). `insider_flows`: the same rows with every trade counted once, a later-corrected trade included, each with its wallet's hop (its distance from the mint's creator in the insider walk) and first_slot (the slot of the transfer that made it an insider), plus one row with flow 0 at the minute of its reach for an insider reached that day with no move in the file. `activity`: per mint and minute with trades, swaps, buys, fees_sol and volume_sol (lamports) as the live activity figures count them, tip_trades and tipped_trades (non-arb buys and sells whose landing tip is recorded, and those that paid one). `activity_base`: per mint, the same six figures over everything before the day. `activity_slots`: the `activity` figures per mint and slot instead of per minute, with ts_ms (the slot's time) and dev_sells (the mint's dev's sells in the slot). Timestamps are unix milliseconds. The catalog's `facts` lists the files a day carries, and a new file can join it. A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Returns a wrapper object for the known response body format(s).
 //
