@@ -1482,6 +1482,10 @@ type PulsightInternalCoreDomainAggregatorMintLiveMetrics struct {
 	// unknown decimals, absent supply).
 	PriceUsd *float32 `json:"price_usd,omitempty"`
 
+	// Tax Tax carries MintRow.Tax verbatim, read the same way, so a dynamic pool
+	// fee stays current between identity reads.
+	Tax *PulsightInternalCoreDomainAggregatorTax `json:"tax,omitempty"`
+
 	// UniqueTraders UniqueTraders is read straight off the insert-time `mint_traders`
 	// plane, so it is as fresh as ingest. nil when the plane has no row: this
 	// route never falls back to a lifetime fold over positions, which is the
@@ -1523,6 +1527,11 @@ type PulsightInternalCoreDomainAggregatorMintMarket struct {
 	SolVolumeLamports *int     `json:"sol_volume_lamports,omitempty"`
 	SolVolumeShare    *float32 `json:"sol_volume_share,omitempty"`
 	SwapCount         *int     `json:"swap_count,omitempty"`
+
+	// Tax Tax is what a trade of the page's mint pays on this pool: the pool's
+	// swap fee plus the mint's transfer fee. Always present; its unknown
+	// components are omitted.
+	Tax *PulsightInternalCoreDomainAggregatorTax `json:"tax,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorMintMatchedPool defines model for pulsight_internal_core_domain_aggregator.MintMatchedPool.
@@ -1673,6 +1682,12 @@ type PulsightInternalCoreDomainAggregatorMintRow struct {
 	// MarketsCount is the number of pools the mint trades in.
 	SwapCount *int    `json:"swap_count,omitempty"`
 	Symbol    *string `json:"symbol,omitempty"`
+
+	// Tax Tax is what a trade of the mint pays on its reference pool, the pool
+	// its price is read from: that pool's swap fee plus the mint's transfer
+	// fee. nil when the mint has no reference pool and no transfer fee on
+	// file.
+	Tax *PulsightInternalCoreDomainAggregatorTax `json:"tax,omitempty"`
 
 	// TippedSharePct TippedSharePct — share of the mint's trades whose transaction paid a
 	// landing tip, in percent, over every trade since tips were recorded and
@@ -2115,6 +2130,45 @@ type PulsightInternalCoreDomainAggregatorServiceDominanceRow struct {
 	// (micro-USD).
 	TipSumUsd   *int `json:"tip_sum_usd,omitempty"`
 	TippedCount *int `json:"tipped_count,omitempty"`
+}
+
+// PulsightInternalCoreDomainAggregatorTax defines model for pulsight_internal_core_domain_aggregator.Tax.
+type PulsightInternalCoreDomainAggregatorTax struct {
+	// BuyBps BuyBps is the tax a buy pays, SwapFeeBps plus TransferFeeBps. Absent
+	// while either is unknown: the tax is then at least TransferFeeBps.
+	BuyBps *int `json:"buy_bps,omitempty"`
+
+	// Dex Dex is Pool's venue slug, same vocabulary as `?dex=`.
+	Dex *string `json:"dex,omitempty"`
+
+	// HolderRewards HolderRewards reports that the creator share inside SwapFeeBps is paid
+	// to the coin's holders: the mint is a pump.fun holder-rewards coin and
+	// the pool is its own pump.fun curve or PumpSwap pool. Never set on a
+	// listing row, whose pool is not named.
+	HolderRewards *bool `json:"holder_rewards,omitempty"`
+
+	// Pool Pool is the pool SwapFeeBps was read from: on the token page's row the
+	// mint's reference pool, the one its price is read from. Omitted on a
+	// listing row and on a market row, which is its own pool.
+	Pool *string `json:"pool,omitempty"`
+
+	// SellBps SellBps is the tax a sell pays, on the same components as BuyBps.
+	SellBps *int `json:"sell_bps,omitempty"`
+
+	// SwapFeeAt SwapFeeAt is the minute SwapFeeBps was recorded in. Omitted on a
+	// listing row.
+	SwapFeeAt *string `json:"swap_fee_at,omitempty"`
+
+	// SwapFeeBps SwapFeeBps is the pool's swap fee, the venue's whole schedule (LP,
+	// protocol, creator and partner shares): the highest fee its trades
+	// recorded in the latest minute that recorded one. Absent when no trade
+	// on the pool ever recorded a fee — unknown, never free.
+	SwapFeeBps *int `json:"swap_fee_bps,omitempty"`
+
+	// TransferFeeBps TransferFeeBps is the mint's Token-2022 transfer fee, the higher of its
+	// current and scheduled rate with its per-transfer cap not applied; 0 for
+	// a mint without one. Absent until the mint account has been read.
+	TransferFeeBps *int `json:"transfer_fee_bps,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTimeframe defines model for pulsight_internal_core_domain_aggregator.Timeframe.
@@ -4253,6 +4307,12 @@ type GetMintsParams struct {
 	// MinTippedShare Min share of the mint's trades whose transaction paid a landing tip, in percent — the row's tipped_share_pct. Mints without it are excluded.
 	MinTippedShare *float32 `form:"min_tipped_share,omitempty" json:"min_tipped_share,omitempty"`
 
+	// MinTax Min tax in percent — the row's tax: its reference pool's swap fee plus the mint's Token-2022 transfer fee. Compared on the known part: a mint whose swap fee is unknown passes only when its transfer fee alone reaches the floor.
+	MinTax *float32 `form:"min_tax,omitempty" json:"min_tax,omitempty"`
+
+	// MaxTax Max tax in percent, on the same basis as min_tax: a mint whose swap fee is unknown passes unless its transfer fee alone exceeds the ceiling.
+	MaxTax *float32 `form:"max_tax,omitempty" json:"max_tax,omitempty"`
+
 	// MaxAgeSecs Only mints first seen within the last N seconds (launched < N ago). Mints with no observed first_seen are excluded.
 	MaxAgeSecs *int `form:"max_age_secs,omitempty" json:"max_age_secs,omitempty"`
 
@@ -4318,6 +4378,12 @@ type GetMintsByPubkeyLpEventsParams struct {
 type GetMintsByPubkeyMarketsParams struct {
 	// Window Window (1m|5m|1h|24h|all, default 24h)
 	Window *string `form:"window,omitempty" json:"window,omitempty"`
+
+	// MinTax Min tax in percent, compared on the known part: a pool whose swap fee is unknown passes only when the mint's transfer fee alone reaches the floor.
+	MinTax *float32 `form:"min_tax,omitempty" json:"min_tax,omitempty"`
+
+	// MaxTax Max tax in percent, on the same basis: a pool whose swap fee is unknown passes unless the mint's transfer fee alone exceeds the ceiling.
+	MaxTax *float32 `form:"max_tax,omitempty" json:"max_tax,omitempty"`
 }
 
 // GetMintsByPubkeyRiskCohortsParams defines parameters for GetMintsByPubkeyRiskCohorts.
@@ -5020,7 +5086,7 @@ type ClientInterface interface {
 
 	// GetMintsByPubkeyMarkets List Mint Markets
 	//
-	// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`.
+	// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`. Every row carries the `tax` a trade of the mint pays on that pool (its swap fee plus the mint's transfer fee); `min_tax`/`max_tax` filter on it, and `sol_volume_share` stays a share of every market's volume.
 	//
 	// Corresponds with GET /api/mints/{pubkey}/markets (the `GetMintsByPubkeyMarkets` operationId).
 	GetMintsByPubkeyMarkets(ctx context.Context, pubkey string, params *GetMintsByPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6044,7 +6110,7 @@ func (c *Client) GetMintsByPubkeyLpEvents(ctx context.Context, pubkey string, pa
 
 // GetMintsByPubkeyMarkets List Mint Markets
 //
-// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`.
+// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`. Every row carries the `tax` a trade of the mint pays on that pool (its swap fee plus the mint's transfer fee); `min_tax`/`max_tax` filter on it, and `sol_volume_share` stays a share of every market's volume.
 //
 // Corresponds with GET /api/mints/{pubkey}/markets (the `GetMintsByPubkeyMarkets` operationId).
 func (c *Client) GetMintsByPubkeyMarkets(ctx context.Context, pubkey string, params *GetMintsByPubkeyMarketsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -8628,6 +8694,30 @@ func NewGetMintsRequest(server string, params *GetMintsParams) (*http.Request, e
 
 		}
 
+		if params.MinTax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_tax", *params.MinTax, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxTax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_tax", *params.MaxTax, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.MaxAgeSecs != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_age_secs", *params.MaxAgeSecs, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
@@ -9116,6 +9206,30 @@ func NewGetMintsByPubkeyMarketsRequest(server string, pubkey string, params *Get
 		if params.Window != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MinTax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "min_tax", *params.MinTax, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.MaxTax != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "max_tax", *params.MaxTax, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
@@ -13001,7 +13115,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMintsByPubkeyMarketsWithResponse List Mint Markets
 	//
-	// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`.
+	// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`. Every row carries the `tax` a trade of the mint pays on that pool (its swap fee plus the mint's transfer fee); `min_tax`/`max_tax` filter on it, and `sol_volume_share` stays a share of every market's volume.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -18959,7 +19073,7 @@ func (c *ClientWithResponses) GetMintsByPubkeyLpEventsWithResponse(ctx context.C
 
 // GetMintsByPubkeyMarketsWithResponse List Mint Markets
 //
-// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`.
+// Returns per-(pool, dex) rollup with SOL-volume share (0..1) for a single mint over the requested window. `window=all` lists every market the mint ever traded on — use it to resolve markets for tokens with no recent activity. At most one pool carries `is_default: true` (window-independent): the mint's default market, the same pool an unpinned `/api/ohlcv` chart resolves to. An idle default market may be absent from short-window listings, so resolve defaults from `window=all`. Every row carries the `tax` a trade of the mint pays on that pool (its swap fee plus the mint's transfer fee); `min_tax`/`max_tax` filter on it, and `sol_volume_share` stays a share of every market's volume.
 //
 // Returns a wrapper object for the known response body format(s).
 //
