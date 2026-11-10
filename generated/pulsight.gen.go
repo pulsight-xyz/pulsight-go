@@ -59,6 +59,7 @@ const (
 	Fund          PulsightInternalCoreDomainAggregatorTaxPartKind = "fund"
 	HolderRewards PulsightInternalCoreDomainAggregatorTaxPartKind = "holder_rewards"
 	Lp            PulsightInternalCoreDomainAggregatorTaxPartKind = "lp"
+	Platform      PulsightInternalCoreDomainAggregatorTaxPartKind = "platform"
 	Protocol      PulsightInternalCoreDomainAggregatorTaxPartKind = "protocol"
 )
 
@@ -74,6 +75,8 @@ func (e PulsightInternalCoreDomainAggregatorTaxPartKind) Valid() bool {
 	case HolderRewards:
 		return true
 	case Lp:
+		return true
+	case Platform:
 		return true
 	case Protocol:
 		return true
@@ -2220,9 +2223,11 @@ type PulsightInternalCoreDomainAggregatorTax struct {
 	// venue adds a variable fee on top that no recorded trade has priced yet.
 	SwapFeeMinBps *int `json:"swap_fee_min_bps,omitempty"`
 
-	// SwapFeeParts SwapFeeParts splits a configured SwapFeeBps into the shares the venue
-	// defines, summing to it. Absent when the swap fee is recorded, a lower
-	// bound or unknown, and on a listing row.
+	// SwapFeeParts SwapFeeParts splits SwapFeeBps into the shares the venue defines,
+	// summing to it: always for a configured fee, and for a recorded one where
+	// the venue defines its split as shares of whatever fee it charges.
+	// Absent when the swap fee is a lower bound or unknown, and on a listing
+	// row.
 	SwapFeeParts *[]PulsightInternalCoreDomainAggregatorTaxPart `json:"swap_fee_parts,omitempty"`
 
 	// SwapFeeSource SwapFeeSource says where the swap fee comes from: `recorded`, the highest
@@ -2238,7 +2243,7 @@ type PulsightInternalCoreDomainAggregatorTax struct {
 	// a mint without one. Absent until the mint account has been read.
 	TransferFeeBps *int `json:"transfer_fee_bps,omitempty"`
 
-	// Via Via is the extra a SOL trade pays when Pool is quoted in another token:
+	// Via Via is the most a SOL trade adds when Pool is quoted in another token:
 	// the hop between SOL and that token. Absent when Pool is quoted in SOL or
 	// in a money mint, on a listing row and on a market row. Never part of
 	// BuyBps, SellBps or a tax filter.
@@ -2259,22 +2264,26 @@ type PulsightInternalCoreDomainAggregatorTaxPart struct {
 	Bps *float32 `json:"bps,omitempty"`
 
 	// Kind Kind names the share: `lp` (paid to liquidity providers), `protocol`
-	// (the venue), `fund` (the venue's fund), `creator` (the coin's creator),
+	// (the venue), `fund` (the venue's fund), `platform` (the launchpad
+	// platform the pool belongs to), `creator` (the coin's creator),
 	// `holder_rewards` (the coin's holders), `cashback` (paid back to the
 	// trader).
 	Kind *PulsightInternalCoreDomainAggregatorTaxPartKind `json:"kind,omitempty"`
 }
 
 // PulsightInternalCoreDomainAggregatorTaxPartKind Kind names the share: `lp` (paid to liquidity providers), `protocol`
-// (the venue), `fund` (the venue's fund), `creator` (the coin's creator),
+// (the venue), `fund` (the venue's fund), `platform` (the launchpad
+// platform the pool belongs to), `creator` (the coin's creator),
 // `holder_rewards` (the coin's holders), `cashback` (paid back to the
 // trader).
 type PulsightInternalCoreDomainAggregatorTaxPartKind string
 
 // PulsightInternalCoreDomainAggregatorTaxVia defines model for pulsight_internal_core_domain_aggregator.TaxVia.
 type PulsightInternalCoreDomainAggregatorTaxVia struct {
-	// Bps Bps is what the hop adds, SwapFeeBps plus TransferFeeBps; absent while
-	// either is unknown.
+	// Bps Bps is the most the hop adds: SwapFeeBps plus TransferFeeBps, what a SOL
+	// trade pays when it swaps through Pool as a hop of its own. Absent while
+	// either is unknown. A router that prices the two hops together can charge
+	// less; see PumpRouted.
 	Bps *int `json:"bps,omitempty"`
 
 	// Dex Dex is Pool's venue slug.
@@ -2283,6 +2292,13 @@ type PulsightInternalCoreDomainAggregatorTaxVia struct {
 	// Pool Pool is the hop's pool: the quote token's deepest pool paired with SOL,
 	// else its reference pool.
 	Pool *string `json:"pool,omitempty"`
+
+	// PumpRouted PumpRouted reports that pump's own router (`multi_hop_swap`) serves this
+	// route: Pool is a PumpSwap pool and the token's pool is a pump pool.
+	// Through that router the hop adds nothing: pump charges the far pool's
+	// protocol share on the hop instead of on the far pool, so a buyer it
+	// routes pays the token's own tax alone.
+	PumpRouted *bool `json:"pump_routed,omitempty"`
 
 	// QuoteMint QuoteMint is the quote token the hop swaps through.
 	QuoteMint *string `json:"quote_mint,omitempty"`
