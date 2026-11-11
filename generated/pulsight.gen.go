@@ -760,9 +760,11 @@ type InternalAdaptersPrimaryHttpHandlerSnapshotRow struct {
 	AvgRpAll *float32 `json:"avg_rp_all,omitempty"`
 
 	// AvgRpAllUsd micro-USD
-	AvgRpAllUsd        *float32 `json:"avg_rp_all_usd,omitempty"`
-	AvgSellsPerToken   *float32 `json:"avg_sells_per_token,omitempty"`
-	HoldingPnlLamports *float32 `json:"holding_pnl_lamports,omitempty"`
+	AvgRpAllUsd         *float32 `json:"avg_rp_all_usd,omitempty"`
+	AvgSellsPerToken    *float32 `json:"avg_sells_per_token,omitempty"`
+	BuyImpactSamples30d *int     `json:"buy_impact_samples_30d,omitempty"`
+	BuyImpactSamples7d  *int     `json:"buy_impact_samples_7d,omitempty"`
+	HoldingPnlLamports  *float32 `json:"holding_pnl_lamports,omitempty"`
 
 	// HoldingPnlUsd micro-USD, stamped at execution
 	HoldingPnlUsd     *float32 `json:"holding_pnl_usd,omitempty"`
@@ -792,10 +794,20 @@ type InternalAdaptersPrimaryHttpHandlerSnapshotRow struct {
 	MedRpAll *float32 `json:"med_rp_all,omitempty"`
 
 	// MedRpAllUsd micro-USD
-	MedRpAllUsd      *float32 `json:"med_rp_all_usd,omitempty"`
-	MedSellsPerToken *float32 `json:"med_sells_per_token,omitempty"`
-	OldestTradeAt    *string  `json:"oldest_trade_at,omitempty"`
-	PnlDistribution  *[]int   `json:"pnl_distribution,omitempty"`
+	MedRpAllUsd           *float32 `json:"med_rp_all_usd,omitempty"`
+	MedSellsPerToken      *float32 `json:"med_sells_per_token,omitempty"`
+	MedianBuyImpactPct30d *float32 `json:"median_buy_impact_pct_30d,omitempty"`
+
+	// MedianBuyImpactPct7d Buy-impact figures of the snapshot's wallet, the same fields and null
+	// rules as the trader listing: percent price move per constant-product
+	// buy, quote reserve before it in SOL, buys measured.
+	MedianBuyImpactPct7d  *float32 `json:"median_buy_impact_pct_7d,omitempty"`
+	MedianEntryPoolSol30d *float32 `json:"median_entry_pool_sol_30d,omitempty"`
+	MedianEntryPoolSol7d  *float32 `json:"median_entry_pool_sol_7d,omitempty"`
+	OldestTradeAt         *string  `json:"oldest_trade_at,omitempty"`
+	P90BuyImpactPct30d    *float32 `json:"p90_buy_impact_pct_30d,omitempty"`
+	P90BuyImpactPct7d     *float32 `json:"p90_buy_impact_pct_7d,omitempty"`
+	PnlDistribution       *[]int   `json:"pnl_distribution,omitempty"`
 
 	// PnlDistributionUsd the buckets measured on the USD stamps
 	PnlDistributionUsd *[]int `json:"pnl_distribution_usd,omitempty"`
@@ -3594,7 +3606,7 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	CopiesSkippedNonSolQuote *int `json:"copies_skipped_non_sol_quote,omitempty"`
 
 	// CopiesSkippedPoolNotSimulated CopiesSkippedPoolNotSimulated counts target swaps a per-pool run saw on a
-	// market it carried no instrument for (outside the mint's top pools, or a
+	// market it carried no instrument for (past the per-mint pool cap, or a
 	// pool the catalog does not know). They fold into the target book and are
 	// recorded once as `pool_not_simulated`; nothing fills. A per-pool
 	// artefact, not in CopiesSkippedUnpriced. Additive JSONB field.
@@ -3678,26 +3690,11 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	PlatformFeesPaidSol *float32 `json:"platform_fees_paid_sol,omitempty"`
 
 	// PositionsOpenedUnmarked PositionsOpenedUnmarked counts positions the run opened while it had NO
-	// price to mark them with — so for as long as that lasted, every
-	// price-based exit rule (take-profit, stop, trailing stop, max-drawdown)
-	// evaluated as undefined and could not fire.
-	//
-	// It happens because a copy fills at the price the TARGET left behind, on
-	// the pool THEY traded, while the position is marked against the run's own
-	// candle stream. Normally those are the same market. They are not when the
-	// fill lands somewhere the stream does not cover — a parallel venue, or a
-	// market whose candles simply have not started yet.
-	//
-	// Like CopiesSkippedUnpriced this is a COVERAGE number, not a result: an
-	// exit rule that could not be evaluated did not decline to fire, it never
-	// ran, and the position rode on until something else closed it. A non-zero
-	// value means the run UNDER-represents its own exit rules — read the ROI
-	// with that in mind.
-	//
-	// Mid-window graduations used to dominate this and no longer do: the
-	// candle stream now merges a token's whole migration lineage, so a
-	// bonding-curve entry is marked from the moment it opens. Additive JSONB
-	// field — old rows decode as 0.
+	// price to mark them with, so that every price-based exit rule
+	// (take-profit, stop, trailing stop, max-drawdown) evaluated as undefined
+	// and could not fire. A copy seeds the mark from its own triggering swap
+	// until the first candle closes, so a run records 0; a non-zero value is a
+	// run from before that rule. Additive JSONB field — old rows decode as 0.
 	PositionsOpenedUnmarked *int     `json:"positions_opened_unmarked,omitempty"`
 	RealizedPnlSol          *float32 `json:"realized_pnl_sol,omitempty"`
 
@@ -3711,7 +3708,7 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	RoiPct        *float32 `json:"roi_pct,omitempty"`
 
 	// ScopeExitsUnpriced ScopeExitsUnpriced counts the forced closes an `on_retire: sell` policy
-	// could not fill because no candle had priced the token yet when it left
+	// could not fill because nothing had priced the token yet when it left
 	// the selection: the position stays open, its exits keep firing, and
 	// whatever is left at the end is marked in HeldPositions. Additive JSONB
 	// field — old rows decode as 0.
@@ -3774,7 +3771,8 @@ type PulsightInternalCoreUsecasesBacktestBacktestTrade struct {
 	SolAmount      *float32                                         `json:"sol_amount,omitempty"`
 	Source         *PulsightInternalCoreUsecasesBacktestTradeSource `json:"source,omitempty"`
 
-	// SwapFeeBps SwapFeeBps is the venue swap fee this fill paid, in basis points.
+	// SwapFeeBps SwapFeeBps is the venue swap fee this fill paid, rounded to the nearest
+	// basis point; the fill itself is charged to the millionth.
 	SwapFeeBps *int `json:"swap_fee_bps,omitempty"`
 
 	// TargetPriceImpactPct TargetPriceImpactPct is the MIRRORED trader's own price impact on the
@@ -4033,22 +4031,28 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// Behavioral1d Behavioral1d/7d/30d/All are the rows the "Behavioural" panel
 	// toggles between. nil → panel renders its empty state for that
 	// window.
-	Behavioral1d    *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_1d,omitempty"`
-	Behavioral30d   *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_30d,omitempty"`
-	Behavioral7d    *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_7d,omitempty"`
-	BehavioralAll   *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_all,omitempty"`
-	Buy1d           *int                                                       `json:"buy_1d,omitempty"`
-	Buy30d          *int                                                       `json:"buy_30d,omitempty"`
-	Buy7d           *int                                                       `json:"buy_7d,omitempty"`
-	BuyAll          *int                                                       `json:"buy_all,omitempty"`
-	BuySellRatio1d  *float32                                                   `json:"buy_sell_ratio_1d,omitempty"`
-	BuySellRatio30d *float32                                                   `json:"buy_sell_ratio_30d,omitempty"`
-	BuySellRatio7d  *float32                                                   `json:"buy_sell_ratio_7d,omitempty"`
-	BuySellRatioAll *float32                                                   `json:"buy_sell_ratio_all,omitempty"`
-	Cashback1d      *float32                                                   `json:"cashback_1d,omitempty"`
-	Cashback1dUsd   *float32                                                   `json:"cashback_1d_usd,omitempty"`
-	Cashback30d     *float32                                                   `json:"cashback_30d,omitempty"`
-	Cashback30dUsd  *float32                                                   `json:"cashback_30d_usd,omitempty"`
+	Behavioral1d  *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_1d,omitempty"`
+	Behavioral30d *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_30d,omitempty"`
+	Behavioral7d  *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_7d,omitempty"`
+	BehavioralAll *PulsightInternalCoreDomainAggregatorTraderBehavioralStats `json:"behavioral_all,omitempty"`
+	Buy1d         *int                                                       `json:"buy_1d,omitempty"`
+	Buy30d        *int                                                       `json:"buy_30d,omitempty"`
+	Buy7d         *int                                                       `json:"buy_7d,omitempty"`
+	BuyAll        *int                                                       `json:"buy_all,omitempty"`
+
+	// BuyImpactSamples30d Buys measured for the 30-day buy-impact figures.
+	BuyImpactSamples30d *int `json:"buy_impact_samples_30d,omitempty"`
+
+	// BuyImpactSamples7d Buys measured for the 7-day buy-impact figures.
+	BuyImpactSamples7d *int     `json:"buy_impact_samples_7d,omitempty"`
+	BuySellRatio1d     *float32 `json:"buy_sell_ratio_1d,omitempty"`
+	BuySellRatio30d    *float32 `json:"buy_sell_ratio_30d,omitempty"`
+	BuySellRatio7d     *float32 `json:"buy_sell_ratio_7d,omitempty"`
+	BuySellRatioAll    *float32 `json:"buy_sell_ratio_all,omitempty"`
+	Cashback1d         *float32 `json:"cashback_1d,omitempty"`
+	Cashback1dUsd      *float32 `json:"cashback_1d_usd,omitempty"`
+	Cashback30d        *float32 `json:"cashback_30d,omitempty"`
+	Cashback30dUsd     *float32 `json:"cashback_30d_usd,omitempty"`
 
 	// Cashback7d Pump cashback: accrued in the window (the screening signal) and
 	// swept. Claimed is ALREADY inside NetProfit7d — never add it on top.
@@ -4123,14 +4127,33 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 
 	// Label Label/LabelType identify a known wallet (CEX/fee/KOL/...) from the
 	// known_addresses registry; empty when the wallet isn't labelled.
-	Label                      *string  `json:"label,omitempty"`
-	LabelType                  *string  `json:"label_type,omitempty"`
-	LandedTxs1d                *int     `json:"landed_txs_1d,omitempty"`
-	LandedTxs30d               *int     `json:"landed_txs_30d,omitempty"`
-	LandedTxs7d                *int     `json:"landed_txs_7d,omitempty"`
-	LandedTxsAll               *int     `json:"landed_txs_all,omitempty"`
-	LastActiveTimestamp        *int     `json:"last_active_timestamp,omitempty"`
-	MedianBuyCountPerToken     *float32 `json:"median_buy_count_per_token,omitempty"`
+	Label                  *string  `json:"label,omitempty"`
+	LabelType              *string  `json:"label_type,omitempty"`
+	LandedTxs1d            *int     `json:"landed_txs_1d,omitempty"`
+	LandedTxs30d           *int     `json:"landed_txs_30d,omitempty"`
+	LandedTxs7d            *int     `json:"landed_txs_7d,omitempty"`
+	LandedTxsAll           *int     `json:"landed_txs_all,omitempty"`
+	LastActiveTimestamp    *int     `json:"last_active_timestamp,omitempty"`
+	MedianBuyCountPerToken *float32 `json:"median_buy_count_per_token,omitempty"`
+
+	// MedianBuyImpactPct30d Median price move per buy over the last 30 days, in percent.
+	MedianBuyImpactPct30d *float32 `json:"median_buy_impact_pct_30d,omitempty"`
+
+	// MedianBuyImpactPct7d Median price move per buy over the last 7 days, in percent (2 = 2 %):
+	// (B_pre/B_post)^2 - 1 on the pool's base reserve, capped at 1000 %.
+	// Constant-product venues only (pump bonding curve, PumpSwap, Raydium
+	// AMM v4/CPMM, Meteora pools, Fluxbeam, Heaven, Omnipair); about twice the
+	// backtest's target_price_impact_pct for the same swap. Null until the
+	// window is served or when no buy was measured.
+	MedianBuyImpactPct7d *float32 `json:"median_buy_impact_pct_7d,omitempty"`
+
+	// MedianEntryPoolSol30d Median quote reserve of the pool before each buy over the last 30 days, in SOL.
+	MedianEntryPoolSol30d *float32 `json:"median_entry_pool_sol_30d,omitempty"`
+
+	// MedianEntryPoolSol7d Median quote reserve of the pool before each buy over the last 7 days,
+	// in SOL; on the pump bonding curve it includes the curve's virtual SOL.
+	// Null when no measured buy was valued.
+	MedianEntryPoolSol7d       *float32 `json:"median_entry_pool_sol_7d,omitempty"`
 	MedianFirstBuyReactivity   *float32 `json:"median_first_buy_reactivity,omitempty"`
 	MedianHoldingTime          *float32 `json:"median_holding_time,omitempty"`
 	MedianRealizedProfit1d     *float32 `json:"median_realized_profit_1d,omitempty"`
@@ -4153,6 +4176,12 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	NetProfitAll    *float32 `json:"net_profit_all,omitempty"`
 	NetProfitAllUsd *float32 `json:"net_profit_all_usd,omitempty"`
 	OldestTradeAt   *int     `json:"oldest_trade_at,omitempty"`
+
+	// P90BuyImpactPct30d 90th-percentile price move per buy over the last 30 days, in percent.
+	P90BuyImpactPct30d *float32 `json:"p90_buy_impact_pct_30d,omitempty"`
+
+	// P90BuyImpactPct7d 90th-percentile price move per buy over the last 7 days, in percent.
+	P90BuyImpactPct7d *float32 `json:"p90_buy_impact_pct_7d,omitempty"`
 
 	// Periods Periods is one row per canonical window (1d, 7d, 30d, all) off the
 	// wallet's board row. Drives the period stats panel on the
