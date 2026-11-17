@@ -280,6 +280,30 @@ func (e PulsightInternalCoreDomainSubscriptionSubscriptionTier) Valid() bool {
 	}
 }
 
+// Defines values for PulsightInternalCoreDomainTraderSimilarityLabel.
+const (
+	SimilarityAlike         PulsightInternalCoreDomainTraderSimilarityLabel = "alike"
+	SimilarityDifferent     PulsightInternalCoreDomainTraderSimilarityLabel = "different"
+	SimilaritySomewhatAlike PulsightInternalCoreDomainTraderSimilarityLabel = "somewhat_alike"
+	SimilarityVeryAlike     PulsightInternalCoreDomainTraderSimilarityLabel = "very_alike"
+)
+
+// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainTraderSimilarityLabel enum.
+func (e PulsightInternalCoreDomainTraderSimilarityLabel) Valid() bool {
+	switch e {
+	case SimilarityAlike:
+		return true
+	case SimilarityDifferent:
+		return true
+	case SimilaritySomewhatAlike:
+		return true
+	case SimilarityVeryAlike:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PulsightInternalCoreDomainWebhookType.
 const (
 	TypeDiscord  PulsightInternalCoreDomainWebhookType = "discord"
@@ -544,6 +568,7 @@ const (
 	GetTradersParamsSortByRewardsTotal             GetTradersParamsSortBy = "rewards_total"
 	GetTradersParamsSortByRoi                      GetTradersParamsSortBy = "roi"
 	GetTradersParamsSortBySell                     GetTradersParamsSortBy = "sell"
+	GetTradersParamsSortBySimilarity               GetTradersParamsSortBy = "similarity"
 	GetTradersParamsSortBySolBalance               GetTradersParamsSortBy = "sol_balance"
 	GetTradersParamsSortBySoldGtBoughtSells        GetTradersParamsSortBy = "sold_gt_bought_sells"
 	GetTradersParamsSortBySpamRate                 GetTradersParamsSortBy = "spam_rate"
@@ -624,6 +649,8 @@ func (e GetTradersParamsSortBy) Valid() bool {
 	case GetTradersParamsSortByRoi:
 		return true
 	case GetTradersParamsSortBySell:
+		return true
+	case GetTradersParamsSortBySimilarity:
 		return true
 	case GetTradersParamsSortBySolBalance:
 		return true
@@ -3196,6 +3223,54 @@ type PulsightInternalCoreDomainTraderFilter struct {
 	UserId    *string                 `json:"user_id,omitempty"`
 }
 
+// PulsightInternalCoreDomainTraderMoneyTraitValue defines model for pulsight_internal_core_domain_trader.MoneyTraitValue.
+type PulsightInternalCoreDomainTraderMoneyTraitValue struct {
+	Closeness *float32 `json:"closeness,omitempty"`
+	Value     *float32 `json:"value,omitempty"`
+	ValueUsd  *float32 `json:"value_usd,omitempty"`
+}
+
+// PulsightInternalCoreDomainTraderSimilarity defines model for pulsight_internal_core_domain_trader.Similarity.
+type PulsightInternalCoreDomainTraderSimilarity struct {
+	BuySize *PulsightInternalCoreDomainTraderMoneyTraitValue `json:"buy_size,omitempty"`
+
+	// Label Label names the score's band; null with the score.
+	Label          *PulsightInternalCoreDomainTraderSimilarityLabel `json:"label,omitempty"`
+	MedianHoldSecs *PulsightInternalCoreDomainTraderTraitValue      `json:"median_hold_secs,omitempty"`
+
+	// Score Score is the similarity, 0–100, and the page's sort value rounded; null
+	// when fewer than three traits are measured on both wallets.
+	Score          *int                                                 `json:"score,omitempty"`
+	Tags           *PulsightInternalCoreDomainTraderTagsTrait           `json:"tags,omitempty"`
+	TokensTraded   *PulsightInternalCoreDomainTraderTraitValue          `json:"tokens_traded,omitempty"`
+	TradesPerToken *PulsightInternalCoreDomainTraderTradesPerTokenTrait `json:"trades_per_token,omitempty"`
+
+	// TraitsTotal TraitsTotal counts the traits the window carries: 6, or 5 at lifetime,
+	// which has no token count.
+	TraitsTotal *int `json:"traits_total,omitempty"`
+
+	// TraitsUsed TraitsUsed counts the traits measured on both wallets.
+	TraitsUsed *int `json:"traits_used,omitempty"`
+
+	// Volume Volume is the window's bought plus sold value in lamports, with its USD
+	// twin (micro-USD). It is shown beside the score, never part of it.
+	Volume    *float32 `json:"volume,omitempty"`
+	VolumeUsd *float32 `json:"volume_usd,omitempty"`
+
+	// Window Window is the window the windowed traits are read at (the page's).
+	Window  *string                                     `json:"window,omitempty"`
+	Winrate *PulsightInternalCoreDomainTraderTraitValue `json:"winrate,omitempty"`
+}
+
+// PulsightInternalCoreDomainTraderSimilarityLabel defines model for pulsight_internal_core_domain_trader.SimilarityLabel.
+type PulsightInternalCoreDomainTraderSimilarityLabel string
+
+// PulsightInternalCoreDomainTraderTagsTrait defines model for pulsight_internal_core_domain_trader.TagsTrait.
+type PulsightInternalCoreDomainTraderTagsTrait struct {
+	Closeness *float32  `json:"closeness,omitempty"`
+	Value     *[]string `json:"value,omitempty"`
+}
+
 // PulsightInternalCoreDomainTraderTrader defines model for pulsight_internal_core_domain_trader.Trader.
 type PulsightInternalCoreDomainTraderTrader struct {
 	ArbTxRatio1d  *float32 `json:"arb_tx_ratio_1d,omitempty"`
@@ -3389,6 +3464,10 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	Sell7d    *int     `json:"sell_7d,omitempty"`
 	SellAll   *int     `json:"sell_all,omitempty"`
 
+	// Similarity Similarity is the row's style closeness to the reference wallet of a
+	// similar listing (`ref`); absent without one.
+	Similarity *PulsightInternalCoreDomainTraderSimilarity `json:"similarity,omitempty"`
+
 	// SolBalance SolBalance is the wallet's SOL balance in lamports.
 	SolBalance           *float32 `json:"sol_balance,omitempty"`
 	SoldGtBoughtSells1d  *int     `json:"sold_gt_bought_sells_1d,omitempty"`
@@ -3447,6 +3526,19 @@ type PulsightInternalCoreDomainTraderTrader struct {
 	Winrate7dUsd  *float32 `json:"winrate_7d_usd,omitempty"`
 	WinrateAll    *float32 `json:"winrate_all,omitempty"`
 	WinrateAllUsd *float32 `json:"winrate_all_usd,omitempty"`
+}
+
+// PulsightInternalCoreDomainTraderTradesPerTokenTrait defines model for pulsight_internal_core_domain_trader.TradesPerTokenTrait.
+type PulsightInternalCoreDomainTraderTradesPerTokenTrait struct {
+	Buys      *float32 `json:"buys,omitempty"`
+	Closeness *float32 `json:"closeness,omitempty"`
+	Sells     *float32 `json:"sells,omitempty"`
+}
+
+// PulsightInternalCoreDomainTraderTraitValue defines model for pulsight_internal_core_domain_trader.TraitValue.
+type PulsightInternalCoreDomainTraderTraitValue struct {
+	Closeness *float32 `json:"closeness,omitempty"`
+	Value     *float32 `json:"value,omitempty"`
 }
 
 // PulsightInternalCoreDomainWebhookNotifier defines model for pulsight_internal_core_domain_webhook.Notifier.
@@ -4441,28 +4533,32 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// RealizedProfit. No lifetime failure record is served: the failed-tx
 	// planes are TTL-bounded to three months while the landed side is not,
 	// so a lifetime success or spam rate would be structurally flattering.
-	RoiAll               *float32  `json:"roi_all,omitempty"`
-	RoiAllUsd            *float32  `json:"roi_all_usd,omitempty"`
-	Sell1d               *int      `json:"sell_1d,omitempty"`
-	Sell30d              *int      `json:"sell_30d,omitempty"`
-	Sell7d               *int      `json:"sell_7d,omitempty"`
-	SellAll              *int      `json:"sell_all,omitempty"`
-	SolBalance           *float32  `json:"sol_balance,omitempty"`
-	SoldGtBoughtSells1d  *int      `json:"sold_gt_bought_sells_1d,omitempty"`
-	SoldGtBoughtSells30d *int      `json:"sold_gt_bought_sells_30d,omitempty"`
-	SoldGtBoughtSells7d  *int      `json:"sold_gt_bought_sells_7d,omitempty"`
-	SoldGtBoughtSellsAll *int      `json:"sold_gt_bought_sells_all,omitempty"`
-	SpamRate1d           *float32  `json:"spam_rate_1d,omitempty"`
-	SpamRate30d          *float32  `json:"spam_rate_30d,omitempty"`
-	SpamRate7d           *float32  `json:"spam_rate_7d,omitempty"`
-	SuccessRate1d        *float32  `json:"success_rate_1d,omitempty"`
-	SuccessRate30d       *float32  `json:"success_rate_30d,omitempty"`
-	SuccessRate7d        *float32  `json:"success_rate_7d,omitempty"`
-	Tags                 *[]string `json:"tags,omitempty"`
-	TokenNum1d           *int      `json:"token_num_1d,omitempty"`
-	TokenNum30d          *int      `json:"token_num_30d,omitempty"`
-	TokenNum7d           *int      `json:"token_num_7d,omitempty"`
-	TokenNumAll          *int      `json:"token_num_all,omitempty"`
+	RoiAll    *float32 `json:"roi_all,omitempty"`
+	RoiAllUsd *float32 `json:"roi_all_usd,omitempty"`
+	Sell1d    *int     `json:"sell_1d,omitempty"`
+	Sell30d   *int     `json:"sell_30d,omitempty"`
+	Sell7d    *int     `json:"sell_7d,omitempty"`
+	SellAll   *int     `json:"sell_all,omitempty"`
+
+	// Similarity Similarity is the row's style closeness to the page's reference wallet
+	// (`ref`); absent without one.
+	Similarity           *PulsightInternalCoreDomainTraderSimilarity `json:"similarity,omitempty"`
+	SolBalance           *float32                                    `json:"sol_balance,omitempty"`
+	SoldGtBoughtSells1d  *int                                        `json:"sold_gt_bought_sells_1d,omitempty"`
+	SoldGtBoughtSells30d *int                                        `json:"sold_gt_bought_sells_30d,omitempty"`
+	SoldGtBoughtSells7d  *int                                        `json:"sold_gt_bought_sells_7d,omitempty"`
+	SoldGtBoughtSellsAll *int                                        `json:"sold_gt_bought_sells_all,omitempty"`
+	SpamRate1d           *float32                                    `json:"spam_rate_1d,omitempty"`
+	SpamRate30d          *float32                                    `json:"spam_rate_30d,omitempty"`
+	SpamRate7d           *float32                                    `json:"spam_rate_7d,omitempty"`
+	SuccessRate1d        *float32                                    `json:"success_rate_1d,omitempty"`
+	SuccessRate30d       *float32                                    `json:"success_rate_30d,omitempty"`
+	SuccessRate7d        *float32                                    `json:"success_rate_7d,omitempty"`
+	Tags                 *[]string                                   `json:"tags,omitempty"`
+	TokenNum1d           *int                                        `json:"token_num_1d,omitempty"`
+	TokenNum30d          *int                                        `json:"token_num_30d,omitempty"`
+	TokenNum7d           *int                                        `json:"token_num_7d,omitempty"`
+	TokenNumAll          *int                                        `json:"token_num_all,omitempty"`
 
 	// TokensCreated TokensCreated / TokensGraduated are the wallet's lifetime
 	// creator-token counts (distinct mints created, and the subset that
@@ -4517,7 +4613,12 @@ type PulsightInternalCoreUsecasesTraderTraderListResult struct {
 	NextCursorPubkey *string                                             `json:"next_cursor_pubkey,omitempty"`
 	NextCursorValue  *float32                                            `json:"next_cursor_value,omitempty"`
 	Offset           *int                                                `json:"offset,omitempty"`
-	Total            *int                                                `json:"total,omitempty"`
+
+	// Reference Reference is the reference wallet's own row on the page's basis (its
+	// similarity block compares it with itself), on a page read with `ref`;
+	// absent when the board holds no row for it.
+	Reference *PulsightInternalCoreUsecasesTraderTraderListItem `json:"reference,omitempty"`
+	Total     *int                                              `json:"total,omitempty"`
 
 	// Unit Unit is the currency the page was ranked, filtered and cursored in
 	// (sol|usd); every row carries both currencies regardless.
@@ -5026,13 +5127,13 @@ type GetTradersParams struct {
 	// Offset Offset
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
-	// SortBy Ranking key. `realized_profit` (the default) ranks NET PnL after costs, the opposite of the `f=` key `realized_profit`, which is gross; `total_profit` ranks gross realized PnL. Every other key is the `f=` key of the figure it ranks, plus `roi` and `total_costs`; `pnl` and `net_profit` alias `realized_profit`, `last_seen` aliases `last_active_ts`, and an unknown key ranks net PnL. A key with no figure for the window is refused with a 400: token_num, didnt_buy_sells, sold_gt_bought_sells, success_rate, spam_rate, failed_txs, landed_txs and total_costs have no lifetime figure.
+	// SortBy Ranking key. `realized_profit` (the default) ranks NET PnL after costs, the opposite of the `f=` key `realized_profit`, which is gross; `total_profit` ranks gross realized PnL. Every other key is the `f=` key of the figure it ranks, plus `roi` and `total_costs`; `pnl` and `net_profit` alias `realized_profit`, `last_seen` aliases `last_active_ts`, and an unknown key ranks net PnL. A key with no figure for the window is refused with a 400: token_num, didnt_buy_sells, sold_gt_bought_sells, success_rate, spam_rate, failed_txs, landed_txs and total_costs have no lifetime figure. `similarity` ranks by the rows' similarity to `ref`, which it requires (400 without it, and 400 when the reference has fewer than 3 traits measured at the window); rows with no score rank last in both directions, and the cursor is the unrounded score.
 	SortBy *GetTradersParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
 
 	// Direction Sort Direction
 	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
 
-	// Window The window the page is ranked over: the sorted figure's window and the listed population. 1d, 7d and 30d list the traders who traded in it; all ranks lifetime figures of the traders with 10+ trades in the last 30 days (the unfiltered 7d/30d pages ranked by net PnL, win rate or last active list every trader who traded in the window; every other page also needs those 10+ trades). An `f=` clause without a window suffix compiles at 30d when window=30d and at 7d otherwise, whatever this window.
+	// Window The window the page is ranked over: the sorted figure's window and the listed population. A ranked page lists the traders with 10+ trades in the last 30 days: at 1d, 7d and 30d those of them who traded in the window, at all their lifetime figures; a `search`, `favorites_only` or `tracked_only` page matches its wallets whatever their activity. An `f=` clause without a window suffix compiles at 30d when window=30d and at 7d otherwise, whatever this window.
 	Window *GetTradersParamsWindow `form:"window,omitempty" json:"window,omitempty"`
 
 	// F Filter clauses `key[_window]|op|value[|value2]`, AND-combined. A windowed key without a suffix compiles at 30d when window=30d and at 7d otherwise; a buy-impact key without a suffix is refused on a 1d or all page.
@@ -5049,6 +5150,9 @@ type GetTradersParams struct {
 
 	// Unit Currency the page is ranked, filtered and cursored in: sol (lamports) or usd (micro-USD stamped at execution). Money clause values are whole units of that currency. Every row carries both currencies (`_usd` twins) whatever the unit.
 	Unit *string `form:"unit,omitempty" json:"unit,omitempty"`
+
+	// Ref Reference wallet of a similar listing. Every row carries `similarity`, its style closeness to this wallet (0-100 over win rate, tokens traded and SOL per buy at `window`, median buys and sells per token and median hold over every position, and tags; an unmeasured trait counts half; no score below 3 measured traits), the envelope carries the wallet's own row as `reference`, and the wallet is left out of its own result. The page never ranks off a precomputed board. Required by sort_by=similarity.
+	Ref *string `form:"ref,omitempty" json:"ref,omitempty"`
 }
 
 // GetTradersParamsSortBy defines parameters for GetTraders.
@@ -12141,6 +12245,18 @@ func NewGetTradersRequest(server string, params *GetTradersParams) (*http.Reques
 		if params.Unit != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "unit", *params.Unit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Ref != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "ref", *params.Ref, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
 				return nil, err
 			} else {
 				for _, qp := range strings.Split(queryFrag, "&") {
