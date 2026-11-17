@@ -54,31 +54,31 @@ func (e PulsightInternalCoreDomainAggregatorTaxSwapFeeSource) Valid() bool {
 
 // Defines values for PulsightInternalCoreDomainAggregatorTaxPartKind.
 const (
-	Cashback      PulsightInternalCoreDomainAggregatorTaxPartKind = "cashback"
-	Creator       PulsightInternalCoreDomainAggregatorTaxPartKind = "creator"
-	Fund          PulsightInternalCoreDomainAggregatorTaxPartKind = "fund"
-	HolderRewards PulsightInternalCoreDomainAggregatorTaxPartKind = "holder_rewards"
-	Lp            PulsightInternalCoreDomainAggregatorTaxPartKind = "lp"
-	Platform      PulsightInternalCoreDomainAggregatorTaxPartKind = "platform"
-	Protocol      PulsightInternalCoreDomainAggregatorTaxPartKind = "protocol"
+	PulsightInternalCoreDomainAggregatorTaxPartKindCashback      PulsightInternalCoreDomainAggregatorTaxPartKind = "cashback"
+	PulsightInternalCoreDomainAggregatorTaxPartKindCreator       PulsightInternalCoreDomainAggregatorTaxPartKind = "creator"
+	PulsightInternalCoreDomainAggregatorTaxPartKindFund          PulsightInternalCoreDomainAggregatorTaxPartKind = "fund"
+	PulsightInternalCoreDomainAggregatorTaxPartKindHolderRewards PulsightInternalCoreDomainAggregatorTaxPartKind = "holder_rewards"
+	PulsightInternalCoreDomainAggregatorTaxPartKindLp            PulsightInternalCoreDomainAggregatorTaxPartKind = "lp"
+	PulsightInternalCoreDomainAggregatorTaxPartKindPlatform      PulsightInternalCoreDomainAggregatorTaxPartKind = "platform"
+	PulsightInternalCoreDomainAggregatorTaxPartKindProtocol      PulsightInternalCoreDomainAggregatorTaxPartKind = "protocol"
 )
 
 // Valid indicates whether the value is a known member of the PulsightInternalCoreDomainAggregatorTaxPartKind enum.
 func (e PulsightInternalCoreDomainAggregatorTaxPartKind) Valid() bool {
 	switch e {
-	case Cashback:
+	case PulsightInternalCoreDomainAggregatorTaxPartKindCashback:
 		return true
-	case Creator:
+	case PulsightInternalCoreDomainAggregatorTaxPartKindCreator:
 		return true
-	case Fund:
+	case PulsightInternalCoreDomainAggregatorTaxPartKindFund:
 		return true
-	case HolderRewards:
+	case PulsightInternalCoreDomainAggregatorTaxPartKindHolderRewards:
 		return true
-	case Lp:
+	case PulsightInternalCoreDomainAggregatorTaxPartKindLp:
 		return true
-	case Platform:
+	case PulsightInternalCoreDomainAggregatorTaxPartKindPlatform:
 		return true
-	case Protocol:
+	case PulsightInternalCoreDomainAggregatorTaxPartKindProtocol:
 		return true
 	default:
 		return false
@@ -328,6 +328,7 @@ func (e PulsightInternalCoreUsecasesBacktestBacktestStatus) Valid() bool {
 // Defines values for PulsightInternalCoreUsecasesBacktestDeclineReason.
 const (
 	DeclineCooldown           PulsightInternalCoreUsecasesBacktestDeclineReason = "cooldown"
+	DeclineCurveComplete      PulsightInternalCoreUsecasesBacktestDeclineReason = "curve_complete"
 	DeclineExposureCap        PulsightInternalCoreUsecasesBacktestDeclineReason = "exposure_cap"
 	DeclineMaxBuysPerPosition PulsightInternalCoreUsecasesBacktestDeclineReason = "max_buys_per_position"
 	DeclineNoBracket          PulsightInternalCoreUsecasesBacktestDeclineReason = "no_bracket"
@@ -345,6 +346,8 @@ const (
 func (e PulsightInternalCoreUsecasesBacktestDeclineReason) Valid() bool {
 	switch e {
 	case DeclineCooldown:
+		return true
+	case DeclineCurveComplete:
 		return true
 	case DeclineExposureCap:
 		return true
@@ -505,24 +508,186 @@ func (e GetMintsParamsHours) Valid() bool {
 	}
 }
 
+// Defines values for GetTradersParamsSortBy.
+const (
+	GetTradersParamsSortByArbTxRatio               GetTradersParamsSortBy = "arb_tx_ratio"
+	GetTradersParamsSortByAvgBuyCountPerToken      GetTradersParamsSortBy = "avg_buy_count_per_token"
+	GetTradersParamsSortByAvgFirstBuyReactivity    GetTradersParamsSortBy = "avg_first_buy_reactivity"
+	GetTradersParamsSortByAvgHoldingTime           GetTradersParamsSortBy = "avg_holding_time"
+	GetTradersParamsSortByAvgRealizedProfit        GetTradersParamsSortBy = "avg_realized_profit"
+	GetTradersParamsSortByAvgSellCountPerToken     GetTradersParamsSortBy = "avg_sell_count_per_token"
+	GetTradersParamsSortByBuy                      GetTradersParamsSortBy = "buy"
+	GetTradersParamsSortByBuySellRatio             GetTradersParamsSortBy = "buy_sell_ratio"
+	GetTradersParamsSortByCashback                 GetTradersParamsSortBy = "cashback"
+	GetTradersParamsSortByCashbackClaimCount       GetTradersParamsSortBy = "cashback_claim_count"
+	GetTradersParamsSortByCashbackClaimed          GetTradersParamsSortBy = "cashback_claimed"
+	GetTradersParamsSortByCashbackShare            GetTradersParamsSortBy = "cashback_share"
+	GetTradersParamsSortByCreatorTokensCreated     GetTradersParamsSortBy = "creator_tokens_created"
+	GetTradersParamsSortByCreatorTokensGraduated   GetTradersParamsSortBy = "creator_tokens_graduated"
+	GetTradersParamsSortByDidntBuySells            GetTradersParamsSortBy = "didnt_buy_sells"
+	GetTradersParamsSortByFailedTxs                GetTradersParamsSortBy = "failed_txs"
+	GetTradersParamsSortByHolderRewardPayouts      GetTradersParamsSortBy = "holder_reward_payouts"
+	GetTradersParamsSortByHolderRewards            GetTradersParamsSortBy = "holder_rewards"
+	GetTradersParamsSortByHoldingPnl               GetTradersParamsSortBy = "holding_pnl"
+	GetTradersParamsSortByLandedTxs                GetTradersParamsSortBy = "landed_txs"
+	GetTradersParamsSortByLastActiveTs             GetTradersParamsSortBy = "last_active_ts"
+	GetTradersParamsSortByLastSeen                 GetTradersParamsSortBy = "last_seen"
+	GetTradersParamsSortByMedianBuyCountPerToken   GetTradersParamsSortBy = "median_buy_count_per_token"
+	GetTradersParamsSortByMedianFirstBuyReactivity GetTradersParamsSortBy = "median_first_buy_reactivity"
+	GetTradersParamsSortByMedianHoldingTime        GetTradersParamsSortBy = "median_holding_time"
+	GetTradersParamsSortByMedianRealizedProfit     GetTradersParamsSortBy = "median_realized_profit"
+	GetTradersParamsSortByMedianSellCountPerToken  GetTradersParamsSortBy = "median_sell_count_per_token"
+	GetTradersParamsSortByNetProfit                GetTradersParamsSortBy = "net_profit"
+	GetTradersParamsSortByOldestTradeAt            GetTradersParamsSortBy = "oldest_trade_at"
+	GetTradersParamsSortByPnl                      GetTradersParamsSortBy = "pnl"
+	GetTradersParamsSortByRealizedProfit           GetTradersParamsSortBy = "realized_profit"
+	GetTradersParamsSortByRewardsTotal             GetTradersParamsSortBy = "rewards_total"
+	GetTradersParamsSortByRoi                      GetTradersParamsSortBy = "roi"
+	GetTradersParamsSortBySell                     GetTradersParamsSortBy = "sell"
+	GetTradersParamsSortBySolBalance               GetTradersParamsSortBy = "sol_balance"
+	GetTradersParamsSortBySoldGtBoughtSells        GetTradersParamsSortBy = "sold_gt_bought_sells"
+	GetTradersParamsSortBySpamRate                 GetTradersParamsSortBy = "spam_rate"
+	GetTradersParamsSortBySuccessRate              GetTradersParamsSortBy = "success_rate"
+	GetTradersParamsSortByTokenNum                 GetTradersParamsSortBy = "token_num"
+	GetTradersParamsSortByTotalCosts               GetTradersParamsSortBy = "total_costs"
+	GetTradersParamsSortByTotalProfit              GetTradersParamsSortBy = "total_profit"
+	GetTradersParamsSortByWinrate                  GetTradersParamsSortBy = "winrate"
+)
+
+// Valid indicates whether the value is a known member of the GetTradersParamsSortBy enum.
+func (e GetTradersParamsSortBy) Valid() bool {
+	switch e {
+	case GetTradersParamsSortByArbTxRatio:
+		return true
+	case GetTradersParamsSortByAvgBuyCountPerToken:
+		return true
+	case GetTradersParamsSortByAvgFirstBuyReactivity:
+		return true
+	case GetTradersParamsSortByAvgHoldingTime:
+		return true
+	case GetTradersParamsSortByAvgRealizedProfit:
+		return true
+	case GetTradersParamsSortByAvgSellCountPerToken:
+		return true
+	case GetTradersParamsSortByBuy:
+		return true
+	case GetTradersParamsSortByBuySellRatio:
+		return true
+	case GetTradersParamsSortByCashback:
+		return true
+	case GetTradersParamsSortByCashbackClaimCount:
+		return true
+	case GetTradersParamsSortByCashbackClaimed:
+		return true
+	case GetTradersParamsSortByCashbackShare:
+		return true
+	case GetTradersParamsSortByCreatorTokensCreated:
+		return true
+	case GetTradersParamsSortByCreatorTokensGraduated:
+		return true
+	case GetTradersParamsSortByDidntBuySells:
+		return true
+	case GetTradersParamsSortByFailedTxs:
+		return true
+	case GetTradersParamsSortByHolderRewardPayouts:
+		return true
+	case GetTradersParamsSortByHolderRewards:
+		return true
+	case GetTradersParamsSortByHoldingPnl:
+		return true
+	case GetTradersParamsSortByLandedTxs:
+		return true
+	case GetTradersParamsSortByLastActiveTs:
+		return true
+	case GetTradersParamsSortByLastSeen:
+		return true
+	case GetTradersParamsSortByMedianBuyCountPerToken:
+		return true
+	case GetTradersParamsSortByMedianFirstBuyReactivity:
+		return true
+	case GetTradersParamsSortByMedianHoldingTime:
+		return true
+	case GetTradersParamsSortByMedianRealizedProfit:
+		return true
+	case GetTradersParamsSortByMedianSellCountPerToken:
+		return true
+	case GetTradersParamsSortByNetProfit:
+		return true
+	case GetTradersParamsSortByOldestTradeAt:
+		return true
+	case GetTradersParamsSortByPnl:
+		return true
+	case GetTradersParamsSortByRealizedProfit:
+		return true
+	case GetTradersParamsSortByRewardsTotal:
+		return true
+	case GetTradersParamsSortByRoi:
+		return true
+	case GetTradersParamsSortBySell:
+		return true
+	case GetTradersParamsSortBySolBalance:
+		return true
+	case GetTradersParamsSortBySoldGtBoughtSells:
+		return true
+	case GetTradersParamsSortBySpamRate:
+		return true
+	case GetTradersParamsSortBySuccessRate:
+		return true
+	case GetTradersParamsSortByTokenNum:
+		return true
+	case GetTradersParamsSortByTotalCosts:
+		return true
+	case GetTradersParamsSortByTotalProfit:
+		return true
+	case GetTradersParamsSortByWinrate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetTradersParamsWindow.
+const (
+	GetTradersParamsWindowAll  GetTradersParamsWindow = "all"
+	GetTradersParamsWindowN1d  GetTradersParamsWindow = "1d"
+	GetTradersParamsWindowN30d GetTradersParamsWindow = "30d"
+	GetTradersParamsWindowN7d  GetTradersParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetTradersParamsWindow enum.
+func (e GetTradersParamsWindow) Valid() bool {
+	switch e {
+	case GetTradersParamsWindowAll:
+		return true
+	case GetTradersParamsWindowN1d:
+		return true
+	case GetTradersParamsWindowN30d:
+		return true
+	case GetTradersParamsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for GetTradersByWalletAddressPnlSeriesParamsWindow.
 const (
-	All  GetTradersByWalletAddressPnlSeriesParamsWindow = "all"
-	N1d  GetTradersByWalletAddressPnlSeriesParamsWindow = "1d"
-	N30d GetTradersByWalletAddressPnlSeriesParamsWindow = "30d"
-	N7d  GetTradersByWalletAddressPnlSeriesParamsWindow = "7d"
+	GetTradersByWalletAddressPnlSeriesParamsWindowAll  GetTradersByWalletAddressPnlSeriesParamsWindow = "all"
+	GetTradersByWalletAddressPnlSeriesParamsWindowN1d  GetTradersByWalletAddressPnlSeriesParamsWindow = "1d"
+	GetTradersByWalletAddressPnlSeriesParamsWindowN30d GetTradersByWalletAddressPnlSeriesParamsWindow = "30d"
+	GetTradersByWalletAddressPnlSeriesParamsWindowN7d  GetTradersByWalletAddressPnlSeriesParamsWindow = "7d"
 )
 
 // Valid indicates whether the value is a known member of the GetTradersByWalletAddressPnlSeriesParamsWindow enum.
 func (e GetTradersByWalletAddressPnlSeriesParamsWindow) Valid() bool {
 	switch e {
-	case All:
+	case GetTradersByWalletAddressPnlSeriesParamsWindowAll:
 		return true
-	case N1d:
+	case GetTradersByWalletAddressPnlSeriesParamsWindowN1d:
 		return true
-	case N30d:
+	case GetTradersByWalletAddressPnlSeriesParamsWindowN30d:
 		return true
-	case N7d:
+	case GetTradersByWalletAddressPnlSeriesParamsWindowN7d:
 		return true
 	default:
 		return false
@@ -2990,6 +3155,11 @@ type PulsightInternalCoreDomainStrategyStrategyDef struct {
 	// strategy does not describe its own universe — it needs mirror
 	// wallets or an explicit run-time scope.
 	Selection *PulsightInternalCoreDomainStrategySubGraph `json:"selection,omitempty"`
+
+	// Timeframe Timeframe is the candle timeframe the strategy was built for, one of
+	// the run timeframes; empty when it names none. A run still takes its
+	// own timeframe.
+	Timeframe *string `json:"timeframe,omitempty"`
 }
 
 // PulsightInternalCoreDomainStrategySubGraph defines model for pulsight_internal_core_domain_strategy.SubGraph.
@@ -3463,6 +3633,10 @@ type PulsightInternalCoreUsecasesBacktestBacktestEstimate struct {
 	// minute as a run resolves it.
 	MintsCount *int `json:"mints_count,omitempty"`
 
+	// Warnings Warnings are caveats about the resolution the run would replay, such
+	// as a token selection that stopped at its candidate cap.
+	Warnings *[]string `json:"warnings,omitempty"`
+
 	// WithinBudget WithinBudget reports EstimatedTicks <= MaxTickBudget.
 	WithinBudget *bool `json:"within_budget,omitempty"`
 
@@ -3629,9 +3803,20 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// mostly-skipped run reads as "not enough data" instead of quietly looking
 	// like a thin strategy — or worse, than being filled at a fictional price
 	// and looking profitable. Additive JSONB field — old rows decode as 0.
-	CopiesSkippedUnpriced *int     `json:"copies_skipped_unpriced,omitempty"`
-	EndingBalanceSol      *float32 `json:"ending_balance_sol,omitempty"`
-	FeesPaidSol           *float32 `json:"fees_paid_sol,omitempty"`
+	CopiesSkippedUnpriced *int `json:"copies_skipped_unpriced,omitempty"`
+
+	// EmitBuysDeclined EmitBuysDeclined counts the candle closes on which an Emit buy whose
+	// rule held was refused by a rule — sizing, max_buys_per_open_position,
+	// exposure cap, bracket placement, rate limit — once per refusal: an Emit
+	// buy refused on consecutive closes for the same reason counts once, until
+	// it fills, a close finds it not ready to fire or the reason changes. Each
+	// one is persisted as a `backtest_declines` row with its reason, source
+	// `emit_buy` and no triggering swap. An Emit buy a target's swap triggered
+	// counts in CopiesDeclined instead. Additive JSONB field — old rows decode
+	// as 0.
+	EmitBuysDeclined *int     `json:"emit_buys_declined,omitempty"`
+	EndingBalanceSol *float32 `json:"ending_balance_sol,omitempty"`
+	FeesPaidSol      *float32 `json:"fees_paid_sol,omitempty"`
 
 	// HeldPositions HeldPositions is every mint still open at run end — the bags the
 	// strategy never sold, valued at their liquidity-aware exit (see
@@ -3731,7 +3916,11 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// every fill; it is already inside the fill prices, so it is not folded again.
 	TransferFeesPaidSol *float32 `json:"transfer_fees_paid_sol,omitempty"`
 	UnrealizedPnlSol    *float32 `json:"unrealized_pnl_sol,omitempty"`
-	Wins                *int     `json:"wins,omitempty"`
+
+	// Warnings Warnings are caveats about this run's own inputs, such as a token
+	// selection that stopped at its candidate cap. Additive JSONB field.
+	Warnings *[]string `json:"warnings,omitempty"`
+	Wins     *int      `json:"wins,omitempty"`
 }
 
 // PulsightInternalCoreUsecasesBacktestBacktestTrade defines model for pulsight_internal_core_usecases_backtest.BacktestTrade.
@@ -4144,7 +4333,9 @@ type PulsightInternalCoreUsecasesTraderTraderListItem struct {
 	// Constant-product venues only (pump bonding curve, PumpSwap, Raydium
 	// AMM v4/CPMM, Meteora pools, Fluxbeam, Heaven, Omnipair); about twice the
 	// backtest's target_price_impact_pct for the same swap. Null until the
-	// window is served or when no buy was measured.
+	// window is served or when no buy was measured. The figures fold a daily
+	// plane: "7 days" spans 7 to 8 calendar days (the oldest UTC day counts
+	// whole), "30 days" 30 to 31.
 	MedianBuyImpactPct7d *float32 `json:"median_buy_impact_pct_7d,omitempty"`
 
 	// MedianEntryPoolSol30d Median quote reserve of the pool before each buy over the last 30 days, in SOL.
@@ -4835,11 +5026,17 @@ type GetTradersParams struct {
 	// Offset Offset
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
-	// SortBy Sort key: realized_profit, winrate or last_active_ts
-	SortBy *string `form:"sort_by,omitempty" json:"sort_by,omitempty"`
+	// SortBy Ranking key. `realized_profit` (the default) ranks NET PnL after costs, the opposite of the `f=` key `realized_profit`, which is gross; `total_profit` ranks gross realized PnL. Every other key is the `f=` key of the figure it ranks, plus `roi` and `total_costs`; `pnl` and `net_profit` alias `realized_profit`, `last_seen` aliases `last_active_ts`, and an unknown key ranks net PnL. A key with no figure for the window is refused with a 400: token_num, didnt_buy_sells, sold_gt_bought_sells, success_rate, spam_rate, failed_txs, landed_txs and total_costs have no lifetime figure.
+	SortBy *GetTradersParamsSortBy `form:"sort_by,omitempty" json:"sort_by,omitempty"`
 
 	// Direction Sort Direction
 	Direction *string `form:"direction,omitempty" json:"direction,omitempty"`
+
+	// Window The window the page is ranked over: the sorted figure's window and the listed population. 1d, 7d and 30d list the traders who traded in it; all ranks lifetime figures of the traders with 10+ trades in the last 30 days (the unfiltered 7d/30d pages ranked by net PnL, win rate or last active list every trader who traded in the window; every other page also needs those 10+ trades). An `f=` clause without a window suffix compiles at 30d when window=30d and at 7d otherwise, whatever this window.
+	Window *GetTradersParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+
+	// F Filter clauses `key[_window]|op|value[|value2]`, AND-combined. A windowed key without a suffix compiles at 30d when window=30d and at 7d otherwise; a buy-impact key without a suffix is refused on a 1d or all page.
+	F *[]string `form:"f,omitempty" json:"f,omitempty"`
 
 	// FavoritesOnly Restrict to the caller's favorited traders (authenticated only)
 	FavoritesOnly *bool `form:"favorites_only,omitempty" json:"favorites_only,omitempty"`
@@ -4847,12 +5044,18 @@ type GetTradersParams struct {
 	// TrackedOnly Restrict to the caller's tracked wallets (authenticated only); with favorites_only, to the tracked favorites
 	TrackedOnly *bool `form:"tracked_only,omitempty" json:"tracked_only,omitempty"`
 
-	// ExtraWindows Comma list of DISPLAY-only window families to include: 1d, all. They ride the same board row; sorting is unaffected (it reads 7d/30d board columns) and f= filters read 1d/7d/30d board columns.
+	// ExtraWindows Comma list of the window families each row carries beyond 7d and 30d: 1d, all. They ride the same board row; the family of the page's window is always included.
 	ExtraWindows *string `form:"extra_windows,omitempty" json:"extra_windows,omitempty"`
 
 	// Unit Currency the page is ranked, filtered and cursored in: sol (lamports) or usd (micro-USD stamped at execution). Money clause values are whole units of that currency. Every row carries both currencies (`_usd` twins) whatever the unit.
 	Unit *string `form:"unit,omitempty" json:"unit,omitempty"`
 }
+
+// GetTradersParamsSortBy defines parameters for GetTraders.
+type GetTradersParamsSortBy string
+
+// GetTradersParamsWindow defines parameters for GetTraders.
+type GetTradersParamsWindow string
 
 // GetTradersSearchParams defines parameters for GetTradersSearch.
 type GetTradersSearchParams struct {
@@ -5213,7 +5416,7 @@ type ClientInterface interface {
 
 	// GetLegsExportByDayLegsByPart Download one part of a day's DEX legs
 	//
-	// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown), mayhem (flags & 1: the leg traded a pump.fun bonding curve or PumpSwap pool the ledger knows is in mayhem mode; false when it is not or its mode is unknown), custodial (the leg is pump.fun's Mayhem agent trading through its custody program, not a wallet trading for itself). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
 	GetLegsExportByDayLegsByPart(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -5644,7 +5847,7 @@ type ClientInterface interface {
 
 	// GetTraders List Traders
 	//
-	// Retrieves a list of traders supporting advanced filtering and sorting.
+	// Retrieves a list of traders supporting advanced filtering and sorting. The page is ranked by `sort_by` at `window`; every row carries its 7d and 30d figures, plus the 1d and lifetime families the window or `extra_windows` names.
 	//
 	// Corresponds with GET /api/traders (the `GetTraders` operationId).
 	GetTraders(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -6127,7 +6330,7 @@ func (c *Client) GetLegsExportByDayFactsByDataset(ctx context.Context, day strin
 
 // GetLegsExportByDayLegsByPart Download one part of a day's DEX legs
 //
-// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown), mayhem (flags & 1: the leg traded a pump.fun bonding curve or PumpSwap pool the ledger knows is in mayhem mode; false when it is not or its mode is unknown), custodial (the leg is pump.fun's Mayhem agent trading through its custody program, not a wallet trading for itself). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Corresponds with GET /api/legs/export/{day}/legs/{part} (the `GetLegsExportByDayLegsByPart` operationId).
 func (c *Client) GetLegsExportByDayLegsByPart(ctx context.Context, day string, part int, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -7168,7 +7371,7 @@ func (c *Client) PutTraderFiltersById(ctx context.Context, id string, body PutTr
 
 // GetTraders List Traders
 //
-// Retrieves a list of traders supporting advanced filtering and sorting.
+// Retrieves a list of traders supporting advanced filtering and sorting. The page is ranked by `sort_by` at `window`; every row carries its 7d and 30d figures, plus the 1d and lifetime families the window or `extra_windows` names.
 //
 // Corresponds with GET /api/traders (the `GetTraders` operationId).
 func (c *Client) GetTraders(ctx context.Context, params *GetTradersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -11875,6 +12078,30 @@ func NewGetTradersRequest(server string, params *GetTradersParams) (*http.Reques
 
 		}
 
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.F != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "f", *params.F, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "array", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
 		if params.FavoritesOnly != nil {
 
 			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "favorites_only", *params.FavoritesOnly, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
@@ -13220,7 +13447,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
 	//
-	// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+	// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown), mayhem (flags & 1: the leg traded a pump.fun bonding curve or PumpSwap pool the ledger knows is in mayhem mode; false when it is not or its mode is unknown), custodial (the leg is pump.fun's Mayhem agent trading through its custody program, not a wallet trading for itself). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -13741,7 +13968,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetTradersWithResponse List Traders
 	//
-	// Retrieves a list of traders supporting advanced filtering and sorting.
+	// Retrieves a list of traders supporting advanced filtering and sorting. The page is ranked by `sort_by` at `window`; every row carries its 7d and 30d figures, plus the 1d and lifetime families the window or `extra_windows` names.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -19112,7 +19339,7 @@ func (c *ClientWithResponses) GetLegsExportByDayFactsByDatasetWithResponse(ctx c
 
 // GetLegsExportByDayLegsByPartWithResponse Download one part of a day's DEX legs
 //
-// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
+// Streams, as Parquet (zstd), every DEX leg of the UTC day, on every venue the ledger records, whose pool_id modulo the catalog's parts equals `part`, sorted by pool_id, slot, tx_index, ix_index. A pool's legs are in the same part every day. Columns: pool_id, mint_id, quote_mint_id (u64 ledger ids), dex, ts_ms, slot, tx_index, ix_index, trader (32 raw bytes), is_buy (the base side), base_amount, quote_amount, base_reserve_pre, quote_reserve_pre, base_reserve_post, quote_reserve_post (raw units), value_sol (lamports), swap_fee_bps (0 = unknown), flags, marginal_price_q (f64, raw quote units per raw base unit after the leg: the pool's marginal price, else the leg's own quote_amount / base_amount; 0 = unknown), mayhem (flags & 1: the leg traded a pump.fun bonding curve or PumpSwap pool the ledger knows is in mayhem mode; false when it is not or its mode is unknown), custodial (the leg is pump.fun's Mayhem agent trading through its custody program, not a wallet trading for itself). A request refused before streaming (400, 403, 429) is not charged, and one the server fails to deliver is refunded.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -19999,7 +20226,7 @@ func (c *ClientWithResponses) PutTraderFiltersByIdWithResponse(ctx context.Conte
 
 // GetTradersWithResponse List Traders
 //
-// Retrieves a list of traders supporting advanced filtering and sorting.
+// Retrieves a list of traders supporting advanced filtering and sorting. The page is ranked by `sort_by` at `window`; every row carries its 7d and 30d figures, plus the 1d and lifetime families the window or `extra_windows` names.
 //
 // Returns a wrapper object for the known response body format(s).
 //
