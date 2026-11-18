@@ -208,6 +208,72 @@ func (e PulsightInternalCoreDomainCreditReason) Valid() bool {
 	}
 }
 
+// Defines values for PulsightInternalCoreDomainStrategyComparisonOp.
+const (
+	ComparisonEq  PulsightInternalCoreDomainStrategyComparisonOp = "eq"
+	ComparisonGt  PulsightInternalCoreDomainStrategyComparisonOp = "gt"
+	ComparisonGte PulsightInternalCoreDomainStrategyComparisonOp = "gte"
+	ComparisonLt  PulsightInternalCoreDomainStrategyComparisonOp = "lt"
+	ComparisonLte PulsightInternalCoreDomainStrategyComparisonOp = "lte"
+)
+
+// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainStrategyComparisonOp enum.
+func (e PulsightInternalCoreDomainStrategyComparisonOp) Valid() bool {
+	switch e {
+	case ComparisonEq:
+		return true
+	case ComparisonGt:
+		return true
+	case ComparisonGte:
+		return true
+	case ComparisonLt:
+		return true
+	case ComparisonLte:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PulsightInternalCoreDomainStrategyConfluenceCount.
+const (
+	ConfluenceCountBuys    PulsightInternalCoreDomainStrategyConfluenceCount = "buys"
+	ConfluenceCountEntries PulsightInternalCoreDomainStrategyConfluenceCount = "entries"
+)
+
+// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainStrategyConfluenceCount enum.
+func (e PulsightInternalCoreDomainStrategyConfluenceCount) Valid() bool {
+	switch e {
+	case ConfluenceCountBuys:
+		return true
+	case ConfluenceCountEntries:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PulsightInternalCoreDomainStrategyConfluenceMetric.
+const (
+	ConfluenceBuyers  PulsightInternalCoreDomainStrategyConfluenceMetric = "buyers"
+	ConfluenceHolders PulsightInternalCoreDomainStrategyConfluenceMetric = "holders"
+	ConfluenceSellers PulsightInternalCoreDomainStrategyConfluenceMetric = "sellers"
+)
+
+// Valid indicates whether the value is a known member of the PulsightInternalCoreDomainStrategyConfluenceMetric enum.
+func (e PulsightInternalCoreDomainStrategyConfluenceMetric) Valid() bool {
+	switch e {
+	case ConfluenceBuyers:
+		return true
+	case ConfluenceHolders:
+		return true
+	case ConfluenceSellers:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PulsightInternalCoreDomainStrategyEdgePort.
 const (
 	EdgePortCond    PulsightInternalCoreDomainStrategyEdgePort = "cond"
@@ -719,6 +785,12 @@ func (e GetTradersByWalletAddressPnlSeriesParamsWindow) Valid() bool {
 	default:
 		return false
 	}
+}
+
+// InternalAdaptersPrimaryHttpHandlerConfluencePreviewRequest defines model for internal_adapters_primary_http_handler.ConfluencePreviewRequest.
+type InternalAdaptersPrimaryHttpHandlerConfluencePreviewRequest struct {
+	// Node Node is the node's data, as the strategy holds it.
+	Node *PulsightInternalCoreDomainStrategyWalletConfluenceCondition `json:"node,omitempty"`
 }
 
 // InternalAdaptersPrimaryHttpHandlerDashboardStats defines model for internal_adapters_primary_http_handler.DashboardStats.
@@ -3092,6 +3164,60 @@ type PulsightInternalCoreDomainCreditTransaction struct {
 	UserId    *string                                 `json:"user_id,omitempty"`
 }
 
+// PulsightInternalCoreDomainStrategyComparisonOp defines model for pulsight_internal_core_domain_strategy.ComparisonOp.
+type PulsightInternalCoreDomainStrategyComparisonOp string
+
+// PulsightInternalCoreDomainStrategyConfluenceCount defines model for pulsight_internal_core_domain_strategy.ConfluenceCount.
+type PulsightInternalCoreDomainStrategyConfluenceCount string
+
+// PulsightInternalCoreDomainStrategyConfluenceFire defines model for pulsight_internal_core_domain_strategy.ConfluenceFire.
+type PulsightInternalCoreDomainStrategyConfluenceFire struct {
+	// At At is the instant, unix seconds.
+	At *int `json:"at,omitempty"`
+
+	// Mint Mint is the token's address.
+	Mint *string `json:"mint,omitempty"`
+
+	// Votes Votes is how many wallets the condition counted then, after merging same-second buys.
+	Votes *int `json:"votes,omitempty"`
+}
+
+// PulsightInternalCoreDomainStrategyConfluenceMetric defines model for pulsight_internal_core_domain_strategy.ConfluenceMetric.
+type PulsightInternalCoreDomainStrategyConfluenceMetric string
+
+// PulsightInternalCoreDomainStrategyConfluencePreview defines model for pulsight_internal_core_domain_strategy.ConfluencePreview.
+type PulsightInternalCoreDomainStrategyConfluencePreview struct {
+	// Capped Capped is true when the wallets' trades exceeded what one preview reads; the counts are then lower bounds.
+	Capped *bool `json:"capped,omitempty"`
+
+	// Fires Fires lists the 50 most recent of those instants, newest first.
+	Fires *[]PulsightInternalCoreDomainStrategyConfluenceFire `json:"fires,omitempty"`
+
+	// Fires7d Fires7d counts the instants the condition became true inside the window, across every token.
+	Fires7d *int `json:"fires_7d,omitempty"`
+
+	// SameOperator SameOperator lists up to 20 wallet pairs that bought the same tokens within 1 second of each other, highest rate first.
+	SameOperator *[]PulsightInternalCoreDomainStrategySameOperatorPair `json:"same_operator,omitempty"`
+
+	// Tokens7d Tokens7d counts the tokens on which it became true at least once.
+	Tokens7d *int `json:"tokens_7d,omitempty"`
+
+	// WindowFrom WindowFrom is the start of the 7-day window, unix seconds.
+	WindowFrom *int `json:"window_from,omitempty"`
+
+	// WindowTo WindowTo is the end of the window (now), unix seconds.
+	WindowTo *int `json:"window_to,omitempty"`
+}
+
+// PulsightInternalCoreDomainStrategyConfluenceSource defines model for pulsight_internal_core_domain_strategy.ConfluenceSource.
+type PulsightInternalCoreDomainStrategyConfluenceSource struct {
+	// GroupId GroupID is the favorites group, or "ungrouped".
+	GroupId *string `json:"group_id,omitempty"`
+
+	// SyncedAt SyncedAt is when the wallets were taken from the group.
+	SyncedAt *string `json:"synced_at,omitempty"`
+}
+
 // PulsightInternalCoreDomainStrategyEdge defines model for pulsight_internal_core_domain_strategy.Edge.
 type PulsightInternalCoreDomainStrategyEdge struct {
 	From *string                                     `json:"from,omitempty"`
@@ -3171,6 +3297,27 @@ type PulsightInternalCoreDomainStrategyRecord struct {
 	UserId      *string                                        `json:"user_id,omitempty"`
 }
 
+// PulsightInternalCoreDomainStrategySameOperatorPair defines model for pulsight_internal_core_domain_strategy.SameOperatorPair.
+type PulsightInternalCoreDomainStrategySameOperatorPair struct {
+	// A A is the first wallet, in the order of the set.
+	A *string `json:"a,omitempty"`
+
+	// B B is the second wallet.
+	B *string `json:"b,omitempty"`
+
+	// CoBoughtTokens CoBoughtTokens counts the tokens both entered within 1 second of each other.
+	CoBoughtTokens *int `json:"co_bought_tokens,omitempty"`
+
+	// CoBuyRate CoBuyRate is CoBoughtTokens divided by SmallerTokens.
+	CoBuyRate *float32 `json:"co_buy_rate,omitempty"`
+
+	// SharedTokens SharedTokens counts the tokens both wallets entered in the window.
+	SharedTokens *int `json:"shared_tokens,omitempty"`
+
+	// SmallerTokens SmallerTokens is the smaller of the two wallets' counts of tokens entered.
+	SmallerTokens *int `json:"smaller_tokens,omitempty"`
+}
+
 // PulsightInternalCoreDomainStrategyStrategyDef defines model for pulsight_internal_core_domain_strategy.StrategyDef.
 type PulsightInternalCoreDomainStrategyStrategyDef struct {
 	Constraints *PulsightInternalCoreDomainStrategyGlobalConstraints `json:"constraints,omitempty"`
@@ -3197,6 +3344,42 @@ type PulsightInternalCoreDomainStrategySubGraph struct {
 
 // PulsightInternalCoreDomainStrategyVenueID defines model for pulsight_internal_core_domain_strategy.VenueID.
 type PulsightInternalCoreDomainStrategyVenueID string
+
+// PulsightInternalCoreDomainStrategyWalletConfluenceCondition defines model for pulsight_internal_core_domain_strategy.WalletConfluenceCondition.
+type PulsightInternalCoreDomainStrategyWalletConfluenceCondition struct {
+	// Count Count applies to buyers only: entries (positions opened, the default) or buys (any buy).
+	Count *PulsightInternalCoreDomainStrategyConfluenceCount `json:"count,omitempty"`
+
+	// DedupSecs DedupSecs merges wallets whose trades are within this many seconds of each other into one; absent is 1, 0 turns it off.
+	DedupSecs *int `json:"dedup_secs,omitempty"`
+
+	// MaxPremiumPct MaxPremiumPct caps how far the price may sit above the counted wallets' average entry, in percent; holders and buyers only.
+	MaxPremiumPct *float32 `json:"max_premium_pct,omitempty"`
+
+	// Metric Metric is what a wallet is counted by: holding (entered within the window), buying or selling.
+	Metric *PulsightInternalCoreDomainStrategyConfluenceMetric `json:"metric,omitempty"`
+
+	// MinBuySol MinBuySol is the SOL a wallet must have bought over its position to count; absent is no floor.
+	MinBuySol *float32 `json:"min_buy_sol,omitempty"`
+
+	// MinSellPct MinSellPct is the share of its position a wallet must have sold to count, required with sellers only.
+	MinSellPct *float32 `json:"min_sell_pct,omitempty"`
+
+	// Op Op is gte (at least) or lte (at most).
+	Op *PulsightInternalCoreDomainStrategyComparisonOp `json:"op,omitempty"`
+
+	// Sources Sources records the favorites groups the wallets came from; nothing evaluates it.
+	Sources *[]PulsightInternalCoreDomainStrategyConfluenceSource `json:"sources,omitempty"`
+
+	// Value Value is the threshold: 1 to the set size with gte, 0 to one less than the set size with lte.
+	Value *int `json:"value,omitempty"`
+
+	// Wallets Wallets is the set, 2 to 50 distinct addresses.
+	Wallets *[]string `json:"wallets,omitempty"`
+
+	// WindowSecs WindowSecs is the window in seconds, 10 to 604800.
+	WindowSecs *int `json:"window_secs,omitempty"`
+}
 
 // PulsightInternalCoreDomainSubscriptionSubscriptionTier defines model for pulsight_internal_core_domain_subscription.SubscriptionTier.
 type PulsightInternalCoreDomainSubscriptionSubscriptionTier string
@@ -3621,14 +3804,24 @@ type PulsightInternalCorePortsInputSubscriptionInfo struct {
 	// Label Label/PriceUSD/Interval describe a bespoke ENTERPRISE plan; populated
 	// only for an active TierEnterprise user (from their custom entitlement)
 	// so the plan page can render the negotiated plan instead of a tier card.
-	Label     *string                                                 `json:"label,omitempty"`
-	Limits    *PulsightInternalCorePortsInputPlanLimitsRead           `json:"limits,omitempty"`
-	PriceUsd  *float32                                                `json:"price_usd,omitempty"`
-	Provider  *string                                                 `json:"provider,omitempty"`
-	StartedAt *string                                                 `json:"started_at,omitempty"`
-	Status    *string                                                 `json:"status,omitempty"`
-	Tier      *PulsightInternalCoreDomainSubscriptionSubscriptionTier `json:"tier,omitempty"`
-	Usage     *PulsightInternalCorePortsInputUsageCounts              `json:"usage,omitempty"`
+	Label  *string                                       `json:"label,omitempty"`
+	Limits *PulsightInternalCorePortsInputPlanLimitsRead `json:"limits,omitempty"`
+
+	// PendingAt PendingAt is when the scheduled change takes effect: the end of the paid
+	// period.
+	PendingAt *string `json:"pending_at,omitempty"`
+
+	// PendingTier PendingTier is the plan a change scheduled for the end of the paid period
+	// moves to at PendingAt: a card downgrade, or the plan a crypto subscription
+	// that no longer renews is paid at when renewed. Absent when no change is
+	// scheduled, and while a cancellation is.
+	PendingTier *PulsightInternalCoreDomainSubscriptionSubscriptionTier `json:"pending_tier,omitempty"`
+	PriceUsd    *float32                                                `json:"price_usd,omitempty"`
+	Provider    *string                                                 `json:"provider,omitempty"`
+	StartedAt   *string                                                 `json:"started_at,omitempty"`
+	Status      *string                                                 `json:"status,omitempty"`
+	Tier        *PulsightInternalCoreDomainSubscriptionSubscriptionTier `json:"tier,omitempty"`
+	Usage       *PulsightInternalCorePortsInputUsageCounts              `json:"usage,omitempty"`
 }
 
 // PulsightInternalCorePortsInputUsageCounts defines model for pulsight_internal_core_ports_input.UsageCounts.
@@ -5284,6 +5477,9 @@ type PostBacktestsPickTokensJSONRequestBody = InternalAdaptersPrimaryHttpHandler
 // PostStrategiesJSONRequestBody defines body for PostStrategies for application/json ContentType.
 type PostStrategiesJSONRequestBody = InternalAdaptersPrimaryHttpHandlerStrategyCreateRequest
 
+// PostStrategiesConfluencePreviewJSONRequestBody defines body for PostStrategiesConfluencePreview for application/json ContentType.
+type PostStrategiesConfluencePreviewJSONRequestBody = InternalAdaptersPrimaryHttpHandlerConfluencePreviewRequest
+
 // PostStrategiesPreviewJSONRequestBody defines body for PostStrategiesPreview for application/json ContentType.
 type PostStrategiesPreviewJSONRequestBody = PulsightInternalCoreUsecasesBacktestPreviewRequest
 
@@ -5723,6 +5919,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/strategies (the `PostStrategies` operationId).
 	PostStrategies(ctx context.Context, body PostStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostStrategiesConfluencePreviewWithBody Preview Wallet Confluence
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+	PostStrategiesConfluencePreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostStrategiesConfluencePreview Preview Wallet Confluence
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+	PostStrategiesConfluencePreview(ctx context.Context, body PostStrategiesConfluencePreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetStrategiesDashboard Strategy Dashboard Stats
 	//
@@ -6928,6 +7138,40 @@ func (c *Client) PostStrategiesWithBody(ctx context.Context, contentType string,
 // Corresponds with POST /api/strategies (the `PostStrategies` operationId).
 func (c *Client) PostStrategies(ctx context.Context, body PostStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostStrategiesRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostStrategiesConfluencePreviewWithBody Preview Wallet Confluence
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+func (c *Client) PostStrategiesConfluencePreviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStrategiesConfluencePreviewRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PostStrategiesConfluencePreview Preview Wallet Confluence
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+func (c *Client) PostStrategiesConfluencePreview(ctx context.Context, body PostStrategiesConfluencePreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostStrategiesConfluencePreviewRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -11007,6 +11251,46 @@ func NewPostStrategiesRequestWithBody(server string, contentType string, body io
 	return req, nil
 }
 
+// NewPostStrategiesConfluencePreviewRequest calls the generic PostStrategiesConfluencePreview builder with application/json body
+func NewPostStrategiesConfluencePreviewRequest(server string, body PostStrategiesConfluencePreviewJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostStrategiesConfluencePreviewRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostStrategiesConfluencePreviewRequestWithBody constructs an http.Request for the PostStrategiesConfluencePreview method, with any body, and a specified content type
+func NewPostStrategiesConfluencePreviewRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/strategies/confluence-preview")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetStrategiesDashboardRequest constructs an http.Request for the GetStrategiesDashboard method
 func NewGetStrategiesDashboardRequest(server string) (*http.Request, error) {
 	var err error
@@ -13822,6 +14106,20 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/strategies (the `PostStrategies` operationId).
 	PostStrategiesWithResponse(ctx context.Context, body PostStrategiesJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStrategiesResponse, error)
+
+	// PostStrategiesConfluencePreviewWithBodyWithResponse Preview Wallet Confluence
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+	PostStrategiesConfluencePreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStrategiesConfluencePreviewResponse, error)
+
+	// PostStrategiesConfluencePreviewWithResponse Preview Wallet Confluence
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+	PostStrategiesConfluencePreviewWithResponse(ctx context.Context, body PostStrategiesConfluencePreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStrategiesConfluencePreviewResponse, error)
 
 	// GetStrategiesDashboardWithResponse Strategy Dashboard Stats
 	//
@@ -16702,6 +17000,68 @@ func (r PostStrategiesResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PostStrategiesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PostStrategiesConfluencePreviewResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PulsightInternalCoreDomainStrategyConfluencePreview
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *InternalAdaptersPrimaryHttpHandlerErrorResponse
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PostStrategiesConfluencePreviewResponse) GetJSON200() *PulsightInternalCoreDomainStrategyConfluencePreview {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r PostStrategiesConfluencePreviewResponse) GetJSON400() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON400
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r PostStrategiesConfluencePreviewResponse) GetJSON429() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON429
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r PostStrategiesConfluencePreviewResponse) GetJSON503() *InternalAdaptersPrimaryHttpHandlerErrorResponse {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r PostStrategiesConfluencePreviewResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PostStrategiesConfluencePreviewResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostStrategiesConfluencePreviewResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PostStrategiesConfluencePreviewResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -19895,6 +20255,32 @@ func (c *ClientWithResponses) PostStrategiesWithResponse(ctx context.Context, bo
 	return ParsePostStrategiesResponse(rsp)
 }
 
+// PostStrategiesConfluencePreviewWithBodyWithResponse Preview Wallet Confluence
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+func (c *ClientWithResponses) PostStrategiesConfluencePreviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostStrategiesConfluencePreviewResponse, error) {
+	rsp, err := c.PostStrategiesConfluencePreviewWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostStrategiesConfluencePreviewResponse(rsp)
+}
+
+// PostStrategiesConfluencePreviewWithResponse Preview Wallet Confluence
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/strategies/confluence-preview (the `PostStrategiesConfluencePreview` operationId).
+func (c *ClientWithResponses) PostStrategiesConfluencePreviewWithResponse(ctx context.Context, body PostStrategiesConfluencePreviewJSONRequestBody, reqEditors ...RequestEditorFn) (*PostStrategiesConfluencePreviewResponse, error) {
+	rsp, err := c.PostStrategiesConfluencePreview(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostStrategiesConfluencePreviewResponse(rsp)
+}
+
 // GetStrategiesDashboardWithResponse Strategy Dashboard Stats
 //
 // Returns a wrapper object for the known response body format(s).
@@ -22380,6 +22766,53 @@ func ParsePostStrategiesResponse(rsp *http.Response) (*PostStrategiesResponse, e
 			return nil, err
 		}
 		response.JSON403 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostStrategiesConfluencePreviewResponse parses an HTTP response from a PostStrategiesConfluencePreviewWithResponse call
+func ParsePostStrategiesConfluencePreviewResponse(rsp *http.Response) (*PostStrategiesConfluencePreviewResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostStrategiesConfluencePreviewResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PulsightInternalCoreDomainStrategyConfluencePreview
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest InternalAdaptersPrimaryHttpHandlerErrorResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
 
 	}
 
