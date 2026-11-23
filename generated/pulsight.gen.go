@@ -4083,23 +4083,26 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	// CashDeclinedBuys CashDeclinedBuys counts the buy attempts the run declined before sending
 	// because the cash left could not pay them (`insufficient_balance`,
 	// tx_failed false), candle-driven Emit buys included; CashDeclinedSol is
-	// the SOL they asked for.
+	// the SOL they asked for. Each one also counts in CopiesDeclined or
+	// EmitBuysDeclined.
 	CashDeclinedBuys *int     `json:"cash_declined_buys,omitempty"`
 	CashDeclinedSol  *float32 `json:"cash_declined_sol,omitempty"`
 
 	// CashFailedBuys CashFailedBuys counts the buy attempts sent while the cash was at or
 	// below zero, which failed and paid nothing (`insufficient_balance`,
-	// tx_failed true); CashFailedSol is the SOL they asked for.
+	// tx_failed true), candle-driven Emit buys included; CashFailedSol is the
+	// SOL they asked for. Each one also counts in CopiesDeclined or
+	// EmitBuysDeclined.
 	CashFailedBuys *int     `json:"cash_failed_buys,omitempty"`
 	CashFailedSol  *float32 `json:"cash_failed_sol,omitempty"`
 
 	// CopiesDeclined CopiesDeclined counts target swaps a signal-driven exec wanted to act
-	// on but that a RULE refused: cooldown, sizing, max_buys_per_open_position,
-	// exposure cap, bracket placement, rate limit, cash left too short — plus
-	// the sells this run sat out because the target only sold tokens it had
-	// never mirrored. Reverts, buys that failed on an empty cash and unpriced
-	// skips have their own counters and are not in here. Every
-	// one is persisted as a `backtest_declines` row with its reason, so the
+	// on but that a RULE or the run's cash refused: cooldown, sizing,
+	// max_buys_per_open_position, exposure cap, bracket placement, rate limit,
+	// cash left too short, a buy that failed on an empty cash — plus the sells
+	// this run sat out because the target only sold tokens it had never
+	// mirrored. Reverts and unpriced skips have their own counters and are not
+	// in here. Every one is persisted as a `backtest_declines` row with its reason, so the
 	// trade history reads as a complete account of the target's swaps.
 	// Additive JSONB field — old rows decode as 0.
 	CopiesDeclined *int `json:"copies_declined,omitempty"`
@@ -4150,11 +4153,12 @@ type PulsightInternalCoreUsecasesBacktestBacktestSummary struct {
 	CopiesSkippedUnpriced *int `json:"copies_skipped_unpriced,omitempty"`
 
 	// EmitBuysDeclined EmitBuysDeclined counts the candle closes on which an Emit buy whose
-	// rule held was refused by a rule — sizing, max_buys_per_open_position,
-	// exposure cap, bracket placement, rate limit, cash left too short (a buy
-	// that failed on an empty cash is not in here) — once per refusal: an Emit
-	// buy refused on consecutive closes for the same reason counts once, until
-	// it fills, a close finds it not ready to fire or the reason changes. Each
+	// rule held was refused by a rule or the run's cash — sizing,
+	// max_buys_per_open_position, exposure cap, bracket placement, rate limit,
+	// cash left too short, a buy that failed on an empty cash — once per
+	// refusal: an Emit buy refused on consecutive closes for the same reason
+	// counts once, until it fills, a close finds it not ready to fire or the
+	// reason (or, for insufficient_balance, tx_failed) changes. Each
 	// one is persisted as a `backtest_declines` row with its reason, source
 	// `emit_buy` and no triggering swap. An Emit buy a target's swap triggered
 	// counts in CopiesDeclined instead. Additive JSONB field — old rows decode
